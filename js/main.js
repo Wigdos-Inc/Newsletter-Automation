@@ -1,0 +1,35 @@
+const article_root = document.getElementById('articles');
+
+let articles = 0;
+
+function generate_article(obj) {
+    const root = document.createElement('div');
+    const index = document.createElement('p');
+    const titel = document.createElement('h2');
+    const textbody = document.createElement('textarea');
+    const bron = document.createElement('a');
+
+    index.innerHTML = obj['id'];
+    titel.innerHTML = obj['title'];
+    textbody.textContent = obj['text_body'];
+    bron.href = obj['sources'];
+    bron.innerHTML = obj['sources'];
+
+    root.setAttribute('class', 'article_root mb-2p');
+    index.setAttribute('class', 'article_index mb-2p bg_light p-1p');
+    titel.setAttribute('class', 'article_title mb-2p bg_light p-1p');
+    textbody.setAttribute('class', 'article_body mb-2p bg_light p-1p');
+    textbody.setAttribute('readonly', '');
+    textbody.style.resize = 'none';
+    bron.setAttribute('class', 'article_source mb-2p bg_light p-1p');
+
+    root.append(index);
+    root.append(titel);
+    root.append(textbody);
+    root.append(bron);
+    article_root.append(root);
+}
+
+for (let i = 0; i < result.length; i++){
+    generate_article(result[i]);
+}
