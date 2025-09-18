@@ -5,7 +5,7 @@ function generate_article(obj) {
     const index = document.createElement('p');
     const title = document.createElement('h2');
     const dateEl = document.createElement('p');
-    const textbody = document.createElement('textarea');
+    const textbody = document.createElement('div');
     const sourcesWrapper = document.createElement('div');
 
     index.textContent = obj['id'];
@@ -29,7 +29,25 @@ function generate_article(obj) {
     } else {
         dateEl.textContent = '';
     }
-    textbody.textContent = obj['text_body'].replaceAll("%%", "'");
+    // Convert simple markdown-style **bold** and custom %% apostrophes to HTML
+    // 1. Replace custom apostrophe marker
+    // 2. Escape HTML
+    // 3. Convert **bold** segments
+    // 4. Convert newlines to <br>
+    const raw = (obj['text_body'] || '').toString();
+    function escapeHTML(str) {
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+    let processed = raw.replaceAll('%%', "'");
+    processed = escapeHTML(processed);
+    // Bold: **text** (non-greedy). Avoid spanning newlines excessively.
+    processed = processed.replace(/\*\*(.+?)\*\*/g, (m, p1) => `<strong>${p1}</strong>`);
+    // Line breaks
+    processed = processed.replace(/\r\n|\r|\n/g, '<br>');
+    textbody.innerHTML = processed;
 
     // Parse sources: can be array, JSON string, or delimited string
     let rawSources = obj['sources'];
@@ -99,8 +117,6 @@ function generate_article(obj) {
     title.setAttribute('class', 'article_title mb-2p bg_light p-1p');
     dateEl.setAttribute('class', 'article_date mb-2p');
     textbody.setAttribute('class', 'article_body mb-2p bg_light p-1p');
-    textbody.setAttribute('readonly', '');
-    textbody.style.resize = 'none';
 
     root.append(index);
     root.append(title);
