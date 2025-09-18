@@ -5,13 +5,68 @@ function generate_article(obj) {
     const index = document.createElement('p');
     const title = document.createElement('h2');
     const textbody = document.createElement('textarea');
-    const bron = document.createElement('a');
+    const sourcesWrapper = document.createElement('div');
 
-    index.innerHTML = obj['id'];
-    title.innerHTML = obj['title'];
+    index.textContent = obj['id'];
+    title.textContent = obj['title'];
     textbody.textContent = obj['text_body'];
-    bron.href = obj['sources'];
-    bron.innerHTML = obj['sources'];
+
+    // Parse sources: can be array, JSON string, or delimited string
+    let rawSources = obj['sources'];
+    let links = [];
+    if (Array.isArray(rawSources)) {
+        links = rawSources;
+    } else if (typeof rawSources === 'string') {
+        const trimmed = rawSources.trim();
+        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) links = parsed; else links = [trimmed];
+            } catch (_) {
+                links = [trimmed];
+            }
+        } else if (trimmed.includes('\n')) {
+            links = trimmed.split(/\n+/).map(s => s.trim()).filter(Boolean);
+        } else if (trimmed.includes(',')) {
+            links = trimmed.split(',').map(s => s.trim()).filter(Boolean);
+        } else if (trimmed.includes('|')) {
+            links = trimmed.split('|').map(s => s.trim()).filter(Boolean);
+        } else {
+            links = [trimmed];
+        }
+    }
+
+    // Basic URL validation and unique filtering
+    const urlSet = new Set();
+    const validLinks = links.filter(l => {
+        if (!l) return false;
+        try { new URL(l); } catch { return false; }
+        if (urlSet.has(l)) return false;
+        urlSet.add(l);
+        return true;
+    });
+
+    if (validLinks.length === 0) {
+        const none = document.createElement('span');
+        none.textContent = 'No sources';
+        sourcesWrapper.append(none);
+    } else {
+        sourcesWrapper.setAttribute('class', 'article_sources mb-2p bg_light p-1p');
+        validLinks.forEach((href, i) => {
+            const a = document.createElement('a');
+            a.href = href;
+            a.textContent = `Source ${i+1}`;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'article_source_link';
+            sourcesWrapper.append(a);
+            if (i < validLinks.length - 1) {
+                const sep = document.createElement('span');
+                sep.textContent = ' '; // small gap
+                sourcesWrapper.append(sep);
+            }
+        });
+    }
 
     root.setAttribute('class', 'article_root mb-2p');
     index.setAttribute('class', 'article_index mb-2p bg_light p-1p');
@@ -19,12 +74,11 @@ function generate_article(obj) {
     textbody.setAttribute('class', 'article_body mb-2p bg_light p-1p');
     textbody.setAttribute('readonly', '');
     textbody.style.resize = 'none';
-    bron.setAttribute('class', 'article_source mb-2p bg_light p-1p');
 
     root.append(index);
     root.append(title);
     root.append(textbody);
-    root.append(bron);
+    root.append(sourcesWrapper);
     article_root.append(root);
 }
 
