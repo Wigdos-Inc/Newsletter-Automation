@@ -2,9 +2,10 @@
   "name": "newsletter-automation",
   "version": "1.0.0",
   "description": "Static newsletter site build using Firestore instead of MySQL/PHP.",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
-    "build": "node scripts/build_articles.js"
+    "build:articles": "node scripts/build_articles.js",
+    "build": "npm run build:articles"
   },
   "dependencies": {
     "firebase-admin": "^12.5.0"
