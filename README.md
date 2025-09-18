@@ -1,14 +1,15 @@
-# Newsletter Automation (Jekyll + Scheduled Refresh)
+# Newsletter Automation (Unified Build + Jekyll Deploy)
 
-The site is built from the `docs/` directory using GitHub Pages **Jekyll build with `source: docs`**. A scheduled + on‑demand refresh workflow pulls the latest rows from MySQL and regenerates static assets (`articles.json`, `index.html`, CSS/JS copies). Jekyll then deploys the folder as the site root.
+The site is generated and deployed by a **single GitHub Actions workflow** that:
+1. Runs the PHP build script to pull the latest MySQL rows.
+2. Regenerates `docs/articles.json`, `docs/index.html`, and asset copies.
+3. Optionally commits changes (only if content changed).
+4. Builds & deploys the `docs/` directory with Jekyll to GitHub Pages.
 
-## Current Pipeline
-1. `Refresh Articles` (`.github/workflows/refresh.yml`) runs every 15 minutes (cron) or manually.
-   - Executes `scripts/build_articles.php` (PHP 8.2) using MySQL secrets.
-   - Rebuilds `docs/articles.json`, `docs/index.html`, and syncs `docs/css` + `docs/js`.
-   - Commits only when there are content changes (avoids noisy deploys).
-2. `Deploy Jekyll (docs as source)` (`.github/workflows/jekyll-gh-pages.yml`) triggers on pushes touching `docs/` and publishes the site via GitHub Pages.
-3. Browser loads `index.html`; `js/main.js` fetches `articles.json?cb=<timestamp>` to avoid stale caching and renders entries.
+You can trigger it by:
+- Pushing changes (scripts / css / js / workflow itself)
+- Manual run (workflow_dispatch) with an optional `article_limit` input
+- External webhook (`repository_dispatch` event_type: `deploy-site`)
 
 ## Database Table Schema
 Your MySQL `articles` table must contain:
@@ -19,10 +20,9 @@ text_body (TEXT)
 sources (TEXT or VARCHAR)
 date (DATETIME or DATE)
 ```
-Optional: set `ARTICLE_LIMIT` env (default 5) in the refresh workflow to control how many recent articles are emitted.
+`ARTICLE_LIMIT` (default 5) can be overridden via manual dispatch input or repository_dispatch payload.
 
 ## Required GitHub Action Secrets
-Add under: Settings → Secrets and variables → Actions.
 ```
 MYSQL_HOST
 MYSQL_DB
@@ -30,53 +30,66 @@ MYSQL_USER
 MYSQL_PASS
 MYSQL_PORT   (optional, default 3306)
 ```
-You can set `BUILD_ALLOW_EMPTY=1` if you want an empty dataset to deploy without failing.
+Optional: `BUILD_ALLOW_EMPTY=1` if you want deployment even when zero rows.
 
-## GitHub Pages Configuration
-Pages now uses the dedicated Pages deployment workflow (not branch/folder UI). Source is the artifact produced by Jekyll with `source: docs`. No further manual Pages configuration needed beyond enabling GitHub Pages for the repo once.
+## Workflow
+```
+.github/workflows/jekyll-gh-pages.yml   # Unified build + deploy
+```
+Key steps inside the workflow:
+- Setup PHP → run `scripts/build_articles.php`
+- Commit changes in `docs/` if diffs exist
+- Jekyll build (`source: docs`) → upload artifact → deploy
 
-## Workflows Overview
+### Override ARTICLE_LIMIT Examples
+Manual dispatch (GitHub UI): provide input `article_limit=15`.
+Repository dispatch payload:
 ```
-.github/workflows/refresh.yml          # Generates content (every 15 min)
-.github/workflows/jekyll-gh-pages.yml  # Builds & deploys Jekyll from docs/
+POST /repos/<owner>/<repo>/dispatches
+{
+  "event_type": "deploy-site",
+  "client_payload": { "article_limit": 25 }
+}
 ```
-(Removed: former `build-static.yml` which duplicated generation logic.)
 
 ## Key Files
 ```
-scripts/build_articles.php  # Pulls DB rows and writes static assets
+scripts/build_articles.php  # Pulls DB rows & writes static assets
 /docs/index.html            # Generated HTML shell
-/docs/articles.json         # Data consumed by JS
+/docs/articles.json         # Dataset consumed by JS
 /docs/css/ & /docs/js/      # Deployed assets
-/js/main.js                 # Renders articles (source)
-/css/main.css               # Styles (source)
-/docs/_config.yml           # Jekyll config (docs as site root)
+/js/main.js                 # Rendering logic
+/css/main.css               # Styles
+/docs/_config.yml           # Jekyll config (docs as root)
 ```
 
 ## Frontend Rendering Notes
-- Bold syntax `**text**` in `text_body` becomes `<strong>text</strong>`.
-- Custom placeholder `%%` becomes `'` (apostrophe).
-- Newlines converted to `<br>`.
-- Sources field auto-parses arrays, JSON strings, comma/pipe/newline delimited lists.
+- `**bold**` → `<strong>`
+- `%%` → `'` apostrophe
+- Newlines → `<br>`
+- Sources auto-parse JSON array, newline, comma, or pipe delimiters
+- Cache busting added: `articles.json?cb=<timestamp>`
 
-## Operational Notes
-- Commits only occur when `articles.json` actually changes (minimizes needless deploys).
-- Cache busting query param (`?cb=timestamp`) prevents CDN/browser stale JSON.
-- If zero rows are returned the build exits with code 2 unless `BUILD_ALLOW_EMPTY=1`.
+## Webhook Trigger (repository_dispatch)
+Endpoint:
+```
+POST https://api.github.com/repos/Wigdos-Inc/Newsletter-Automation/dispatches
+Headers: Authorization: Bearer <TOKEN>, Accept: application/vnd.github+json
+Body:
+{
+  "event_type": "deploy-site",
+  "client_payload": { "reason": "external refresh", "article_limit": 12 }
+}
+```
 
 ## Customization Ideas
-- Pagination: adjust PHP to emit `articles-page-1.json`, etc.
-- SEO: add `jekyll-seo-tag` (ensure whitelisted) in `docs/_config.yml` plus `<head>` tag update.
-- Sitemap: add `jekyll-sitemap` plugin.
-- RSS/Atom: generate `feed.xml` in the PHP build step.
-- Search: precompute `search-index.json` with minimal tokens.
+- Pagination / multiple JSON pages
+- SEO & sitemap (add `jekyll-seo-tag`, `jekyll-sitemap` if needed)
+- Search index file
+- Feed (RSS/Atom) generation in PHP
 
 ## Security
-- Never echo raw secrets in logs.
-- Restrict SQL to selected columns; sanitize any new columns before exposing.
-
-## License
-Add a `LICENSE` file if you intend to distribute.
+Never commit credentials; secrets are injected at runtime.
 
 ---
-Automated Jekyll + refresh pipeline is live. Adjust cron, limits, or add plugins as needed.
+Unified pipeline ready. Trigger manually, by push, or externally via `repository_dispatch`.

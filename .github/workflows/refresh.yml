@@ -8,6 +8,8 @@ on:
     paths:
       - 'scripts/**'
       - '.github/workflows/refresh.yml'
+  repository_dispatch:
+    types: [refresh-content]
 
 jobs:
   build:

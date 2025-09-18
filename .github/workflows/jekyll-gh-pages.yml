@@ -1,15 +1,24 @@
-name: Deploy Jekyll (docs as source)
+name: Generate & Deploy Site
 
 on:
   push:
     branches: ["main"]
     paths:
-      - 'docs/**'
+      - 'scripts/**'
+      - 'css/**'
+      - 'js/**'
       - '.github/workflows/jekyll-gh-pages.yml'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      article_limit:
+        description: "Override ARTICLE_LIMIT (optional)"
+        required: false
+        type: string
+  repository_dispatch:
+    types: [deploy-site]
 
 permissions:
-  contents: read
+  contents: write   # we commit docs if changed
   pages: write
   id-token: write
 
@@ -23,6 +32,53 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Derive ARTICLE_LIMIT from inputs/payload
+        id: derive_limit
+        run: |
+          LIMIT=""
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.article_limit }}" ]]; then
+            LIMIT="${{ inputs.article_limit }}"
+          elif [[ "${{ github.event_name }}" == "repository_dispatch" ]]; then
+            # Try to extract from client_payload JSON (GitHub places it in the event file)
+            EVENT_FILE="$GITHUB_EVENT_PATH"
+            if grep -q 'article_limit' "$EVENT_FILE"; then
+              LIMIT=$(jq -r '.client_payload.article_limit // empty' "$EVENT_FILE")
+            fi
+          fi
+          if [[ -n "$LIMIT" ]]; then
+            echo "Using ARTICLE_LIMIT=$LIMIT"
+            echo "ARTICLE_LIMIT=$LIMIT" >> $GITHUB_ENV
+          else
+            echo "No ARTICLE_LIMIT override provided"
+          fi
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Generate content (PHP build)
+        env:
+          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
+          MYSQL_DB: ${{ secrets.MYSQL_DB }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASS: ${{ secrets.MYSQL_PASS }}
+          ARTICLE_LIMIT: ${{ env.ARTICLE_LIMIT }}
+        run: php scripts/build_articles.php || echo "Build script exited with code $? (continuing to deploy)"
+
+      - name: Commit updated docs (if changed)
+        run: |
+          if [[ -n $(git status --porcelain docs/) ]]; then
+            git config user.name 'github-actions'
+            git config user.email 'actions@users.noreply.github.com'
+            git add docs/
+            git commit -m "content: refresh $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || true
+            git push || true
+          else
+            echo 'No doc changes to commit.'
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Build with Jekyll (source=docs)
