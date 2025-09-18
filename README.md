@@ -1,78 +1,82 @@
-# Newsletter Automation (Static GitHub Pages Version).
+# Newsletter Automation (Jekyll + Scheduled Refresh)
 
-This repository now operates in **static-only** mode. A GitHub Actions workflow connects to your MySQL database (filess.io) and generates a static site inside `docs/`. GitHub Pages serves the contents of `docs/` directly—no PHP runtime is required.
+The site is built from the `docs/` directory using GitHub Pages **Jekyll build with `source: docs`**. A scheduled + on‑demand refresh workflow pulls the latest rows from MySQL and regenerates static assets (`articles.json`, `index.html`, CSS/JS copies). Jekyll then deploys the folder as the site root.
 
-## How It Works
-1. Workflow runs (`.github/workflows/build-static.yml`).
-2. PHP script `scripts/build_articles.php` connects to MySQL using secrets.
-3. It queries the `articles` table and writes:
-   - `docs/articles.json` (data)
-   - `docs/index.html` (page shell)
-   - Copies `css/` + `js/` into `docs/`.
-4. `js/main.js` fetches `articles.json` and renders the list client-side.
+## Current Pipeline
+1. `Refresh Articles` (`.github/workflows/refresh.yml`) runs every 15 minutes (cron) or manually.
+   - Executes `scripts/build_articles.php` (PHP 8.2) using MySQL secrets.
+   - Rebuilds `docs/articles.json`, `docs/index.html`, and syncs `docs/css` + `docs/js`.
+   - Commits only when there are content changes (avoids noisy deploys).
+2. `Deploy Jekyll (docs as source)` (`.github/workflows/jekyll-gh-pages.yml`) triggers on pushes touching `docs/` and publishes the site via GitHub Pages.
+3. Browser loads `index.html`; `js/main.js` fetches `articles.json?cb=<timestamp>` to avoid stale caching and renders entries.
 
 ## Database Table Schema
 Your MySQL `articles` table must contain:
 ```
 ID (INT PRIMARY KEY AUTO_INCREMENT)
-title (VARCHAR)        -- mapped to frontend field `title`
+title (VARCHAR)        -- mapped to frontend `title`
 text_body (TEXT)
 sources (TEXT or VARCHAR)
 date (DATETIME or DATE)
 ```
+Optional: set `ARTICLE_LIMIT` env (default 5) in the refresh workflow to control how many recent articles are emitted.
 
 ## Required GitHub Action Secrets
-Add these in: Settings → Secrets and variables → Actions → New repository secret.
+Add under: Settings → Secrets and variables → Actions.
 ```
-MYSQL_HOST   (example: sql123.filess.io)
-MYSQL_DB     (example: newsletter_prod)
-MYSQL_USER   (example: newsletter_user)
-MYSQL_PASS   (your password)
+MYSQL_HOST
+MYSQL_DB
+MYSQL_USER
+MYSQL_PASS
 MYSQL_PORT   (optional, default 3306)
 ```
+You can set `BUILD_ALLOW_EMPTY=1` if you want an empty dataset to deploy without failing.
 
-## Enable GitHub Pages
-1. Settings → Pages
-2. Source: Deploy from a branch
-3. Branch: `main` / Folder: `/docs`
-4. Save and wait for deployment.
+## GitHub Pages Configuration
+Pages now uses the dedicated Pages deployment workflow (not branch/folder UI). Source is the artifact produced by Jekyll with `source: docs`. No further manual Pages configuration needed beyond enabling GitHub Pages for the repo once.
 
-## Triggering a Build
-- Push a commit (any file)
-- Or: Actions tab → select workflow → Run workflow
+## Workflows Overview
+```
+.github/workflows/refresh.yml          # Generates content (every 15 min)
+.github/workflows/jekyll-gh-pages.yml  # Builds & deploys Jekyll from docs/
+```
+(Removed: former `build-static.yml` which duplicated generation logic.)
 
-## Adding / Updating Articles
-Insert or update rows in the MySQL `articles` table. The next workflow run refreshes `articles.json`.
+## Key Files
+```
+scripts/build_articles.php  # Pulls DB rows and writes static assets
+/docs/index.html            # Generated HTML shell
+/docs/articles.json         # Data consumed by JS
+/docs/css/ & /docs/js/      # Deployed assets
+/js/main.js                 # Renders articles (source)
+/css/main.css               # Styles (source)
+/docs/_config.yml           # Jekyll config (docs as site root)
+```
 
-## Error Handling & Logs
-- If connection fails: workflow logs will show messages like `MySQL connection failed`.
-- `articles.json` may end up empty if query returns no rows or fails.
+## Frontend Rendering Notes
+- Bold syntax `**text**` in `text_body` becomes `<strong>text</strong>`.
+- Custom placeholder `%%` becomes `'` (apostrophe).
+- Newlines converted to `<br>`.
+- Sources field auto-parses arrays, JSON strings, comma/pipe/newline delimited lists.
+
+## Operational Notes
+- Commits only occur when `articles.json` actually changes (minimizes needless deploys).
+- Cache busting query param (`?cb=timestamp`) prevents CDN/browser stale JSON.
+- If zero rows are returned the build exits with code 2 unless `BUILD_ALLOW_EMPTY=1`.
 
 ## Customization Ideas
-- Pagination: generate page segments (`articles-page-1.json`, etc.).
-- RSS feed: emit `docs/feed.xml` inside build script.
-- Search: create a prebuilt index (e.g. `search-index.json`).
+- Pagination: adjust PHP to emit `articles-page-1.json`, etc.
+- SEO: add `jekyll-seo-tag` (ensure whitelisted) in `docs/_config.yml` plus `<head>` tag update.
+- Sitemap: add `jekyll-sitemap` plugin.
+- RSS/Atom: generate `feed.xml` in the PHP build step.
+- Search: precompute `search-index.json` with minimal tokens.
 
-## File Map (Static Mode)
-```
-scripts/build_articles.php  # Build script
-docs/index.html             # Generated static entry
-docs/articles.json          # Generated dataset
-docs/css/                   # Copied styles
-docs/js/                    # Copied scripts
-js/main.js                  # Rendering logic (source)
-css/main.css                # Styles (source)
-.github/workflows/build-static.yml  # Automation
-```
-
-Legacy dynamic PHP files have been deprecated and stripped.
-
-## Security Notes
-- Never commit database credentials.
-- Only expose publicly safe columns; remove or rename sensitive fields before output.
+## Security
+- Never echo raw secrets in logs.
+- Restrict SQL to selected columns; sanitize any new columns before exposing.
 
 ## License
-Add a LICENSE file if distributing.
+Add a `LICENSE` file if you intend to distribute.
 
 ---
-Static build pipeline is ready. Add secrets, enable Pages, and you’re live.
+Automated Jekyll + refresh pipeline is live. Adjust cron, limits, or add plugins as needed.
