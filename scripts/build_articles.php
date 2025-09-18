@@ -45,18 +45,18 @@ if ($pdo instanceof PDO) {
         $colRows = $pdo->query('SHOW COLUMNS FROM articles');
         $cols = $colRows ? $colRows->fetchAll(PDO::FETCH_COLUMN) : [];
         $hasTitle  = in_array('title', $cols, true);
-        $hasTitels = in_array('titels', $cols, true); // legacy misspelling support
+        $hastitle = in_array('title', $cols, true); // legacy misspelling support
         $expectedCore = ['ID','text_body','sources','date'];
         $missingCore = array_diff($expectedCore, $cols);
         if ($missingCore) {
             logWarn('Missing required columns: ' . implode(', ', $missingCore));
         }
-        if (!$hasTitle && !$hasTitels) {
-            logError("Neither 'title' nor legacy 'titels' column exists. Add one.");
-        } elseif ($hasTitle && $hasTitels) {
-            logWarn("Both 'title' and 'titels' exist; using 'title'. Consider dropping 'titels'.");
-        } elseif ($hasTitels) {
-            logWarn("Using legacy column 'titels'. Rename it to 'title' when possible.");
+        if (!$hasTitle && !$hastitle) {
+            logError("Neither 'title' nor legacy 'title' column exists. Add one.");
+        } elseif ($hasTitle && $hastitle) {
+            logWarn("Both 'title' and 'title' exist; using 'title'. Consider dropping 'title'.");
+        } elseif ($hastitle) {
+            logWarn("Using legacy column 'title'. Rename it to 'title' when possible.");
         } else {
             logInfo("Using 'title' column.");
         }
@@ -64,8 +64,8 @@ if ($pdo instanceof PDO) {
         logWarn('Could not inspect columns: ' . $e->getMessage());
     }
     try {
-        // Prefer 'title'; fallback to 'titels' if 'title' not present.
-        $titleExpr = '(CASE WHEN (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "articles" AND COLUMN_NAME = "title") > 0 THEN title ELSE titels END)';
+        // Prefer 'title'; fallback to 'title' if 'title' not present.
+        $titleExpr = '(CASE WHEN (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "articles" AND COLUMN_NAME = "title") > 0 THEN title ELSE title END)';
         $sql = "SELECT 
                     ID        AS id,
                     $titleExpr AS title,
