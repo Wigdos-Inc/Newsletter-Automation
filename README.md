@@ -1,4 +1,4 @@
-# Newsletter Automation (Static GitHub Pages Version)
+# Newsletter Automation (Static GitHub Pages Version).
 
 This repository now operates in **static-only** mode. A GitHub Actions workflow connects to your MySQL database (filess.io) and generates a static site inside `docs/`. GitHub Pages serves the contents of `docs/` directly—no PHP runtime is required.
 
