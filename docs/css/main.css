@@ -37,6 +37,16 @@ body {
     
 }
 
+.article_date {
+    font-size: 0.9rem;
+    color: #333;
+    font-style: italic;
+    padding: 0.25rem 0.5rem;
+    background: #efecec;
+    display: inline-block;
+    border-radius: 4px;
+}
+
 .article_body {
     width: 97%;
     height: 100vh;

@@ -66,6 +66,14 @@ if ($pdo instanceof PDO) {
     try {
         // Prefer 'title'; fallback to 'title' if 'title' not present.
         $titleExpr = '(CASE WHEN (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "articles" AND COLUMN_NAME = "title") > 0 THEN title ELSE title END)';
+        $limit = getenv('ARTICLE_LIMIT');
+        $limitInt = 5; // default
+        if ($limit !== false) {
+            $maybe = (int)$limit;
+            if ($maybe > 0 && $maybe < 5000) { // guardrail
+                $limitInt = $maybe;
+            }
+        }
         $sql = "SELECT 
                     ID        AS id,
                     $titleExpr AS title,
@@ -73,7 +81,8 @@ if ($pdo instanceof PDO) {
                     sources   AS sources,
                     date      AS date
                 FROM articles
-                ORDER BY date DESC, ID DESC";
+                ORDER BY date DESC, ID DESC
+                LIMIT $limitInt"; // Configurable latest N entries
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $articles = $stmt->fetchAll();
@@ -89,9 +98,21 @@ if (!is_dir($docsDir)) {
     mkdir($docsDir, 0777, true);
 }
 
-// 3. Write articles.json
-file_put_contents($docsDir . '/articles.json', json_encode($articles, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-logInfo('Generated docs/articles.json with ' . count($articles) . ' articles');
+// 3. Write articles.json only if changed (reduces pointless commits)
+$articlesPath = $docsDir . '/articles.json';
+$newJson = json_encode($articles, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+$write = true;
+if (file_exists($articlesPath)) {
+    $old = file_get_contents($articlesPath);
+    if ($old === $newJson) {
+        $write = false;
+        logInfo('articles.json unchanged; skipping rewrite');
+    }
+}
+if ($write) {
+    file_put_contents($articlesPath, $newJson);
+    logInfo('Generated docs/articles.json with ' . count($articles) . ' articles (updated)');
+}
 
 // Write build log for quick inspection via web if desired
 $logSummary = [

@@ -4,11 +4,24 @@ function generate_article(obj) {
     const root = document.createElement('div');
     const index = document.createElement('p');
     const title = document.createElement('h2');
+    const dateEl = document.createElement('p');
     const textbody = document.createElement('textarea');
     const sourcesWrapper = document.createElement('div');
 
     index.textContent = obj['id'];
     title.textContent = obj['title'];
+    let rawDate = obj['date'];
+    if (rawDate) {
+        try {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) {
+                const fmt = d.toLocaleDateString(undefined, {year:'numeric', month:'short', day:'2-digit'});
+                dateEl.textContent = fmt;
+            } else {
+                dateEl.textContent = rawDate;
+            }
+        } catch(_) { dateEl.textContent = rawDate; }
+    }
     textbody.textContent = obj['text_body'];
 
     // Parse sources: can be array, JSON string, or delimited string
@@ -71,12 +84,14 @@ function generate_article(obj) {
     root.setAttribute('class', 'article_root mb-2p');
     index.setAttribute('class', 'article_index mb-2p bg_light p-1p');
     title.setAttribute('class', 'article_title mb-2p bg_light p-1p');
+    if (dateEl.textContent) dateEl.setAttribute('class', 'article_date mb-2p');
     textbody.setAttribute('class', 'article_body mb-2p bg_light p-1p');
     textbody.setAttribute('readonly', '');
     textbody.style.resize = 'none';
 
     root.append(index);
     root.append(title);
+    if (dateEl.textContent) root.append(dateEl);
     root.append(textbody);
     root.append(sourcesWrapper);
     article_root.append(root);
