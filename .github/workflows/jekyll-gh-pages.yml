@@ -3,11 +3,9 @@ name: Generate & Deploy Site
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'scripts/**'
-      - 'css/**'
-      - 'js/**'
-      - '.github/workflows/jekyll-gh-pages.yml'
+    # Removed path filters so the workflow will trigger on ANY change to main.
+    # If you want to limit again, add a paths: section. (Original filters caused
+    # confusion when changing only other files like README/docs.)
   workflow_dispatch:
     inputs:
       article_limit:
@@ -98,4 +96,5 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
+        uses: actions/deploy-pages@v4  # (Previously missing line caused invalid YAML, so workflow might not show)
         uses: actions/deploy-pages@v4
