@@ -1,6 +1,6 @@
 // Firestore-only client implementation using modular v9 SDK via ESM imports.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-import { getFirestore, collection, getDocs, query, orderBy, limit as qLimit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, query, orderBy, limit as qLimit, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
 const article_root = document.getElementById('articles');
 
@@ -61,28 +61,103 @@ if (window.FIREBASE_CONFIG) {
   const app = initializeApp(window.FIREBASE_CONFIG);
   const db = getFirestore(app);
   const lim = window.ARTICLE_LIMIT || 10;
-  let qRef = query(collection(db, 'articles'), orderBy('date', 'desc'));
-  try {
-    qRef = query(collection(db, 'articles'), orderBy('date', 'desc'), orderBy('id', 'desc'));
-  } catch (_) {}
-  qRef = query(qRef, qLimit(lim));
-  const snap = await getDocs(qRef);
-  const out = [];
-  snap.forEach(doc => {
-    const d = doc.data() || {};
-    let dateVal = d.date;
-    if (dateVal && typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
-      dateVal = dateVal.toDate().toISOString().slice(0, 10);
+  const baseCol = collection(db, 'articles');
+  // Insert a container for the newsletters/news test value (field 'test')
+  let testContainer = document.getElementById('newsletter-test');
+  if(!testContainer){
+    testContainer = document.createElement('div');
+    testContainer.id = 'newsletter-test';
+    testContainer.style.margin = '12px 0';
+    testContainer.style.padding = '8px';
+    testContainer.style.background = '#222';
+    testContainer.style.color = '#fff';
+    testContainer.style.fontFamily = 'system-ui, Arial, sans-serif';
+    testContainer.textContent = 'Loading test value...';
+    article_root.before(testContainer);
+  }
+
+  async function loadTestField(){
+    try {
+      const ref = doc(db, 'newsletters', 'news'); // document path newsletters/news
+      console.debug('[loadTestField] Attempting to read document path: newsletters/news');
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        console.warn('[loadTestField] Document newsletters/news does not exist.');
+        testContainer.textContent = 'No newsletters/news document found.';
+        return;
+      }
+      const data = snap.data() || {};
+      if(Object.prototype.hasOwnProperty.call(data,'test')){
+        console.debug('[loadTestField] Retrieved field test with value:', data.test);
+        testContainer.textContent = 'test: ' + String(data.test);
+      } else {
+        console.warn('[loadTestField] Field "test" missing on newsletters/news. Available keys:', Object.keys(data));
+        testContainer.textContent = 'Field "test" not present on newsletters/news.';
+      }
+    } catch(e){
+      // Provide granular diagnostics
+      const code = e && e.code;
+      if(code === 'permission-denied'){
+        console.error('[loadTestField] Permission denied reading newsletters/news. This means current Firestore rules do not allow read access for unauthenticated users (or this user).', e);
+        testContainer.textContent = 'Permission denied reading newsletters/news. Update Firestore rules to allow read.';
+      } else {
+        console.error('[loadTestField] Unexpected error reading newsletters/news:', e);
+        testContainer.textContent = 'Error loading test field (' + (code || 'unknown') + ').';
+      }
+      // Extra debug context
+      console.debug('[loadTestField] FIREBASE_CONFIG projectId:', window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId);
     }
-    out.push(normalizeArticle({
-      id: d.id ?? doc.id,
-      title: d.title,
-      text_body: d.text_body || d.textBody,
-      sources: d.sources,
-      date: dateVal
-    }));
-  });
-  renderArticles(out);
+  }
+  let wantDualOrder = true;
+  let snap;
+  try {
+    // Attempt compound ordering date desc + id desc
+    let qRef = query(baseCol, orderBy('date', 'desc'), orderBy('id', 'desc'), qLimit(lim));
+    snap = await getDocs(qRef);
+  } catch (e) {
+    // Firestore index error code: failed-precondition
+    if (e && e.code === 'failed-precondition') {
+      wantDualOrder = false;
+      console.warn('[Firestore] Missing composite index for (date desc, id desc). Retrying with single order.');
+      // Fallback: only order by date
+      const qRef = query(baseCol, orderBy('date', 'desc'), qLimit(lim));
+      snap = await getDocs(qRef);
+      // Provide UI hint to create index
+      const hint = document.createElement('div');
+      hint.className = 'index-hint';
+      hint.style.background = '#332';
+      hint.style.color = '#f5c06e';
+      hint.style.padding = '8px';
+      hint.style.margin = '8px 0';
+      hint.style.fontSize = '0.85rem';
+      hint.innerHTML = 'Using fallback ordering (missing composite index date desc + id desc). Create index in Firebase Console > Firestore Indexes for collection "articles" with fields <code>date desc, id desc</code> to enable secondary ordering.';
+      article_root.before(hint);
+    } else {
+      console.error(e);
+      article_root.textContent = 'Error loading articles: ' + (e.message || e);
+      throw e;
+    }
+  }
+  if (snap) {
+    const out = [];
+    snap.forEach(doc => {
+      const d = doc.data() || {};
+      let dateVal = d.date;
+      if (dateVal && typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
+        dateVal = dateVal.toDate().toISOString().slice(0, 10);
+      }
+      out.push(normalizeArticle({
+        id: d.id ?? doc.id,
+        title: d.title,
+        text_body: d.text_body || d.textBody,
+        sources: d.sources,
+        date: dateVal
+      }));
+    });
+    renderArticles(out);
+  }
+  // Always attempt to load the newsletters/news document test field after articles
+  loadTestField();
 } else {
   article_root.textContent = 'Missing FIREBASE_CONFIG. Please set window.FIREBASE_CONFIG in index.html.';
 }

@@ -1,0 +1,26 @@
+// Firestore security rules
+// Read-only public access to articles and newsletters collections.
+// Everything else is denied.
+// Adjust if you later need authenticated writes.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public read-only articles
+    match /articles/{docId} {
+      allow read;
+      allow write: if false;
+    }
+
+    // Public read-only newsletters docs
+    match /newsletters/{docId} {
+      allow read;
+      allow write: if false;
+    }
+
+    // Deny everything else (must remain last)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
