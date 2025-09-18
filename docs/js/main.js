@@ -140,9 +140,10 @@ async function loadArticles() {
         renderArticles(window.result);
         return;
     }
-    // Otherwise try to fetch static JSON (GitHub Pages mode)
+    // Otherwise try to fetch static JSON (GitHub Pages mode) with cache-busting timestamp
     try {
-        const resp = await fetch('articles.json', {cache: 'no-store'});
+        const bust = Date.now();
+        const resp = await fetch(`articles.json?cb=${bust}`, {cache: 'no-store'});
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         renderArticles(data);
