@@ -1,53 +1,28 @@
-name: Build Static Articles
+###############################################################################
+# DEPRECATED WORKFLOW (build-static.yml)
+#
+# This workflow has been intentionally disabled and replaced by the unified
+# 'Generate & Deploy Site' workflow defined in jekyll-gh-pages.yml.
+#
+# It remains in the repository only because automated deletion via the current
+# assistant tooling did not persist. Safe to remove manually. Keeping it as a
+# no-op prevents any accidental duplicate builds or deploys.
+#
+# To remove: git rm .github/workflows/build-static.yml && git commit -m "chore: remove legacy workflow"
+#
+# If you trigger this manually it will exit immediately and do nothing.
+###############################################################################
+
+name: Deprecated - Build Static Articles (NO-OP)
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch: {}
-  schedule:
-    - cron: '0 */6 * * *' # every 6 hours
-
-permissions:
-  contents: write
 
 jobs:
-  build:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          extensions: pdo_mysql, pdo_sqlite
-          coverage: none
-
-      - name: Run build script
-        env:
-          MYSQL_HOST: ${{ secrets.MYSQL_HOST }}
-          MYSQL_DB: ${{ secrets.MYSQL_DB }}
-          MYSQL_USER: ${{ secrets.MYSQL_USER }}
-          MYSQL_PASS: ${{ secrets.MYSQL_PASS }}
-          MYSQL_PORT: ${{ secrets.MYSQL_PORT }}
+      - name: Show deprecation notice
         run: |
-          php scripts/build_articles.php
-
-      - name: Commit generated files
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git add docs/
-          if git diff --cached --quiet; then
-            echo "No changes to commit";
-          else
-            git commit -m "chore: generate static articles $(date -u +'%Y-%m-%dT%H:%M:%SZ')";
-            git push;
-          fi
-
-      - name: Upload artifact (optional)
-        uses: actions/upload-artifact@v4
-        with:
-          name: static-site
-          path: docs
+          echo "This workflow is deprecated and does nothing. Use 'Generate & Deploy Site' instead.";
+          exit 0
