@@ -29,7 +29,7 @@ function generate_article(obj) {
     } else {
         dateEl.textContent = '';
     }
-    textbody.textContent = obj['text_body'];
+    textbody.textContent = obj['text_body'].replaceAll("%%", "'");
 
     // Parse sources: can be array, JSON string, or delimited string
     let rawSources = obj['sources'];
