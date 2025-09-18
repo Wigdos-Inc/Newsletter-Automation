@@ -28,6 +28,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Sanity start
+        run: echo "Workflow initialized at $(date -u +'%Y-%m-%dT%H:%M:%SZ') on commit $GITHUB_SHA"
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -72,7 +74,16 @@ jobs:
             git config user.email 'actions@users.noreply.github.com'
             git add docs/
             git commit -m "content: refresh $(date -u +'%Y-%m-%dT%H:%M:%SZ')" || true
-            git push || true
+            echo "Attempting fast-forward safe push"
+            git fetch origin main
+            # Rebase to avoid merge commits; if it fails we abort and push with force-with-lease as last resort
+            if git rebase origin/main; then
+              git push origin HEAD:main || true
+            else
+              echo "Rebase failed; aborting and using force-with-lease"
+              git rebase --abort || true
+              git push --force-with-lease origin HEAD:main || true
+            fi
           else
             echo 'No doc changes to commit.'
           fi
