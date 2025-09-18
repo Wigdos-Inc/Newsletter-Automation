@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Articles (Live)</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <!-- Provide your public Firestore web config below. This object is NOT secret. -->
+  <script>
+    window.FIREBASE_CONFIG = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "your-project.firebaseapp.com",
+      projectId: "your-project",
+      appId: "YOUR_APP_ID"
+      // optional: storageBucket, messagingSenderId, measurementId, etc.
+    };
+    window.ARTICLE_LIMIT = 10; // adjust as desired
+  </script>
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <div id="header"><h1>AI Articles (Live from Firestore)</h1></div>
+  <div id="articles">Loading articles...</div>
+</body>
+</html>

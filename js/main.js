@@ -1,158 +1,92 @@
+// Firestore-only client implementation using modular v9 SDK via ESM imports.
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, orderBy, limit as qLimit } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
 const article_root = document.getElementById('articles');
 
-function generate_article(obj) {
-    const root = document.createElement('div');
-    const index = document.createElement('p');
-    const title = document.createElement('h2');
-    const dateEl = document.createElement('p');
-    const textbody = document.createElement('div');
-    const sourcesWrapper = document.createElement('div');
+function escapeHTML(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 
-    index.textContent = obj['id'];
-    title.textContent = obj['title'];
-    // Date formatting (expects YYYY-MM-DD or ISO). Fallback to raw value.
-    let rawDate = obj['date'];
-    if (rawDate) {
-        try {
-            // Normalize
-            const d = new Date(rawDate);
-            if (!isNaN(d.getTime())) {
-                // Format as e.g., 18 Sep 2025
-                const fmt = d.toLocaleDateString(undefined, {year:'numeric', month:'short', day:'2-digit'});
-                dateEl.textContent = fmt;
-            } else {
-                dateEl.textContent = rawDate;
-            }
-        } catch(_) {
-            dateEl.textContent = rawDate;
-        }
-    } else {
-        dateEl.textContent = '';
-    }
-    // Convert simple markdown-style **bold** and custom %% apostrophes to HTML
-    // 1. Replace custom apostrophe marker
-    // 2. Escape HTML
-    // 3. Convert **bold** segments
-    // 4. Convert newlines to <br>
-    const raw = (obj['text_body'] || '').toString();
-    function escapeHTML(str) {
-        return str
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-    }
-    let processed = raw.replaceAll('%%', "'");
-    processed = escapeHTML(processed);
-    // Bold: **text** (non-greedy). Avoid spanning newlines excessively.
-    processed = processed.replace(/\*\*(.+?)\*\*/g, (m, p1) => `<strong>${p1}</strong>`);
-    // Line breaks
-    processed = processed.replace(/\r\n|\r|\n/g, '<br>');
-    textbody.innerHTML = processed;
+function normalizeArticle(obj){
+  // Accepts raw Firestore doc data already shaped
+  const raw = (obj.text_body || obj.textBody || '').toString();
+  let processed = raw.replaceAll('%%', "'");
+  processed = escapeHTML(processed)
+    .replace(/\*\*(.+?)\*\*/g,(m,p1)=>`<strong>${p1}</strong>`) // bold
+    .replace(/\r\n|\r|\n/g,'<br>');
+  // Normalize sources
+  let links = [];
+  const s = obj.sources;
+  if (Array.isArray(s)) links = s; else if (typeof s === 'string') {
+    const trimmed = s.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try { const parsed = JSON.parse(trimmed); if (Array.isArray(parsed)) links = parsed; else links=[trimmed]; } catch { links=[trimmed]; }
+    } else if (/\n/.test(trimmed)) links = trimmed.split(/\n+/).map(x=>x.trim()).filter(Boolean);
+    else if (trimmed.includes(',')) links = trimmed.split(',').map(x=>x.trim()).filter(Boolean);
+    else if (trimmed.includes('|')) links = trimmed.split('|').map(x=>x.trim()).filter(Boolean);
+    else links = [trimmed];
+  }
+  const urlSet = new Set();
+  const validLinks = links.filter(l=>{ if(!l) return false; try { new URL(l); } catch { return false; } if(urlSet.has(l)) return false; urlSet.add(l); return true; });
+  return {
+    id: obj.id,
+    title: obj.title || '',
+    bodyHTML: processed,
+    date: obj.date || '',
+    sources: validLinks
+  };
+}
 
-    // Parse sources: can be array, JSON string, or delimited string
-    let rawSources = obj['sources'];
-    let links = [];
-    if (Array.isArray(rawSources)) {
-        links = rawSources;
-    } else if (typeof rawSources === 'string') {
-        const trimmed = rawSources.trim();
-        if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
-            try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed)) links = parsed; else links = [trimmed];
-            } catch (_) {
-                links = [trimmed];
-            }
-        } else if (trimmed.includes('\n')) {
-            links = trimmed.split(/\n+/).map(s => s.trim()).filter(Boolean);
-        } else if (trimmed.includes(',')) {
-            links = trimmed.split(',').map(s => s.trim()).filter(Boolean);
-        } else if (trimmed.includes('|')) {
-            links = trimmed.split('|').map(s => s.trim()).filter(Boolean);
-        } else {
-            links = [trimmed];
-        }
-    }
+function renderArticles(arr){
+  article_root.innerHTML='';
+  arr.forEach(a=>{
+    const root=document.createElement('div');
+    root.className='article_root mb-2p';
+    const idx=document.createElement('p'); idx.className='article_index mb-2p bg_light p-1p'; idx.textContent=a.id;
+    const title=document.createElement('h2'); title.className='article_title mb-2p bg_light p-1p'; title.textContent=a.title;
+    const date=document.createElement('p'); date.className='article_date mb-2p';
+    if(a.date){ try { const d=new Date(a.date); if(!isNaN(d.getTime())) date.textContent=d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'}); else date.textContent=a.date; } catch { date.textContent=a.date; } }
+    const body=document.createElement('div'); body.className='article_body mb-2p bg_light p-1p'; body.innerHTML=a.bodyHTML;
+    const sourcesWrapper=document.createElement('div');
+    if(a.sources.length){
+      sourcesWrapper.className='article_sources mb-2p bg_light p-1p';
+      a.sources.forEach((href,i)=>{ const link=document.createElement('a'); link.href=href; try { link.textContent=new URL(href).hostname.replace(/^www\./,''); } catch { link.textContent='Source '+(i+1);} link.target='_blank'; link.rel='noopener noreferrer'; link.className='article_source_link'; sourcesWrapper.append(link); if(i<a.sources.length-1) sourcesWrapper.append(document.createTextNode(' ')); });
+    } else { const none=document.createElement('span'); none.textContent='No sources'; sourcesWrapper.append(none); }
+    root.append(idx,title); if(date.textContent) root.append(date); root.append(body,sourcesWrapper); article_root.append(root);
+  });
+}
 
-    // Basic URL validation and unique filtering
-    const urlSet = new Set();
-    const validLinks = links.filter(l => {
-        if (!l) return false;
-        try { new URL(l); } catch { return false; }
-        if (urlSet.has(l)) return false;
-        urlSet.add(l);
-        return true;
+async function loadArticles(){
+  try {
+    if(!window.FIREBASE_CONFIG) throw new Error('Missing global FIREBASE_CONFIG');
+    const app = initializeApp(window.FIREBASE_CONFIG);
+    const db = getFirestore(app);
+    const lim = window.ARTICLE_LIMIT || 10;
+    let qRef = query(collection(db,'articles'), orderBy('date','desc'));
+    try { qRef = query(collection(db,'articles'), orderBy('date','desc'), orderBy('id','desc')); } catch(_) {}
+    qRef = query(qRef, qLimit(lim));
+    const snap = await getDocs(qRef);
+    const out=[];
+    snap.forEach(doc=>{
+      const d = doc.data() || {};
+      let dateVal = d.date;
+      if (dateVal && typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
+        dateVal = dateVal.toDate().toISOString().slice(0,10);
+      }
+      out.push(normalizeArticle({
+        id: d.id ?? doc.id,
+        title: d.title,
+        text_body: d.text_body || d.textBody,
+        sources: d.sources,
+        date: dateVal
+      }));
     });
-
-    if (validLinks.length === 0) {
-        const none = document.createElement('span');
-        none.textContent = 'No sources';
-        sourcesWrapper.append(none);
-    } else {
-        sourcesWrapper.setAttribute('class', 'article_sources mb-2p bg_light p-1p');
-        validLinks.forEach((href, i) => {
-            const a = document.createElement('a');
-            a.href = href;
-            let hostText = '';
-            try {
-                const u = new URL(href);
-                hostText = u.hostname.replace(/^www\./,'');
-            } catch { hostText = `Source ${i+1}`; }
-            a.textContent = hostText;
-            a.title = href;
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-            a.className = 'article_source_link';
-            sourcesWrapper.append(a);
-            if (i < validLinks.length - 1) {
-                const sep = document.createElement('span');
-                sep.textContent = ' '; // small gap
-                sourcesWrapper.append(sep);
-            }
-        });
-    }
-
-    root.setAttribute('class', 'article_root mb-2p');
-    index.setAttribute('class', 'article_index mb-2p bg_light p-1p');
-    title.setAttribute('class', 'article_title mb-2p bg_light p-1p');
-    dateEl.setAttribute('class', 'article_date mb-2p');
-    textbody.setAttribute('class', 'article_body mb-2p bg_light p-1p');
-
-    root.append(index);
-    root.append(title);
-    if (dateEl.textContent) root.append(dateEl);
-    root.append(textbody);
-    root.append(sourcesWrapper);
-    article_root.append(root);
-}
-
-function renderArticles(arr) {
-    if (!Array.isArray(arr)) return;
-    article_root.innerHTML = '';
-    for (let i = 0; i < arr.length; i++) {
-        generate_article(arr[i]);
-    }
-}
-
-async function loadArticles() {
-    // If server-side injected variable exists (PHP mode), use it.
-    if (typeof window.result !== 'undefined') {
-        renderArticles(window.result);
-        return;
-    }
-    // Otherwise try to fetch static JSON (GitHub Pages mode) with cache-busting timestamp
-    try {
-        const bust = Date.now();
-        const resp = await fetch(`articles.json?cb=${bust}`, {cache: 'no-store'});
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        renderArticles(data);
-    } catch (e) {
-        console.error('Failed to load articles.json', e);
-        const msg = document.createElement('p');
-        msg.textContent = 'Unable to load articles at this time.';
-        article_root.append(msg);
-    }
+    renderArticles(out);
+  } catch (err) {
+    console.error('Failed to load articles from Firestore', err);
+    article_root.textContent='Unable to load articles.';
+  }
 }
 
 loadArticles();

@@ -1,95 +1,79 @@
-# Newsletter Automation (Unified Build + Jekyll Deploy)
+# Newsletter Automation (Pure Firestore Client Version)
 
-The site is generated and deployed by a **single GitHub Actions workflow** that:
-1. Runs the PHP build script to pull the latest MySQL rows.
-2. Regenerates `docs/articles.json`, `docs/index.html`, and asset copies.
-3. Optionally commits changes (only if content changed).
-4. Builds & deploys the `docs/` directory with Jekyll to GitHub Pages.
+This simplified version loads articles directly from Firestore in the browser. No server-side build or static JSON generation is required. The only moving part is a single page (`index.html`) plus `js/main.js` which fetches and renders documents from the `articles` collection.
 
-You can trigger it by:
-- Pushing changes (scripts / css / js / workflow itself)
-- Manual run (workflow_dispatch) with an optional `article_limit` input
-- External webhook (`repository_dispatch` event_type: `deploy-site`)
+## How It Works
+1. `index.html` defines `window.FIREBASE_CONFIG` (public web config from your Firebase console) and optional `window.ARTICLE_LIMIT`.
+2. `js/main.js` (ES module) initializes Firebase App + Firestore using the modular v9 SDK delivered via CDN.
+3. It queries `articles` ordered by `date` desc (and `id` desc if that secondary field exists) with a limit.
+4. Results are normalized and rendered immediately into the DOM.
 
-## Database Table Schema
-Your MySQL `articles` table must contain:
+## Firestore Data Model
+Collection: `articles`
+Recommended document fields:
 ```
-ID (INT PRIMARY KEY AUTO_INCREMENT)
-title (VARCHAR)        -- mapped to frontend `title`
-text_body (TEXT)
-sources (TEXT or VARCHAR)
-date (DATETIME or DATE)
+id         (number|string)  // optional; falls back to doc.id
+title      (string)
+text_body  (string)
+sources    (array|string)   // array of URLs or delimited string
+date       (Timestamp|string)
 ```
-`ARTICLE_LIMIT` (default 5) can be overridden via manual dispatch input or repository_dispatch payload.
+`date` Firestore Timestamps are converted to `YYYY-MM-DD`.
 
-## Required GitHub Action Secrets
+## Example index.html Config Snippet
+Already included at the top of `index.html`:
 ```
-MYSQL_HOST
-MYSQL_DB
-MYSQL_USER
-MYSQL_PASS
-MYSQL_PORT   (optional, default 3306)
+<script>
+window.FIREBASE_CONFIG = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project",
+  appId: "YOUR_APP_ID"
+};
+window.ARTICLE_LIMIT = 10; // optional
+</script>
 ```
-Optional: `BUILD_ALLOW_EMPTY=1` if you want deployment even when zero rows.
+Replace values with your real Firebase web app configuration (public values – not secret).
 
-## Workflow
+## Security Rules (Public Read Example)
+Only use public read if data is non-sensitive:
 ```
-.github/workflows/jekyll-gh-pages.yml   # Unified build + deploy
-```
-Key steps inside the workflow:
-- Setup PHP → run `scripts/build_articles.php`
-- Commit changes in `docs/` if diffs exist
-- Jekyll build (`source: docs`) → upload artifact → deploy
-
-### Override ARTICLE_LIMIT Examples
-Manual dispatch (GitHub UI): provide input `article_limit=15`.
-Repository dispatch payload:
-```
-POST /repos/<owner>/<repo>/dispatches
-{
-  "event_type": "deploy-site",
-  "client_payload": { "article_limit": 25 }
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /articles/{docId} {
+      allow read; // PUBLIC READ (be cautious)
+    }
+  }
 }
 ```
+For restricted access, add auth (e.g. anonymous + rules, or custom claims) – not covered here.
 
-## Key Files
-```
-scripts/build_articles.php  # Pulls DB rows & writes static assets
-/docs/index.html            # Generated HTML shell
-/docs/articles.json         # Dataset consumed by JS
-/docs/css/ & /docs/js/      # Deployed assets
-/js/main.js                 # Rendering logic
-/css/main.css               # Styles
-/docs/_config.yml           # Jekyll config (docs as root)
-```
-
-## Frontend Rendering Notes
+## Rendering Features
 - `**bold**` → `<strong>`
 - `%%` → `'` apostrophe
 - Newlines → `<br>`
-- Sources auto-parse JSON array, newline, comma, or pipe delimiters
-- Cache busting added: `articles.json?cb=<timestamp>`
+- Sources parsed from array, JSON array string, newline, comma, or pipe-delimited formats
+- Duplicate + invalid URLs removed
 
-## Webhook Trigger (repository_dispatch)
-Endpoint:
+## File Overview
 ```
-POST https://api.github.com/repos/Wigdos-Inc/Newsletter-Automation/dispatches
-Headers: Authorization: Bearer <TOKEN>, Accept: application/vnd.github+json
-Body:
-{
-  "event_type": "deploy-site",
-  "client_payload": { "reason": "external refresh", "article_limit": 12 }
-}
+index.html        # Root page with Firebase config + script include
+js/main.js        # Firestore query + rendering logic (ES module)
+css/main.css      # Styles reused from earlier version
 ```
 
-## Customization Ideas
-- Pagination / multiple JSON pages
-- SEO & sitemap (add `jekyll-seo-tag`, `jekyll-sitemap` if needed)
-- Search index file
-- Feed (RSS/Atom) generation in PHP
+## Deployment
+Because everything is client-side, you can host via GitHub Pages (root) or any static host. No build step necessary.
 
-## Security
-Never commit credentials; secrets are injected at runtime.
+## Optional Enhancements
+- Real-time updates: switch one-time `getDocs` to `onSnapshot`.
+- Pagination / infinite scroll using query cursors.
+- Full-text search via an external index (Algolia / Meilisearch) or local mini-search.
+- Offline caching (Service Worker) for articles.
+
+## Switching Back to Static Build (If Needed)
+If you later want deterministic versioned snapshots (e.g., immutable archives), reintroduce a Node build script that queries Firestore with `firebase-admin` and writes `articles.json`. The current layout won’t conflict.
 
 ---
-Unified pipeline ready. Trigger manually, by push, or externally via `repository_dispatch`.
+Minimal Firestore client setup complete. Add your Firebase config and publish.
