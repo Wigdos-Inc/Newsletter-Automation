@@ -1,7 +1,5 @@
 const article_root = document.getElementById('articles');
 
-let articles = 0;
-
 function generate_article(obj) {
     const root = document.createElement('div');
     const index = document.createElement('p');
@@ -30,6 +28,32 @@ function generate_article(obj) {
     article_root.append(root);
 }
 
-for (let i = 0; i < result.length; i++){
-    generate_article(result[i]);
+function renderArticles(arr) {
+    if (!Array.isArray(arr)) return;
+    article_root.innerHTML = '';
+    for (let i = 0; i < arr.length; i++) {
+        generate_article(arr[i]);
+    }
 }
+
+async function loadArticles() {
+    // If server-side injected variable exists (PHP mode), use it.
+    if (typeof window.result !== 'undefined') {
+        renderArticles(window.result);
+        return;
+    }
+    // Otherwise try to fetch static JSON (GitHub Pages mode)
+    try {
+        const resp = await fetch('articles.json', {cache: 'no-store'});
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        renderArticles(data);
+    } catch (e) {
+        console.error('Failed to load articles.json', e);
+        const msg = document.createElement('p');
+        msg.textContent = 'Unable to load articles at this time.';
+        article_root.append(msg);
+    }
+}
+
+loadArticles();
