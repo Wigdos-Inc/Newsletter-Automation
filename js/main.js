@@ -9,13 +9,11 @@ function escapeHTML(str){
 }
 
 function normalizeArticle(obj){
-  // Accepts raw Firestore doc data already shaped
   const raw = (obj.text_body || obj.textBody || '').toString();
   let processed = raw.replaceAll('%%', "'");
   processed = escapeHTML(processed)
     .replace(/\*\*(.+?)\*\*/g,(m,p1)=>`<strong>${p1}</strong>`) // bold
     .replace(/\r\n|\r|\n/g,'<br>');
-  // Normalize sources
   let links = [];
   const s = obj.sources;
   if (Array.isArray(s)) links = s; else if (typeof s === 'string') {
@@ -57,36 +55,72 @@ function renderArticles(arr){
   });
 }
 
-async function loadArticles(){
-  try {
-    if(!window.FIREBASE_CONFIG) throw new Error('Missing global FIREBASE_CONFIG');
-    const app = initializeApp(window.FIREBASE_CONFIG);
-    const db = getFirestore(app);
-    const lim = window.ARTICLE_LIMIT || 10;
-    let qRef = query(collection(db,'articles'), orderBy('date','desc'));
-    try { qRef = query(collection(db,'articles'), orderBy('date','desc'), orderBy('id','desc')); } catch(_) {}
-    qRef = query(qRef, qLimit(lim));
-    const snap = await getDocs(qRef);
-    const out=[];
-    snap.forEach(doc=>{
-      const d = doc.data() || {};
-      let dateVal = d.date;
-      if (dateVal && typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
-        dateVal = dateVal.toDate().toISOString().slice(0,10);
-      }
-      out.push(normalizeArticle({
-        id: d.id ?? doc.id,
-        title: d.title,
-        text_body: d.text_body || d.textBody,
-        sources: d.sources,
-        date: dateVal
-      }));
-    });
-    renderArticles(out);
-  } catch (err) {
-    console.error('Failed to load articles from Firestore', err);
-    article_root.textContent='Unable to load articles.';
+async function initFirestore() {
+  const admin = require('firebase-admin');
+  if (!admin.apps.length) {
+    const credsMissing = !(process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY);
+    if (credsMissing) throw new Error('Missing environment variables for Firebase Admin SDK');
+    const { initializeApp, applicationDefault, cert } = require('firebase-admin/app');
+    const { getFirestore } = require('firebase-admin/firestore');
+    const serviceAccount = {
+      projectId: process.env.GC_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+    };
+    initializeApp({ credential: cert(serviceAccount) });
   }
+  const db = getFirestore();
+  const lim = window.ARTICLE_LIMIT || 10;
+  let qRef = query(collection(db, 'articles'), orderBy('date', 'desc'));
+  try {
+    qRef = query(collection(db, 'articles'), orderBy('date', 'desc'), orderBy('id', 'desc'));
+  } catch (_) {}
+  qRef = query(qRef, qLimit(lim));
+  const snap = await getDocs(qRef);
+  const out = [];
+  snap.forEach(doc => {
+    const d = doc.data() || {};
+    let dateVal = d.date;
+    if (dateVal && typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
+      dateVal = dateVal.toDate().toISOString().slice(0, 10);
+    }
+    out.push(normalizeArticle({
+      id: d.id ?? doc.id,
+      title: d.title,
+      text_body: d.text_body || d.textBody,
+      sources: d.sources,
+      date: dateVal
+    }));
+  });
+  renderArticles(out);
 }
 
-loadArticles();
+if (window.FIREBASE_CONFIG) {
+  const app = initializeApp(window.FIREBASE_CONFIG);
+  const db = getFirestore(app);
+  const lim = window.ARTICLE_LIMIT || 10;
+  let qRef = query(collection(db, 'articles'), orderBy('date', 'desc'));
+  try {
+    qRef = query(collection(db, 'articles'), orderBy('date', 'desc'), orderBy('id', 'desc'));
+  } catch (_) {}
+  qRef = query(qRef, qLimit(lim));
+  const snap = await getDocs(qRef);
+  const out = [];
+  snap.forEach(doc => {
+    const d = doc.data() || {};
+    let dateVal = d.date;
+    if (dateVal && typeof dateVal === 'object' && typeof dateVal.toDate === 'function') {
+      dateVal = dateVal.toDate().toISOString().slice(0, 10);
+    }
+    out.push(normalizeArticle({
+      id: d.id ?? doc.id,
+      title: d.title,
+      text_body: d.text_body || d.textBody,
+      sources: d.sources,
+      date: dateVal
+    }));
+  });
+  renderArticles(out);
+} else {
+  throw new Error('Missing global FIREBASE_CONFIG');
+}
