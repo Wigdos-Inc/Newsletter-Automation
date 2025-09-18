@@ -5,6 +5,10 @@
 
 declare(strict_types=1);
 
+function logInfo(string $msg): void { echo "[INFO] $msg\n"; }
+function logWarn(string $msg): void { fwrite(STDERR, "[WARN] $msg\n"); }
+function logError(string $msg): void { fwrite(STDERR, "[ERROR] $msg\n"); }
+
 // 1. Connect to MySQL (static-only mode expects MySQL; no SQLite fallback)
 $pdo = null;
 $mysqlHost = getenv('MYSQL_HOST') ?: '';
@@ -13,26 +17,58 @@ $mysqlUser = getenv('MYSQL_USER') ?: '';
 $mysqlPass = getenv('MYSQL_PASS') ?: '';
 $mysqlPort = getenv('MYSQL_PORT') ?: '3306';
 
-if ($mysqlHost && $mysqlDb && $mysqlUser) {
+logInfo('Starting static build...');
+logInfo('Checking required MySQL env vars (values hidden)...');
+foreach (['MYSQL_HOST'=>$mysqlHost,'MYSQL_DB'=>$mysqlDb,'MYSQL_USER'=>$mysqlUser,'MYSQL_PASS'=>$mysqlPass] as $k=>$v) {
+    if ($v === '') { logWarn("Env var $k is MISSING"); }
+}
+
+if ($mysqlHost && $mysqlDb && $mysqlUser && $mysqlPass !== '') {
     $dsn = "mysql:host={$mysqlHost};dbname={$mysqlDb};port={$mysqlPort};charset=utf8mb4";
     try {
         $pdo = new PDO($dsn, $mysqlUser, $mysqlPass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]);
+        logInfo('MySQL connection established.');
     } catch (Throwable $e) {
-        fwrite(STDERR, "MySQL connection failed: {$e->getMessage()}\n");
+        logError('MySQL connection failed: ' . $e->getMessage());
     }
 } else {
-    fwrite(STDERR, "Missing one or more MySQL env vars (MYSQL_HOST, MYSQL_DB, MYSQL_USER, MYSQL_PASS).\n");
+    logError('Missing one or more MySQL env vars (MYSQL_HOST, MYSQL_DB, MYSQL_USER, MYSQL_PASS).');
 }
 
 $articles = [];
 if ($pdo instanceof PDO) {
+    // Column sanity check to detect naming mismatches early
     try {
+        $colRows = $pdo->query('SHOW COLUMNS FROM articles');
+        $cols = $colRows ? $colRows->fetchAll(PDO::FETCH_COLUMN) : [];
+        $hasTitle  = in_array('title', $cols, true);
+        $hasTitels = in_array('titels', $cols, true); // legacy misspelling support
+        $expectedCore = ['ID','text_body','sources','date'];
+        $missingCore = array_diff($expectedCore, $cols);
+        if ($missingCore) {
+            logWarn('Missing required columns: ' . implode(', ', $missingCore));
+        }
+        if (!$hasTitle && !$hasTitels) {
+            logError("Neither 'title' nor legacy 'titels' column exists. Add one.");
+        } elseif ($hasTitle && $hasTitels) {
+            logWarn("Both 'title' and 'titels' exist; using 'title'. Consider dropping 'titels'.");
+        } elseif ($hasTitels) {
+            logWarn("Using legacy column 'titels'. Rename it to 'title' when possible.");
+        } else {
+            logInfo("Using 'title' column.");
+        }
+    } catch (Throwable $e) {
+        logWarn('Could not inspect columns: ' . $e->getMessage());
+    }
+    try {
+        // Prefer 'title'; fallback to 'titels' if 'title' not present.
+        $titleExpr = '(CASE WHEN (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = "articles" AND COLUMN_NAME = "title") > 0 THEN title ELSE titels END)';
         $sql = "SELECT 
                     ID        AS id,
-                    titels    AS title,
+                    $titleExpr AS title,
                     text_body AS text_body,
                     sources   AS sources,
                     date      AS date
@@ -41,8 +77,9 @@ if ($pdo instanceof PDO) {
         $stmt = $pdo->prepare($sql);
         $stmt->execute();
         $articles = $stmt->fetchAll();
+        logInfo('Fetched ' . count($articles) . ' articles.');
     } catch (Throwable $e) {
-        fwrite(STDERR, "Query failed: {$e->getMessage()}\n");
+        logError('Query failed: ' . $e->getMessage());
     }
 }
 
@@ -54,8 +91,28 @@ if (!is_dir($docsDir)) {
 
 // 3. Write articles.json
 file_put_contents($docsDir . '/articles.json', json_encode($articles, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+logInfo('Generated docs/articles.json with ' . count($articles) . ' articles');
 
-echo "Generated docs/articles.json with " . count($articles) . " articles\n";
+// Write build log for quick inspection via web if desired
+$logSummary = [
+    'timestamp_utc' => gmdate('c'),
+    'article_count' => count($articles),
+    'had_connection' => $pdo instanceof PDO,
+    'mysql_host_present' => $mysqlHost !== '',
+    'warnings' => []
+];
+if (!($pdo instanceof PDO)) { $logSummary['warnings'][] = 'No DB connection established'; }
+if (empty($articles)) { $logSummary['warnings'][] = 'Zero articles returned'; }
+file_put_contents($docsDir . '/build_log.json', json_encode($logSummary, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES));
+
+if (!($pdo instanceof PDO)) {
+    logError('Build failed: No database connection.');
+    exit(1);
+}
+if (count($articles) === 0 && getenv('BUILD_ALLOW_EMPTY') !== '1') {
+    logError('Build failed: Zero articles (set BUILD_ALLOW_EMPTY=1 to allow).');
+    exit(2);
+}
 
 // 4. Create static index.html (does not embed data; JS fetches articles.json)
 $indexHtml = <<<HTML
@@ -79,7 +136,7 @@ HTML;
 
 file_put_contents($docsDir . '/index.html', $indexHtml);
 
-echo "Wrote docs/index.html\n";
+logInfo('Wrote docs/index.html');
 
 // 5. Optionally copy assets (css/js) for Pages. We'll create shallow copies referencing root? Easiest: duplicate.
 function copyDir($src, $dest) {
@@ -100,6 +157,7 @@ function copyDir($src, $dest) {
 copyDir(__DIR__ . '/../css', $docsDir . '/css');
 copyDir(__DIR__ . '/../js', $docsDir . '/js');
 
-echo "Copied assets to docs/. Done.\n";
+logInfo('Copied assets to docs/. Done.');
+logInfo('Build completed successfully.');
 
 ?>

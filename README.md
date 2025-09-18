@@ -15,7 +15,7 @@ This repository now operates in **static-only** mode. A GitHub Actions workflow 
 Your MySQL `articles` table must contain:
 ```
 ID (INT PRIMARY KEY AUTO_INCREMENT)
-titels (VARCHAR)        -- mapped to frontend field `title`
+title (VARCHAR)        -- mapped to frontend field `title`
 text_body (TEXT)
 sources (TEXT or VARCHAR)
 date (DATETIME or DATE)
