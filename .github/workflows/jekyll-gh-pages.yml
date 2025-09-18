@@ -107,4 +107,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-  uses: actions/deploy-pages@v4  # (Previously missing line caused invalid YAML, so workflow might not show)
+        uses: actions/deploy-pages@v4  # Deploy Pages artifact
