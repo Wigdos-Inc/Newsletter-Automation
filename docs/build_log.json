@@ -1,7 +1,10 @@
 {
-    "timestamp_utc": "2025-09-18T12:38:49+00:00",
-    "article_count": 4,
-    "had_connection": true,
+    "timestamp_utc": "2025-09-18T13:51:01+00:00",
+    "article_count": 0,
+    "had_connection": false,
     "mysql_host_present": true,
-    "warnings": []
+    "warnings": [
+        "No DB connection established",
+        "Zero articles returned"
+    ]
 }
