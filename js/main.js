@@ -55,7 +55,13 @@ function generate_article(obj) {
         validLinks.forEach((href, i) => {
             const a = document.createElement('a');
             a.href = href;
-            a.textContent = `Source ${i+1}`;
+            let hostText = '';
+            try {
+                const u = new URL(href);
+                hostText = u.hostname.replace(/^www\./,'');
+            } catch { hostText = `Source ${i+1}`; }
+            a.textContent = hostText;
+            a.title = href;
             a.target = '_blank';
             a.rel = 'noopener noreferrer';
             a.className = 'article_source_link';
