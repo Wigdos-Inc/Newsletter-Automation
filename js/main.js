@@ -97,26 +97,32 @@ function buildArticleElement(a) {
   const root = document.createElement('div');
   root.className = 'article_root mb-2p';
 
+  // Header row: title (left) and date (top-right)
+  const header = document.createElement('div');
+  header.className = 'article_header mb-2p';
+
   const title = document.createElement('h2');
-  title.className = 'article_title mb-2p bg_light p-1p';
+  title.className = 'article_title';
   title.textContent = a.title;
 
   const date = document.createElement('p');
-  date.className = 'article_date mb-2p';
+  date.className = 'article_date';
   if (a.date) {
     try {
       const d = new Date(a.date);
       date.textContent = isNaN(d.getTime()) ? a.date : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
     } catch { date.textContent = a.date; }
   }
+  header.append(title);
+  if (date.textContent) header.append(date);
 
   const body = document.createElement('div');
-  body.className = 'article_body mb-2p bg_light p-1p';
+  body.className = 'article_body mb-2p';
   body.innerHTML = a.bodyHTML;
 
   const sourcesWrapper = document.createElement('div');
   if (a.sources.length) {
-    sourcesWrapper.className = 'article_sources mb-2p bg_light p-1p';
+    sourcesWrapper.className = 'article_sources mb-2p';
     a.sources.forEach((src, i) => {
       const link = document.createElement('a');
       link.href = src.href;
@@ -133,8 +139,7 @@ function buildArticleElement(a) {
     sourcesWrapper.append(none);
   }
 
-  root.append(title);
-  if (date.textContent) root.append(date);
+  root.append(header);
   root.append(body, sourcesWrapper);
   return root;
 }
