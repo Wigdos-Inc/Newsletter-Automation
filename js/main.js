@@ -5,6 +5,88 @@ import { getFirestore, collection, getDocs, query, orderBy, limit as qLimit } fr
 // ----- DOM -----
 const article_root = document.getElementById('articles');
 
+// ----- Body gradient segments (left gutter only, per-article height) -----
+function updateBodyGradient() {
+  try {
+    const articles = Array.from(document.querySelectorAll('#articles .article_root'));
+    const body = document.body;
+    if (!articles.length || !body) {
+      body.style.background = getComputedStyle(document.documentElement).getPropertyValue('--body-bg') || body.style.background;
+      return;
+    }
+
+    const container = document.getElementById('articles');
+    const gutterCSS = getComputedStyle(container).getPropertyValue('--gutter').trim();
+    const gutter = parseFloat(gutterCSS) || 16;
+    const pageTop = window.scrollY || 0; // absolute Y
+    const pageLeft = window.scrollX || 0; // absolute X
+    const containerRect = container.getBoundingClientRect();
+    const containerLeftAbs = containerRect.left + pageLeft; // absolute X for the container left edge
+
+  // Build layered backgrounds: per-article full-width segments on top, base page gradient underneath
+  const base = `var(--body-bg, linear-gradient(180deg, var(--bg) 0%, #0e141b 100%))`;
+  const segmentGradient = `var(--body-bg, linear-gradient(180deg, var(--bg) 0%, #0e141b 100%))`;
+  const layers = [];
+
+    // Precompute absolute rects
+    const abs = articles.map(el => {
+      const r = el.getBoundingClientRect();
+      return { top: r.top + pageTop, bottom: r.bottom + pageTop };
+    });
+    const epsilon = 0.5; // tiny overlap to avoid seams from subpixel rounding
+    const docHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.documentElement.clientHeight,
+      document.body ? document.body.scrollHeight : 0
+    );
+    const docWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.documentElement.clientWidth,
+      document.body ? document.body.scrollWidth : 0,
+      window.innerWidth || 0
+    );
+    const xStart = 0; // full width from the left edge
+    const stripeWidth = docWidth;
+
+    for (let i = 0; i < articles.length; i++) {
+      const cur = abs[i];
+      const prev = i > 0 ? abs[i - 1] : null;
+      const next = i < abs.length - 1 ? abs[i + 1] : null;
+
+      // Segment spans from midpoint with previous to midpoint with next
+      const segTop = prev ? (prev.bottom + cur.top) / 2 : cur.top;
+      const segBottom = next ? (cur.bottom + next.top) / 2 : cur.bottom;
+
+      let top = Math.max(0, segTop - epsilon);
+      let bottom = Math.min(docHeight, segBottom + epsilon);
+      let height = Math.max(1, bottom - top);
+
+      layers.push(
+        `${segmentGradient} no-repeat ${xStart}px ${top}px / ${stripeWidth}px ${height}px`
+      );
+    }
+
+    // Paint base last so it sits underneath the segments
+    layers.push(base);
+    body.style.background = layers.join(', ');
+    body.style.backgroundAttachment = 'scroll';
+    body.style.backgroundRepeat = 'no-repeat';
+  } catch (e) {
+    console.warn('updateBodyGradient failed:', e);
+  }
+}
+
+// rAF-based scroll throttling
+let _rafScheduled = false;
+function scheduleUpdate() {
+  if (_rafScheduled) return;
+  _rafScheduled = true;
+  requestAnimationFrame(() => {
+    _rafScheduled = false;
+    updateBodyGradient();
+  });
+}
+
 // ----- Helpers -----
 function escapeHTML(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -147,6 +229,8 @@ function buildArticleElement(a) {
 function renderArticles(list) {
   article_root.innerHTML = '';
   list.forEach(a => article_root.append(buildArticleElement(a)));
+  // Next frame to ensure layout is updated, then compute gradient segments
+  requestAnimationFrame(() => updateBodyGradient());
 }
 
 async function fetchNewsletters(db, limit) {
@@ -170,6 +254,10 @@ async function init() {
     const items = [];
     snap.forEach(ds => items.push(normalizeArticle(ds.id, ds.data() || {})));
     renderArticles(items);
+    // Update stripes after fonts/images settle and on resize
+    window.addEventListener('resize', scheduleUpdate, { passive: true });
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('load', updateBodyGradient);
   } catch (e) {
     if (e && e.code === 'permission-denied') {
       console.error('[Firestore] Permission denied reading newsletters. Check your rules for /newsletters/{docId}.', e);

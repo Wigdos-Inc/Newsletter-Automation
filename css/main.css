@@ -17,7 +17,9 @@ html, body { height: 100%; }
 body {
     margin: 0;
     font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    background: linear-gradient(180deg, var(--bg) 0%, #0e141b 100%);
+    /* base page gradient; JS will layer article-height stripes on top */
+    --body-bg: linear-gradient(180deg, var(--bg) 0%, #0e141b 100%);
+    background: var(--body-bg);
     color: var(--text);
 }
 
@@ -65,9 +67,11 @@ body {
 }
 
 #articles {
+    --gutter: 16px; /* controls the side padding/gutter */
     max-width: 900px;
     margin: 24px auto 56px;
-    padding: 0 16px;
+    padding: 0 var(--gutter);
+    position: relative;
 }
 
 .article_root {
@@ -144,7 +148,7 @@ body {
     .brand_title { font-size: 1rem; }
     .brand_subtitle { font-size: 0.8rem; }
 
-    #articles { margin: 16px auto 40px; padding: 0 12px; }
+    #articles { margin: 16px auto 40px; --gutter: 12px; padding: 0 var(--gutter); }
     .article_root { padding: 16px 16px 12px; }
     .article_header { align-items: flex-start; }
     .article_date { font-size: 0.8rem; }
