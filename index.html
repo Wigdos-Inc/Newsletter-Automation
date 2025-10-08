@@ -1,42 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Newswire</title>
-  <link rel="stylesheet" href="css/main.css" />
-  <!-- Modern font: Inter -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="mask-icon" href="favicon.svg" color="#6ea8fe">
-  <!-- Provide your public Firestore web config below. This object is NOT secret. -->
-  <script>
-    // Firebase public web configuration (safe to expose in client code)
-    window.FIREBASE_CONFIG = {
-      apiKey: "AIzaSyDwTtEXim-aq4PVXgICmJ_1vNT4r2Sbiao",
-      authDomain: "ai-newsletter-harvey.firebaseapp.com",
-      projectId: "ai-newsletter-harvey",
-      storageBucket: "ai-newsletter-harvey.appspot.com", // adjusted to standard bucket domain
-      messagingSenderId: "689124664412",
-      appId: "1:689124664412:web:216ae9547c86e97d807299",
-      measurementId: "G-065EP1B4R1"
-    };
-    window.ARTICLE_LIMIT = 10; // adjust as desired
-  </script>
-  <script type="module" src="js/main.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newswire AI</title>
 </head>
 <body>
-  <div id="header">
-    <div class="brand">
-      <img src="favicon.svg" alt="" class="brand_logo" width="24" height="24" />
-      <div class="brand_text">
-        <h1 class="brand_title">AI Newswire</h1>
-        <p class="brand_subtitle">Curated AI newsletters from Firestore</p>
-      </div>
-    </div>
-  </div>
-  <div id="articles">Loading articles...</div>
+  <div id="pageContent"></div>
+  
 </body>
 </html>

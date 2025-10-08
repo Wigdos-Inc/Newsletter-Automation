@@ -1,0 +1,1 @@
+const contentBox = document.getElementById("pageContent");
