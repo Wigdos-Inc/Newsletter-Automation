@@ -3,7 +3,7 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$servername = "";
+$servername = "localhost:3306";
 $username = "newsletter";
 $password = "35kwJILTx4IXYeNB2Oqs";
 $dbname = "program_table_db";
