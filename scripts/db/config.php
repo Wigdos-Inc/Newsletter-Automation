@@ -3,10 +3,10 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-$servername = "localhost:3306";
+$servername = "localhost";
 $username = "newsletter";
 $password = "35kwJILTx4IXYeNB2Oqs";
-$dbname = "program_table_db";
+$dbname = "Newsletter_Automation";
 
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
