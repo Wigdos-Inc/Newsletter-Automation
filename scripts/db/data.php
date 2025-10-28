@@ -53,18 +53,22 @@ $categories = iniData(
     "SELECT * FROM tab_categories", 
     'category_ID', 
     [
+        'contributors' => [],
         'favorited_by' => [],
         'newsletters'  => []
     ]
 );
-$creators = iniData(
+$users = iniData(
     $pdo,
-    "SELECT user_ID, username, creation_date FROM tab_users WHERE role = 'admin' OR role = 'owner'", 
+    "SELECT user_ID, username, creation_date, role FROM tab_users", 
     'user_ID', 
     [
-        'newsletters'   => [],
-        'contributions' => [],
-        'categories'    => []
+        'f_newsletters' => [],
+        'f_categories'  => [],
+        'f_users'       => [],
+        'c_newsletters' => [],
+        'c_categories'  => [],
+        'favorited_by'  => []
     ]
 );
 
@@ -72,27 +76,39 @@ $creators = iniData(
 
 /* === Connection Table Queries === */
 
-// Many-to-Many Connections:
-# Newsletters-Categories
-# Newsletters-Contributors
-# User Favorites-Newsletters
-# User Favorites-Categories
-# User Favorites-Creators
-
-// Loop Prep
+// Loop Structure
 $loopStruc = [
-    'tables'     => ['con_newsletter_categories', 'con_user_newsletters'],
+    'tables'     => [                   // Many-to-Many
+        'con_newsletter_categories',    // 0: Newsletters-Categories
+        'con_user_newsletters',         // 1: Newsletters-Contributors
+        'con_user_categories',          // 2: Categories-Contributors
+        'con_favorites_newsletters',    // 3: User Favorites-Newsletters
+        'con_favorites_categories',     // 4: User Favorites-Categories
+        'con_favorites_creators'        // 5: User Favorites-Creators
+    ],
     'idKeys'     => [
-        ['newsletter_ID', 'category_ID'],
-        ['newsletter_ID', 'user_ID']
+        ['newsletter_ID', 'category_ID'],      // 0
+        ['user_ID', 'newsletter_ID'],          // 1
+        ['user_ID', 'category_ID'],            // 2
+        ['user_ID', 'newsletter_ID'],          // 3
+        ['user_ID', 'category_ID'],            // 4
+        ['user_ID', 'favorite_user_ID']        // 5
     ],
     'targets'    => [
-        [&$newsletters, &$categories],
-        [&$newsletters, &$creators]
+        [&$newsletters, &$categories],         // 0
+        [&$users, &$newsletters],              // 1
+        [&$users, &$categories],               // 2
+        [&$users, &$newsletters],              // 3
+        [&$users, &$categories],               // 4
+        [&$users, &$users]                     // 5
     ],
     'properties' => [
-        ['categories', 'newsletters'],
-        ['contributors', 'newsletters']
+        ['categories', 'newsletters'],         // 0
+        ['c_newsletters', 'contributors'],     // 1
+        ['c_categories', 'contributors'],      // 2
+        ['f_newsletters', 'favorited_by'],     // 3
+        ['f_categories', 'favorited_by'],      // 4
+        ['f_users', 'favorited_by']            // 5
     ]
 ];
 
@@ -100,24 +116,21 @@ $loopStruc = [
 for ($i=0; $i < count($loopStruc['tables']); $i++) {
 
     // Iterate through Table Rows
-    try {
-        foreach($pdo->query("SELECT * FROM {$loopStruc['tables'][$i]}", PDO::FETCH_ASSOC) as $row) {
+    foreach($pdo->query("SELECT * FROM {$loopStruc['tables'][$i]}", PDO::FETCH_ASSOC) as $row) {
 
-            // Easier Access
-            $ids   = [$row[$loopStruc['idKeys'][$i][0]], $row[$loopStruc['idKeys'][$i][1]]];
-            $tgts  = &$loopStruc['targets'][$i];
-            $props = $loopStruc['properties'][$i];
+        // Easier Access
+        $ids   = [$row[$loopStruc['idKeys'][$i][0]], $row[$loopStruc['idKeys'][$i][1]]];
+        $tgts  = &$loopStruc['targets'][$i];
+        $props = $loopStruc['properties'][$i];
 
-            // Focus Left-ID (AI Assisted)
-            $tgts[0][$ids[0]][$props[0]][] = $ids[1];
+        // Push Data
+        for ($i2=0; $i2 < 2; $i2++) $tgts[$i2][$ids[$i2]][$props[$i2]][] = $ids[1-$i2];
 
-            // Focus Right-ID (AI Assisted)
-            $tgts[1][$ids[1]][$props[1]][] = $ids[0];
-        }
-    }
-    catch (PDOException $e) {
-        echo "Error: " . $e;
-        echo "Table: " . $loopStruc['tables'][$i];
+        // Focus Left-ID (AI Assisted)
+        //$tgts[0][$ids[0]][$props[0]][] = $ids[1];
+
+        // Focus Right-ID (AI Assisted)
+        //$tgts[1][$ids[1]][$props[1]][] = $ids[0];
     }
 }
 

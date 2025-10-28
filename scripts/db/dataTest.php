@@ -8,6 +8,8 @@ echo "--- NEWSLETTERS ---\n";
 print_r($newsletters);
 echo "\n--- CATEGORIES ---\n";
 print_r($categories);
-echo "\n--- CREATORS ---\n";
-print_r($creators);
+echo "\n--- Users ---\n";
+print_r($users);
 echo "</pre>\n";
+
+// https://102871.stu.sd-lab.nl/beroeps/newsletters/scripts/db/dataTest.php
