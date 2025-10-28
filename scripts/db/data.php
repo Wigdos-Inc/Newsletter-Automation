@@ -16,7 +16,7 @@ $userID = isset($_SESSION['userID']) ? intval($_SESSION['userID']) : null;
 if (!$dbStatus) die("No DB Connection");
 
 // Prep Query Function
-function iniData(PDO $pdo, string $query, string $idKey, array $extra): array {
+function iniData(PDO $pdo, string $query, string $idKey, array $extra) {
 
     $output = [];
     foreach ($pdo->query($query, PDO::FETCH_ASSOC) as $row) {
@@ -100,91 +100,26 @@ $loopStruc = [
 for ($i=0; $i < count($loopStruc['tables']); $i++) {
 
     // Iterate through Table Rows
-    foreach($pdo->query("SELECT * FROM {$loopStruc['tables'][$i]}", PDO::FETCH_ASSOC) as $row) {
+    try {
+        foreach($pdo->query("SELECT * FROM {$loopStruc['tables'][$i]}", PDO::FETCH_ASSOC) as $row) {
 
-        // Easier Access
-        $ids   = [$row[$loopStruc['idKeys'][$i][0]], $row[$loopStruc['idKeys'][$i][1]]];
-        $tgts  = &$loopStruc['targets'][$i];
-        $props = $loopStruc['properties'][$i];
+            // Easier Access
+            $ids   = [$row[$loopStruc['idKeys'][$i][0]], $row[$loopStruc['idKeys'][$i][1]]];
+            $tgts  = &$loopStruc['targets'][$i];
+            $props = $loopStruc['properties'][$i];
 
-        // Focus Left-ID (AI Assisted)
-        $tgts[0][$ids[0]][$props[0]][] = $ids[1];
+            // Focus Left-ID (AI Assisted)
+            $tgts[0][$ids[0]][$props[0]][] = $ids[1];
 
-        // Focus Right-ID (AI Assisted)
-        $tgts[1][$ids[1]][$props[1]][] = $ids[0];
+            // Focus Right-ID (AI Assisted)
+            $tgts[1][$ids[1]][$props[1]][] = $ids[0];
+        }
+    }
+    catch (PDOException $e) {
+        echo "Error: " . $e;
+        echo "Table: " . $loopStruc['tables'][$i];
     }
 }
 
 
-
-/* Structure Examples:
-
-$newsletters = [
-    '1' => [
-        'newsletter_ID' => 1,
-        'title'         => 'Weekly Tech Digest',
-        'content'       => 'Newsletter content here...',
-        'status'        => 'published',
-        'creation_date' => '2025-01-15',
-        'user_ID'       => 5,
-        'contributors'  => [],
-        'favorited_by'  => [],
-        'categories'    => [2, 5, 8]  // Category IDs
-    ],
-    '2' => [
-        'newsletter_ID' => 2,
-        'title'         => 'Design Weekly',
-        'content'       => 'More content...',
-        'status'        => 'draft',
-        'creation_date' => '2025-02-20',
-        'user_ID'       => 3,
-        'contributors'  => [],
-        'favorited_by'  => [],
-        'categories'    => [1, 3]
-    ]
-];
-$categories = [
-    '1' => [
-        'category_ID'   => 1,
-        'name'          => 'Technology',
-        'user_ID'       => 5,
-        'favorited_by'  => [2, 4, 6],
-        'newsletters'   => [2, 3]
-    ],
-    '2' => [
-        'category_ID'   => 2,
-        'name'          => 'Design',
-        'user_ID'       => 3,
-        'favorited_by'  => [4, 11],
-        'newsletters'   => [1, 5, 6]
-    ]
-];
-$creators = [
-    '3' => [
-        'user_ID'       => 3,
-        'username'      => 'john',
-        'role'          => 'admin'
-        'creation_date' => '2024-06-10',
-        'newsletters'   => [],
-        'contributions' => [],
-        'categories'    => []
-    ],
-    '5' => [
-        'user_ID'       => 5,
-        'username'      => 'sarah',
-        'role'          => 'owner'
-        'creation_date' => '2024-05-01',
-        'newsletters'   => [],
-        'contributions' => [],
-        'categories'    => []
-    ]
-];
-
-*/
-
-
-
-// Display data for testing
-#echo "<pre>";
-#print_r($data);
-#echo "</pre>";
+// To see raw data structure, open: https://102871.stu.sd-lab.nl/beroeps/newsletters/scripts/db/dataTest.php
