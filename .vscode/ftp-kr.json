@@ -1,0 +1,14 @@
+{
+    "host": "web03.sd-lab.nl",
+    "username": "nam",
+    "password": "6B2y0q8&z",
+    "remotePath": "/",
+    "protocol": "ftp",
+    "port": 21,
+    "fileNameEncoding": "utf8",
+    "autoUpload": true,
+    "autoDelete": true,
+    "autoDownload": true,
+    "ignore": [],
+    "ignoreJsonUploadCaution": true
+}
