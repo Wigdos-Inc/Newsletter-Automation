@@ -4,8 +4,7 @@
 // DB Connect
 require_once 'config.php';
 
-// Start Session (If necessary) & Get User ID
-if (session_status() === PHP_SESSION_NONE) session_start();
+// Get UserID
 $userID = isset($_SESSION['userID']) ? intval($_SESSION['userID']) : null;
 
 

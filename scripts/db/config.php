@@ -25,6 +25,9 @@ try {
     $pdo = new PDO("mysql:host=$servername;dbname=$dbname",$username,$password,$options);
     $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
     $dbStatus = true;
+    
+    // Start Session (If necessary) & Get User ID
+    if (session_status() === PHP_SESSION_NONE) session_start();
     //echo "SQLite database is connected! ";
 } catch (PDOException $e){
     echo "Connection Failed: " . $e->getMessage();
