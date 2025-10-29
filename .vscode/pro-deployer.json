@@ -2,7 +2,7 @@
 	"enableStatusBarItem": true,
 	"enableQuickPick": true,
 	"uploadOnSave": true,
-	"autoDelete": true,
+	"autoDelete": false,
 	"checkGitignore": false,
 	"activeTargets": [
 		"school"

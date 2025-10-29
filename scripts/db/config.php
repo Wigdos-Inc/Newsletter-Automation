@@ -15,6 +15,8 @@ $dbStatus = null;
 # Username: newsletter
 # Password: 35kwJILTx4IXYeNB2Oqs
 
+// Homepage: https://102871.stu.sd-lab.nl/beroeps/newsletters/
+
 $options = [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -25,7 +27,7 @@ try {
     $pdo = new PDO("mysql:host=$servername;dbname=$dbname",$username,$password,$options);
     $pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
     $dbStatus = true;
-    
+
     // Start Session (If necessary) & Get User ID
     if (session_status() === PHP_SESSION_NONE) session_start();
     //echo "SQLite database is connected! ";

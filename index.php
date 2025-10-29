@@ -1,3 +1,5 @@
+<?php require_once 'scripts/db/data.php'; ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +8,7 @@
   <link rel="stylesheet" href="bootstrap-5.3.6-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="styling/main.css">
   <link rel="stylesheet" href="styling/index.css">
-  <title>NEWSfeedAI AI</title>
+  <title>Newswire AI</title>
 </head>
 <body>
 
@@ -18,12 +20,12 @@
         <!-- Logo -->
         <div class="d-flex align-items-center">
           <img src="#" alt="Logo" class="me-2">
-          <span class="fw-bold fs-5 d-none d-md-inline">Newsletter Automation NEWSfeedAI</span>
+          <span class="fw-bold fs-5 d-none d-md-inline">Newswire AI</span>
         </div>
-
+        
         <!-- Desktop Navigation -->
         <nav class="d-none d-md-flex gap-3">
-          <a href="#" class="nav-link text-dark">Home</a>
+          <a href="https://102871.stu.sd-lab.nl/beroeps/newsletters/" class="nav-link text-dark">Home</a>
           <a href="#" class="nav-link text-dark">Results</a>
           <a href="#" class="nav-link text-dark">Inbox</a>
           <a href="#" class="nav-link text-dark">Login</a>
@@ -65,8 +67,8 @@
       <div class="row justify-content-center mb-5">
         <div class="col-12 text-center">
           <span class="custom-badge mb-3 d-inline-block">Our Services</span>
-          <h2 class="display-5 fw-bold mb-3">AI Letter Automation</h2>
-          <p class="text-muted">Discover our range of professional newsletters tailored to your needs</p>
+          <h2 class="display-5 fw-bold mb-3">AI Driven Newsletter Automation</h2>
+          <p class="text-muted">Discover our range of user-generated newsletters tailored to your interests!</p>
         </div>
       </div>
 
