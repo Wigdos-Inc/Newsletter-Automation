@@ -1,0 +1,28 @@
+{
+	"enableStatusBarItem": true,
+	"enableQuickPick": true,
+	"uploadOnSave": true,
+	"autoDelete": true,
+	"checkGitignore": false,
+	"activeTargets": [
+		"school"
+	],
+	"concurrency": 5,
+	"ignore": [
+	],
+	"include": [],
+	"targets": [
+		{
+			"name": "school",
+			"type": "ftp",
+			"host": "web03.sd-lab.nl",
+			"port": 21,
+			"user": "nam",
+			"password": "6B2y0q8&z",
+			"dir": "/",
+			"baseDir": "/",
+			"privateKey": null,
+			"passphrase": null
+		}
+	]
+}
