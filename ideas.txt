@@ -1,0 +1,3 @@
+Structure Changes:
+- index.php becomes global page structure, rest is shown through a mainContent iframe
+- DB Data is requested/sent through JS and added to localStorage (so only need 1 DB interaction instead of every page)
