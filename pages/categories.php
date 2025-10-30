@@ -4,8 +4,8 @@
   <base href="../">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="/bootstrap-5.3.6-dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="/styling/main.css">
+  <link rel="stylesheet" href="bootstrap-5.3.6-dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="styling/main.css">
   <title>Results / Categories</title>
 </head>
 <body>
