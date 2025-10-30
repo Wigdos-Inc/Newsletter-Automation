@@ -9,6 +9,7 @@
 	],
 	"concurrency": 5,
 	"ignore": [
+		".git/**"
 	],
 	"include": [],
 	"targets": [
