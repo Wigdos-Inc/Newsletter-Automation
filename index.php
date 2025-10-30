@@ -26,10 +26,10 @@
         
         <!-- Desktop Navigation -->
         <nav class="d-none d-md-flex gap-3">
-          <a href="https://102871.stu.sd-lab.nl/beroeps/newsletters/" class="nav-link text-dark">Home</a>
-          <a href="#" class="nav-link text-dark">Results</a>
-          <a href="#" class="nav-link text-dark">Inbox</a>
-          <a href="#" class="nav-link text-dark">Login</a>
+          <a href="#" data-page="pages/newsletters.php" class="nav-link text-dark">Home</a>
+          <a href="#" data-page="pages/categories.php" class="nav-link text-dark">Results</a>
+          <a href="#" data-page="pages/newsletters.php" class="nav-link text-dark">Inbox</a>
+          <a href="#" data-page="pages/newsletters.php" class="nav-link text-dark">Login</a>
         </nav>
 
         <!-- Right Section -->
@@ -45,12 +45,12 @@
       </div>
 
       <!-- Mobile Menu -->
-      <div id="mobileMenu" class="d-md-none mt-3">
+      <div id="mobileMenu" class="d-md-none mt-3" style="display:none;">
         <nav class="d-flex flex-column align-items-center gap-2 mb-3">
-          <a href="#" class="nav-link text-dark">Home</a>
-          <a href="#" class="nav-link text-dark">results</a>
-          <a href="#" class="nav-link text-dark">inbox</a>
-          <a href="#" class="nav-link text-dark">Login</a>
+          <a href="#" data-page="pages/newsletters.php" class="nav-link text-dark">Home</a>
+          <a href="#" data-page="pages/categories.php" class="nav-link text-dark">Results</a>
+          <a href="#" data-page="pages/newsletters.php" class="nav-link text-dark">Inbox</a>
+          <a href="#" data-page="pages/newsletters.php" class="nav-link text-dark">Login</a>
         </nav>
         <div class="d-flex flex-column gap-2 mb-3">
           <a href="#" class="btn w-100"><i class="ri-login-circle-line"></i></a>
@@ -64,47 +64,7 @@
   <!-- Main Content -->
   <main class="flex-grow-1 py-5">
     <div class="container">
-      <!-- Header Text -->
-      <div class="row justify-content-center mb-5">
-        <div class="col-12 text-center">
-          <span class="custom-badge mb-3 d-inline-block">Our Services</span>
-          <h2 class="display-5 fw-bold mb-3">AI Driven Newsletter Automation</h2>
-          <p class="text-muted">Discover our range of user-generated newsletters tailored to your interests!</p>
-        </div>
-      </div>
-
-      <!-- Service Cards -->
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="service-card h-100 p-4">
-            <div class="icon-wrapper mb-4">
-              <i class="bi bi-laptop"></i>
-            </div>
-            <h4 class="service-title text-center mb-3">Web Development</h4>
-            <p class="service-text text-center mb-0">Create stunning, responsive websites tailored to your brand's vision and goals.</p>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="service-card h-100 p-4">
-            <div class="icon-wrapper mb-4">
-              <i class="bi bi-phone"></i>
-            </div>
-            <h4 class="service-title text-center mb-3">Mobile Apps</h4>
-            <p class="service-text text-center mb-0">Build powerful mobile applications that engage users and drive results.</p>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="service-card h-100 p-4">
-            <div class="icon-wrapper mb-4">
-              <i class="bi bi-graph-up"></i>
-            </div>
-            <h4 class="service-title text-center mb-3">Analytics</h4>
-            <p class="service-text text-center mb-0">Transform your newsletters into actionable insights with advanced analytics solutions.</p>
-          </div>
-        </div>
-      </div>
+      <iframe id="pageContent" src="pages/newsletters.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
     </div>
   </main>
 
@@ -166,5 +126,7 @@
     </div>
   </footer>
 
+  <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
+  <script src="scripts/main.js"></script>
 </body>
 </html>
