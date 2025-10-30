@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="bootstrap-5.3.6-dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="styling/main.css">
   <link rel="stylesheet" href="styling/index.css">
+  <link rel="shortcut icon" href="media/images/icons/favicon.svg" type="image/x-icon">
   <title>Newswire AI</title>
 </head>
 <body>
@@ -19,7 +20,7 @@
 
         <!-- Logo -->
         <div class="d-flex align-items-center">
-          <img src="#" alt="Logo" class="me-2">
+          <img src="media/images/icons/favicon.svg" alt="Logo" class="me-2">
           <span class="fw-bold fs-5 d-none d-md-inline">Newswire AI</span>
         </div>
         
