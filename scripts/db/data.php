@@ -124,17 +124,8 @@ for ($i=0; $i < count($loopStruc['tables']); $i++) {
 
         // Push Data
         for ($i2=0; $i2 < 2; $i2++) $tgts[$i2][$ids[$i2]][$props[$i2]][] = $ids[1-$i2];
-
-        // Focus Left-ID (AI Assisted)
-        //$tgts[0][$ids[0]][$props[0]][] = $ids[1];
-
-        // Focus Right-ID (AI Assisted)
-        //$tgts[1][$ids[1]][$props[1]][] = $ids[0];
     }
 }
 
 // Put Data in Session
 foreach (['newsletters' => &$newsletters, 'categories' => &$categories, 'users' => &$users] as $target => $data) $_SESSION[$target] = $data;
-
-
-// To see raw data structure, open: https://102871.stu.sd-lab.nl/beroeps/newsletters/scripts/db/dataTest.php
