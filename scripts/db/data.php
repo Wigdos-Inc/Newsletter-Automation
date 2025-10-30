@@ -133,5 +133,8 @@ for ($i=0; $i < count($loopStruc['tables']); $i++) {
     }
 }
 
+// Put Data in Session
+foreach (['newsletters' => &$newsletters, 'categories' => &$categories, 'users' => &$users] as $target => $data) $_SESSION[$target] = $data;
+
 
 // To see raw data structure, open: https://102871.stu.sd-lab.nl/beroeps/newsletters/scripts/db/dataTest.php
