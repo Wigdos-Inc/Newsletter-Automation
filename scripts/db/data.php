@@ -71,6 +71,16 @@ $users = iniData(
     ]
 );
 
+// Get Inbox Items
+$inboxAmount;
+if ($userID) {
+
+    $stmt = $pdo->prepare("SELECT * FROM tab_inbox WHERE user_ID = ? AND status = 'unread'");
+    $stmt->execute([$userID]);
+    $inboxAmount = $stmt->rowCount();
+
+}
+
 
 
 /* === Connection Table Queries === */
