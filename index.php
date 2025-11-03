@@ -304,50 +304,34 @@
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
     const sidebarLinks = document.querySelectorAll('.sidebar-link');
 
-    // Toggle sidebar
+    // Toggle sidebar - pushes content instead of overlaying
+    function toggleSidebar() {
+      sidebar.classList.toggle('active');
+      document.body.classList.toggle('sidebar-open');
+    }
+
     if (sidebarOpenBtn) {
       sidebarOpenBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        sidebar.classList.toggle('active');
-        sidebarOverlay.classList.toggle('active');
+        toggleSidebar();
       });
     }
 
-    // Close sidebar
-    function closeSidebar() {
-      sidebar.classList.remove('active');
-      sidebarOverlay.classList.remove('active');
-    }
-
     if (sidebarToggle) {
-      sidebarToggle.addEventListener('click', closeSidebar);
+      sidebarToggle.addEventListener('click', toggleSidebar);
     }
 
-    if (sidebarOverlay) {
-      sidebarOverlay.addEventListener('click', closeSidebar);
-    }
-
-    // Handle sidebar link clicks
+    // Handle sidebar link clicks - stays open
     sidebarLinks.forEach(link => {
       link.addEventListener('click', function(e) {
         // Remove active class from all links
         sidebarLinks.forEach(l => l.classList.remove('active'));
         // Add active class to clicked link
         this.classList.add('active');
-        
-        // Close sidebar after clicking
-        closeSidebar();
+        // Sidebar stays open - don't close it
       });
-    });
-
-    // Close sidebar on escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && sidebar.classList.contains('active')) {
-        closeSidebar();
-      }
     });
   </script>
 </body>
