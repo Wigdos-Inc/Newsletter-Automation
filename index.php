@@ -19,10 +19,20 @@
     <div class="container">
       <div class="d-flex justify-content-between align-items-center">
 
-        <!-- Logo -->
-        <div class="logo-section">
-          <img src="media/images/icons/favicon.svg" alt="Logo" class="header-logo">
-          <span class="logo-text d-none d-md-inline ms-2">Newswire AI</span>
+        <!-- Left Section with Hamburger and Logo -->
+        <div class="d-flex align-items-center gap-3">
+          <!-- Hamburger Menu Button -->
+          <button class="sidebar-open-btn" id="sidebarOpenBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <!-- Logo -->
+          <div class="logo-section">
+            <img src="media/images/icons/favicon.svg" alt="Logo" class="header-logo">
+            <span class="logo-text d-none d-md-inline ms-2">Newswire AI</span>
+          </div>
         </div>
         
         <!-- Desktop Search Bar (centered) -->
@@ -119,8 +129,73 @@
     </div>
   </header>
 
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h5 class="sidebar-title">Navigation</h5>
+      <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="#" class="sidebar-link active" data-page="pages/newsletters.php">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pages/categories.php">
+        <i class="fas fa-th-large"></i>
+        <span>Categories</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pages/newsletters.php">
+        <i class="fas fa-newspaper"></i>
+        <span>Newsletters</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pages/searchResults.php">
+        <i class="fas fa-search"></i>
+        <span>Search</span>
+      </a>
+      
+      <div class="sidebar-divider"></div>
+      
+      <a href="#" class="sidebar-link" data-page="pages/inbox.php">
+        <i class="fas fa-inbox"></i>
+        <span>Inbox</span>
+        <?php if (isset($inboxAmount) && $inboxAmount > 0): ?>
+          <span class="sidebar-badge"><?php echo $inboxAmount; ?></span>
+        <?php endif; ?>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
+      
+      <div class="sidebar-divider"></div>
+      
+      <a href="#" class="sidebar-link" data-page="pages/login_view.php">
+        <i class="fas fa-sign-in-alt"></i>
+        <span>Login</span>
+      </a>
+      <a href="#" class="sidebar-link" data-page="pages/register_view.php">
+        <i class="fas fa-user-plus"></i>
+        <span>Register</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p class="text-muted small mb-0">© 2025 Newswire AI</p>
+    </div>
+  </aside>
+
+  <!-- Sidebar Overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
   <!-- Main Content -->
-  <main class="flex-grow-1 py-5">
+  <main class="flex-grow-1 py-5 main-content">
     <div class="container">
       <iframe id="pageContent" src="pages/newsletters.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
     </div>
@@ -224,6 +299,56 @@
         }
       });
     }
+
+    // Sidebar functionality
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarOpenBtn = document.getElementById('sidebarOpenBtn');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+    // Toggle sidebar
+    if (sidebarOpenBtn) {
+      sidebarOpenBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sidebar.classList.toggle('active');
+        sidebarOverlay.classList.toggle('active');
+      });
+    }
+
+    // Close sidebar
+    function closeSidebar() {
+      sidebar.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+    }
+
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener('click', closeSidebar);
+    }
+
+    if (sidebarOverlay) {
+      sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // Handle sidebar link clicks
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', function(e) {
+        // Remove active class from all links
+        sidebarLinks.forEach(l => l.classList.remove('active'));
+        // Add active class to clicked link
+        this.classList.add('active');
+        
+        // Close sidebar after clicking
+        closeSidebar();
+      });
+    });
+
+    // Close sidebar on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('active')) {
+        closeSidebar();
+      }
+    });
   </script>
 </body>
 </html>
