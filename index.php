@@ -35,6 +35,58 @@
 
         <!-- Right Section -->
         <div class="d-flex align-items-center gap-3">
+          <!-- Inbox Dropdown -->
+          <div class="position-relative">
+            <div class="inbox-icon" id="inboxIcon">
+              <i class="fas fa-inbox"></i>
+              <?php if (isset($inboxAmount) && $inboxAmount > 0): ?>
+                <span class="inbox-badge"><?php echo $inboxAmount; ?></span>
+              <?php endif; ?>
+            </div>
+            <div class="inbox-dropdown" id="inboxDropdown">
+              <div class="inbox-header">
+                <h6 class="mb-0">Inbox</h6>
+                <span class="badge bg-primary"><?php echo isset($inboxAmount) ? $inboxAmount : 0; ?> unread</span>
+              </div>
+              <div class="inbox-items">
+                <?php if (isset($userID) && $userID): ?>
+                  <?php
+                  $stmt = $pdo->prepare("SELECT * FROM tab_inbox WHERE user_ID = ? AND status = 'unread' ORDER BY created_at DESC LIMIT 5");
+                  $stmt->execute([$userID]);
+                  $inboxItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                  
+                  if (count($inboxItems) > 0):
+                    foreach ($inboxItems as $item):
+                  ?>
+                    <a href="#" class="inbox-item" data-inbox-id="<?php echo $item['inbox_ID']; ?>">
+                      <div class="inbox-item-content">
+                        <strong><?php echo htmlspecialchars($item['title'] ?? 'Notification'); ?></strong>
+                        <p class="mb-0"><?php echo htmlspecialchars(substr($item['message'] ?? '', 0, 50)); ?>...</p>
+                        <small class="text-muted"><?php echo date('M j, Y', strtotime($item['created_at'])); ?></small>
+                      </div>
+                    </a>
+                  <?php 
+                    endforeach;
+                  else:
+                  ?>
+                    <div class="inbox-empty">
+                      <i class="fas fa-inbox fa-2x mb-2"></i>
+                      <p class="mb-0">No new messages</p>
+                    </div>
+                  <?php endif; ?>
+                <?php else: ?>
+                  <div class="inbox-empty">
+                    <i class="fas fa-user-lock fa-2x mb-2"></i>
+                    <p class="mb-0">Please login to view inbox</p>
+                  </div>
+                <?php endif; ?>
+              </div>
+              <a href="#" class="inbox-footer" data-page="pages/inbox.php">
+                View All Messages
+              </a>
+            </div>
+          </div>
+
           <!-- Profile Dropdown -->
           <div class="position-relative">
             <div class="profile-icon" id="profileIcon">
@@ -42,7 +94,6 @@
             </div>
             <div class="profile-dropdown" id="profileDropdown">
               <a href="#" data-page="pages/newsletters.php"><i class="fas fa-user me-2"></i> Profile</a>
-              <a href="#" data-page="pages/newsletters.php"><i class="fas fa-inbox me-2"></i> Inbox</a>
               <a href="#" data-page="pages/newsletters.php"><i class="fas fa-sign-in-alt me-2"></i> Login</a>
               <a href="#" data-page="pages/newsletters.php"><i class="fas fa-user-plus me-2"></i> Register</a>
             </div>
@@ -122,6 +173,19 @@
   <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
   <script src="scripts/main.js"></script>
   <script>
+    // Inbox Dropdown Toggle
+    const inboxIcon = document.getElementById('inboxIcon');
+    const inboxDropdown = document.getElementById('inboxDropdown');
+
+    if (inboxIcon && inboxDropdown) {
+      inboxIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        inboxDropdown.classList.toggle('show');
+        // Close profile dropdown if open
+        if (profileDropdown) profileDropdown.classList.remove('show');
+      });
+    }
+
     // Profile Dropdown Toggle
     const profileIcon = document.getElementById('profileIcon');
     const profileDropdown = document.getElementById('profileDropdown');
@@ -130,15 +194,22 @@
       profileIcon.addEventListener('click', (e) => {
         e.stopPropagation();
         profileDropdown.classList.toggle('show');
-      });
-
-      // Close dropdown when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
-          profileDropdown.classList.remove('show');
-        }
+        // Close inbox dropdown if open
+        if (inboxDropdown) inboxDropdown.classList.remove('show');
       });
     }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (inboxIcon && inboxDropdown && 
+          !inboxIcon.contains(e.target) && !inboxDropdown.contains(e.target)) {
+        inboxDropdown.classList.remove('show');
+      }
+      if (profileIcon && profileDropdown &&
+          !profileIcon.contains(e.target) && !profileDropdown.contains(e.target)) {
+        profileDropdown.classList.remove('show');
+      }
+    });
 
     // Mobile menu toggle
     const menuToggle = document.getElementById('menuToggle');
