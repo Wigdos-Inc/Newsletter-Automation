@@ -106,6 +106,15 @@
               <a href="#" data-page="pages/newsletters.php"><i class="fas fa-user me-2"></i> Profile</a>
               <a href="#" data-page="pages/newsletters.php"><i class="fas fa-sign-in-alt me-2"></i> Login</a>
               <a href="#" data-page="pages/newsletters.php"><i class="fas fa-user-plus me-2"></i> Register</a>
+              <div class="dropdown-divider"></div>
+              <div class="theme-toggle-container">
+                <i class="fas fa-moon me-2"></i>
+                <span>Dark Mode</span>
+                <label class="theme-toggle-switch">
+                  <input type="checkbox" id="themeToggle" checked>
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -332,6 +341,40 @@
         this.classList.add('active');
         // Sidebar stays open - don't close it
       });
+    });
+
+    // Theme Toggle Functionality
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.querySelector('.theme-toggle-container i');
+    const themeText = document.querySelector('.theme-toggle-container span');
+
+    // Check for saved theme preference or default to dark mode
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    if (currentTheme === 'light') {
+      document.body.classList.add('light-mode');
+      themeToggle.checked = false;
+      themeIcon.classList.remove('fa-moon');
+      themeIcon.classList.add('fa-sun');
+      themeText.textContent = 'Light Mode';
+    }
+
+    // Toggle theme
+    themeToggle.addEventListener('change', function() {
+      if (this.checked) {
+        // Switch to dark mode
+        document.body.classList.remove('light-mode');
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+        themeText.textContent = 'Dark Mode';
+        localStorage.setItem('theme', 'dark');
+      } else {
+        // Switch to light mode
+        document.body.classList.add('light-mode');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+        themeText.textContent = 'Light Mode';
+        localStorage.setItem('theme', 'light');
+      }
     });
   </script>
 </body>
