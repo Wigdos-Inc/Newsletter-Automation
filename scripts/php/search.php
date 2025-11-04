@@ -22,19 +22,19 @@ function search(string $query) {
 
 
     // Format Query
-    $query = strtolower($query);
+    $query = strtolower(trim($query));
 
     // Split Search into Terms/Words
     $sTerms = array_filter(
-        explode(' ', $query),        // Seperate Words
-        fn($term) => !empty($term)   // Remove Empty Terms
+        explode(' ', $query),              // Seperate Words
+        fn($term) => !empty(trim($term))   // Remove Empty Terms
     );
 
 
     // Store Relevant Newsletters
     foreach ($newsletters as $id => $data) {
 
-        $score = relevance($query, $sTerms, [$data['name'], $data['content']]);
+        $score = relevance($query, $sTerms, [$data['title'], $data['content']]);
         if ($score > 5) $results['n'][] = [$id, $score];
     }
 
@@ -52,6 +52,10 @@ function search(string $query) {
         if ($score > 5) $results['u'][] = [$id, $score];
     }
 
+
+    // Sort results by Score
+    foreach ($results as &$type) usort($type, fn($a, $b) => $b[1] <=> $a[1]);
+
     
     // Check Result Count
     $rAmount = 0;
@@ -62,45 +66,67 @@ function search(string $query) {
 
 
 
-function relevance(string $query, array $terms, array $data) {
+function relevance(string $query, array $qTerms, array $data) {
 
     $score   = 0;
     $weights = [5, 2, 1];
 
     // Check if Query Matches Data
-    foreach ($data as $index => $text) {
+    foreach ($data as $type => $text) {
 
-        $weight = $weights[$index];
+        $weight = $weights[$type] ?? 1;
+        $text = strtolower($text);
+        $tScore = 0;
 
-        // Temp Score
-        $tScore = [0, 0];
+        // Split Text into Words
+        $tWords = array_filter(
+            explode(' ', $text),                 // Seperate Words
+            fn($tWord) => !empty(trim($tWord))   // Remove Empty Entries
+        );
 
-        // Query Matching
-        if      ($query == $text)                  $tScore[0] += $weight*2;               // Full Match
-        else if ($strpos($text, $query) !== false) $tScore[0] += $weight;                 // Substring Match
-        else if (
-            similar_text($query, $text) / max(strlen($query), strlen($text)) > 0.6 ||     // String Similarity
-            metaphone($query) === metaphone($text)                                        // Phonetic Similarity
-        ) {
-            $tScore[0] += $weight/2;
-        }
+        // Query Match or Appearance
+        if      ($query == $text)                                       $tScore = $weight*10;
+        else if (strpos($text, $query) !== false && strlen($query) > 5) $tScore = $weight*8;
+        else {
 
-        // Term Matching
-        function termScore(float $amount) { &$tScore[1] += $amount / (count($terms)) }
-        foreach($terms as $term) {
+            // Term Matching
+            foreach($qTerms as $term) {
 
-            if      ($term == $text)                  termScore($weight*2);
-            else if ($strpos($text, $term) !== false) termScore($weight);
-            else if (
-                similar_text($term, $text) / max(strlen($term), strlen($text)) > 0.6 ||     
-                metaphone($term) === metaphone($text)                                             
-            ) {
-                termScore($weight/2);
+                $term = trim($term, '.,!?;:/|=');
+
+                // Term Appearance
+                if (strpos($text, $term) !== false) {
+                    $tScore += round($weight / count($qTerms) * 5, 2);
+                    continue;
+                }
+
+                foreach ($tWords as $word) {
+
+                    $found = 0;
+                    $word = trim($word, '.,!?;:/|=');
+
+                    // Word Similarity (for Typos)
+                    $similarity = round(similar_text($term, $word) / max(strlen($term), strlen($word)), 2);
+                    if ($similarity > 0.6) {
+                        $tScore += round($weight * $similarity / count($qTerms) * 2, 2);
+                        $found++;
+                    }
+
+                    // Phonetic Match
+                    if (metaphone($term) === metaphone($word)) {
+                        $tScore += round($weight / count($qTerms), 2);
+                        $found++;
+                    }
+
+                    // Check next Term
+                    if ($found) break;
+                }
             }
+
         }
 
-        // Add Highest Temp Score to Total Score
-        $score += max($tScore);
+        // Overwrite Score if higher
+        $score += $tScore;
     }
 
     return $score;
