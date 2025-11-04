@@ -3,7 +3,7 @@ session_start();
 require '../config.php';
 
 if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-    header("location: ../../../pages/login_view.php?err=0");
+    header("location: ../../../pages/login_view.php?err=Accessed page wihout POST");
 }
 
 $login_mail = filter_var(trim($_POST['username']), FILTER_SANITIZE_EMAIL);

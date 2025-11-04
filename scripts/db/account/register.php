@@ -3,7 +3,7 @@ session_start();
 require '../config.php';
 
 if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-    header("../../../pages/register_view.php?err=0");
+    header("../../../pages/register_view.php?err=Accessed page wihout POST");
 }
 
 $name = $_POST['username'];

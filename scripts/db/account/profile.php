@@ -3,7 +3,7 @@ session_start();
 require '../config.php';
 
 $userid = $_SESSION['user'];
-echo "<p>User ID: ".$userid."</p>";
+//echo "<p>User ID: ".$userid."</p>";
 
 try{
     if (!isset($_SESSION['user'])) {
@@ -16,9 +16,11 @@ try{
         $stmt->execute();
 
         $result = $stmt->fetch();
+        $_SESSION['user_data'] = $result;
 
-        $name = htmlspecialchars($result['username']);
-        header('location: ../../../pages/profile_view.php?name=' . urlencode($name));
+        //$name = htmlspecialchars($result['username']);
+        //header('location: ../../../pages/profile_view.php?name=' . urlencode($name));
+        header('location: ../../../pages/profile_view.php');
         //echo "<h1>Ingelogd in als '" . $result['username'] . "'</h1><a href='../../../index.php'>Terug naar overzicht</a><p>Uw Wachtwoord: " . $result['password'] . "</p>";
     }
 } catch (PDOException $e){
