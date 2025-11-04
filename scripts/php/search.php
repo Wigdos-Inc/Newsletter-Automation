@@ -61,7 +61,14 @@ function search(string $query) {
     $rAmount = 0;
     foreach ($results as $type) $rAmount += count($type);
 
-    return $rAmount ? $results : null;
+    if ($rAmount) {
+        $_SESSION['qResults'] = $results;   // Store for faster Reload
+        return $results;
+    }
+    else {
+        $_SESSION['qResults'] = null;       // Empty to prevent Confusion
+        return null;
+    }
 }
 
 
