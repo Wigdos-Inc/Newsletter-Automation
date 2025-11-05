@@ -254,6 +254,448 @@
     </div>
   </footer>
 
+  <!-- Welcome Tutorial Overlay -->
+  <?php if (isset($_SESSION['show_tutorial']) && $_SESSION['show_tutorial']): ?>
+  <div id="tutorialOverlay" class="tutorial-overlay">
+    <div class="tutorial-container">
+      <div class="tutorial-card" id="tutorialCard">
+        <button class="tutorial-skip-btn" id="skipTutorial">
+          <i class="fas fa-times"></i> Skip Tutorial
+        </button>
+        
+        <!-- Welcome Step -->
+        <div class="tutorial-step active" data-step="0">
+          <div class="tutorial-icon">
+            <i class="fas fa-rocket fa-3x"></i>
+          </div>
+          <h2 class="tutorial-title">Welcome to Newswire AI! 🎉</h2>
+          <p class="tutorial-text">Let's take a quick tour of the key features. This will only take a moment!</p>
+          <div class="tutorial-progress">
+            <span class="tutorial-step-indicator active"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+          </div>
+          <button class="tutorial-next-btn" onclick="nextTutorialStep()">Get Started</button>
+        </div>
+
+        <!-- Step 1: Sidebar -->
+        <div class="tutorial-step" data-step="1">
+          <div class="tutorial-icon">
+            <i class="fas fa-bars fa-3x"></i>
+          </div>
+          <h2 class="tutorial-title">Navigation Sidebar</h2>
+          <p class="tutorial-text">Click the <strong>hamburger menu</strong> in the top left to access all pages including Home, Categories, Newsletters, and Search.</p>
+          <div class="tutorial-mini-card">
+            <i class="fas fa-bars"></i>
+            <span>Opens the main navigation menu</span>
+          </div>
+          <div class="tutorial-progress">
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator active"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+          </div>
+          <div class="tutorial-buttons">
+            <button class="tutorial-back-btn" onclick="prevTutorialStep()">Back</button>
+            <button class="tutorial-next-btn" onclick="nextTutorialStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Search -->
+        <div class="tutorial-step" data-step="2">
+          <div class="tutorial-icon">
+            <i class="fas fa-search fa-3x"></i>
+          </div>
+          <h2 class="tutorial-title">Search Bar</h2>
+          <p class="tutorial-text">Use the <strong>search bar</strong> in the header to quickly find newsletters, articles, and topics that interest you.</p>
+          <div class="tutorial-mini-card">
+            <i class="fas fa-search"></i>
+            <span>Find content across all newsletters</span>
+          </div>
+          <div class="tutorial-progress">
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator active"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+          </div>
+          <div class="tutorial-buttons">
+            <button class="tutorial-back-btn" onclick="prevTutorialStep()">Back</button>
+            <button class="tutorial-next-btn" onclick="nextTutorialStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Inbox -->
+        <div class="tutorial-step" data-step="3">
+          <div class="tutorial-icon">
+            <i class="fas fa-inbox fa-3x"></i>
+          </div>
+          <h2 class="tutorial-title">Inbox</h2>
+          <p class="tutorial-text">The <strong>inbox icon</strong> shows your unread messages and notifications. Click it to see recent updates.</p>
+          <div class="tutorial-mini-card">
+            <i class="fas fa-inbox"></i>
+            <span>View notifications and messages</span>
+          </div>
+          <div class="tutorial-progress">
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator active"></span>
+            <span class="tutorial-step-indicator"></span>
+            <span class="tutorial-step-indicator"></span>
+          </div>
+          <div class="tutorial-buttons">
+            <button class="tutorial-back-btn" onclick="prevTutorialStep()">Back</button>
+            <button class="tutorial-next-btn" onclick="nextTutorialStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- Step 4: Profile -->
+        <div class="tutorial-step" data-step="4">
+          <div class="tutorial-icon">
+            <i class="fas fa-user fa-3x"></i>
+          </div>
+          <h2 class="tutorial-title">Profile Menu</h2>
+          <p class="tutorial-text">Click the <strong>profile icon</strong> to access your profile, settings, and theme preferences (Light/Dark mode).</p>
+          <div class="tutorial-mini-card">
+            <i class="fas fa-user"></i>
+            <span>Manage your account and preferences</span>
+          </div>
+          <div class="tutorial-progress">
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator active"></span>
+            <span class="tutorial-step-indicator"></span>
+          </div>
+          <div class="tutorial-buttons">
+            <button class="tutorial-back-btn" onclick="prevTutorialStep()">Back</button>
+            <button class="tutorial-next-btn" onclick="nextTutorialStep()">Next</button>
+          </div>
+        </div>
+
+        <!-- Final Step -->
+        <div class="tutorial-step" data-step="5">
+          <div class="tutorial-icon">
+            <i class="fas fa-check-circle fa-3x"></i>
+          </div>
+          <h2 class="tutorial-title">You're All Set! 🚀</h2>
+          <p class="tutorial-text">You're ready to explore Newswire AI. Enjoy discovering personalized news and newsletters!</p>
+          <div class="tutorial-mini-card highlight">
+            <i class="fas fa-lightbulb"></i>
+            <span>Tip: You can always access these features from the navigation bar</span>
+          </div>
+          <div class="tutorial-progress">
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator completed"></span>
+            <span class="tutorial-step-indicator active"></span>
+          </div>
+          <button class="tutorial-finish-btn" onclick="finishTutorial()">Start Exploring</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .tutorial-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .tutorial-container {
+      width: 100%;
+      max-width: 600px;
+      padding: 20px;
+    }
+
+    .tutorial-card {
+      background: linear-gradient(135deg, #1a1c20 0%, #2c3e50 100%);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      position: relative;
+      animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tutorial-skip-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .tutorial-skip-btn:hover {
+      background: rgba(231, 76, 60, 0.3);
+      border-color: #e74c3c;
+    }
+
+    .tutorial-step {
+      display: none;
+      text-align: center;
+      animation: fadeInStep 0.3s ease;
+    }
+
+    .tutorial-step.active {
+      display: block;
+    }
+
+    @keyframes fadeInStep {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .tutorial-icon {
+      color: #3498db;
+      margin-bottom: 20px;
+      animation: bounce 1s ease infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .tutorial-title {
+      color: #ffffff;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      background: linear-gradient(45deg, #3498db, #2ecc71);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .tutorial-text {
+      color: #a4b5c6;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    .tutorial-text strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .tutorial-mini-card {
+      background: rgba(52, 152, 219, 0.1);
+      border: 1px solid rgba(52, 152, 219, 0.3);
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin: 20px auto;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .tutorial-mini-card:hover {
+      background: rgba(52, 152, 219, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .tutorial-mini-card.highlight {
+      background: rgba(46, 204, 113, 0.1);
+      border-color: rgba(46, 204, 113, 0.3);
+    }
+
+    .tutorial-mini-card i {
+      color: #3498db;
+      font-size: 1.5rem;
+    }
+
+    .tutorial-mini-card.highlight i {
+      color: #2ecc71;
+    }
+
+    .tutorial-mini-card span {
+      color: #ffffff;
+      font-size: 0.95rem;
+      flex: 1;
+      text-align: left;
+    }
+
+    .tutorial-progress {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0 25px;
+    }
+
+    .tutorial-step-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .tutorial-step-indicator.active {
+      background: #3498db;
+      width: 30px;
+      border-radius: 6px;
+    }
+
+    .tutorial-step-indicator.completed {
+      background: #2ecc71;
+    }
+
+    .tutorial-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .tutorial-next-btn,
+    .tutorial-back-btn,
+    .tutorial-finish-btn {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tutorial-next-btn,
+    .tutorial-finish-btn {
+      background: linear-gradient(135deg, #3498db, #2ecc71);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    }
+
+    .tutorial-next-btn:hover,
+    .tutorial-finish-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .tutorial-back-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .tutorial-back-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    @media (max-width: 768px) {
+      .tutorial-card {
+        padding: 30px 20px;
+      }
+
+      .tutorial-title {
+        font-size: 1.5rem;
+      }
+
+      .tutorial-text {
+        font-size: 1rem;
+      }
+
+      .tutorial-mini-card {
+        padding: 12px 15px;
+      }
+    }
+  </style>
+
+  <script>
+    let currentTutorialStep = 0;
+    const totalSteps = 6;
+
+    function nextTutorialStep() {
+      if (currentTutorialStep < totalSteps - 1) {
+        document.querySelector(`[data-step="${currentTutorialStep}"]`).classList.remove('active');
+        currentTutorialStep++;
+        document.querySelector(`[data-step="${currentTutorialStep}"]`).classList.add('active');
+      }
+    }
+
+    function prevTutorialStep() {
+      if (currentTutorialStep > 0) {
+        document.querySelector(`[data-step="${currentTutorialStep}"]`).classList.remove('active');
+        currentTutorialStep--;
+        document.querySelector(`[data-step="${currentTutorialStep}"]`).classList.add('active');
+      }
+    }
+
+    function finishTutorial() {
+      const overlay = document.getElementById('tutorialOverlay');
+      overlay.style.animation = 'fadeOut 0.3s ease';
+      setTimeout(() => {
+        overlay.remove();
+        // Send request to clear tutorial flag
+        fetch('scripts/db/account/clear_tutorial.php', { method: 'POST' });
+      }, 300);
+    }
+
+    // Skip tutorial
+    document.getElementById('skipTutorial')?.addEventListener('click', finishTutorial);
+
+    // Add fadeOut animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+  <?php endif; ?>
+
   <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
   <script src="scripts/main.js"></script>
   <script>
