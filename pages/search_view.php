@@ -5,13 +5,11 @@ require_once '../scripts/php/search.php';
 // Get old Data
 $rData = isset($_SESSION['searchData']) ? $_SESSION['searchData'] : null;
 
-// Get Query
-$query = isset($_SESSION['query']) ? $_SESSION['query'] : null;
-
 // Get new Data on Query Mismatch
-if ($query && $query != $rData['query']) {
+$query = isset($_GET['query']) ? $_GET['query'] : null;
+if ($query) {
 
-    search($query);
+    search(str_replace('%20', ' ', $_GET['query']));
     $rData = $_SESSION['searchData'];
 }
 
@@ -43,8 +41,8 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
         <!-- Initial Results Check & Output -->
         <p class="text-center">
             <?php 
-            if ($rData) echo "Query yielded {$rData['amount']} results.";
-            else if (!$query) echo 'No search query given.';
+            if ($rData['results']) echo "Query yielded {$rData['amount']} results.";
+            else if (!$rData['query'] && !$query) echo 'No search query given.';
             else echo 'No results found.';
             ?>
         </p>
@@ -60,6 +58,7 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
 
                 <div class="resultItem">
                     <h2><?= $newsletters[$result[0]]['title'] ?></h2>
+                    <p><?= $result[1] ?></p>
                 </div>
 
             <?php endforeach; ?>
