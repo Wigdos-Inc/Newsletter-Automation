@@ -6,7 +6,7 @@
 
 require_once '../config.php';
 
-$userID = 6;
+$userID = 7; // Change this to the desired user ID for testing
 
 echo "=== Inserting Dummy Inbox Data ===\n\n";
 
