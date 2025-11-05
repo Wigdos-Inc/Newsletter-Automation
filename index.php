@@ -160,7 +160,7 @@
         <i class="fas fa-newspaper"></i>
         <span>Newsletters</span>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/searchResults.php">
+      <a href="#" class="sidebar-link" data-page="pages/search_view.php">
         <i class="fas fa-search"></i>
         <span>Search</span>
       </a>

@@ -32,7 +32,7 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
     <base href="../">
     <link rel="stylesheet" href="bootstrap-5.3.6-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="styling/main.css">
-    <link rel="stylesheet" href="styling/searchResults.css">
+    <link rel="stylesheet" href="styling/search.css">
 </head>
 <body>
     
@@ -41,9 +41,9 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
         <h1 class='mb-3 text-center'>Search Results</h1>
 
         <!-- Initial Results Check & Output -->
-        <p class="text-muted text-center">
+        <p class="text-center">
             <?php 
-            if ($results) echo "Query yielded $rCount results.";
+            if ($rData) echo "Query yielded {$rData['amount']} results.";
             else if (!$query) echo 'No search query given.';
             else echo 'No results found.';
             ?>
@@ -52,18 +52,35 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
         <!-- Newsletter Results -->
         <?php if ($results['newsletters']): ?>
 
-            <h2 class='mb-3 text-muted'><i>Newsletter Results</i></h2>
+            <h2 class='mb-3'><i>Newsletter Results</i></h2>
+
+            <div class="resultBox">
+
+            <?php foreach ($results['newsletters'] as $result): ?>
+
+                <div class="resultItem">
+                    <h2><?= $newsletters[$result[0]]['title'] ?></h2>
+                </div>
+
+            <?php endforeach; ?>
+
+            </div>
 
         <?php endif; ?>
 
         <!-- Category Results -->
         <?php if ($results['categories']): ?>
 
-            <h2 class='mb-3 text-muted'><i>Category Results</i></h2>
+            <h2 class='mb-3'><i>Category Results</i></h2>
 
         <?php endif; ?>
 
         <!-- Creator Results -->
+        <?php if ($results['users']): ?>
+
+            <h2 class='mb-3'><i>Creator Results</i></h2>
+
+        <?php endif; ?>
     </div>
 
     
