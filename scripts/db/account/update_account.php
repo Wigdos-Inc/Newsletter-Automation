@@ -7,7 +7,7 @@ if($_SERVER['REQUEST_METHOD'] !== 'POST'){
     exit();
 }
 
-if(!isset($_SESSION['userID'])){
+if(!isset($_COOKIES['userID'])){
     header("location: ../../../pages/login_view.php");
     exit();
 }

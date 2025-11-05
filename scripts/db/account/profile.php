@@ -3,7 +3,7 @@ session_start();
 require '../config.php';
 
 try{
-    if (!isset($_SESSION['userID'])) {
+    if (!isset($_COOKIES['userID'])) {
         header("Location: ../../../pages/login_view.php");
         exit();
     }

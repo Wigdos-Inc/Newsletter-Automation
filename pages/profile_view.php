@@ -2,7 +2,7 @@
     session_start();
     
     // Check if user is logged in
-    if(!isset($_SESSION['userID']) || !isset($_SESSION['user_data'])){
+    if(!isset($_COOKIES['userID']) || !isset($_SESSION['user_data'])){
         header('location: login_view.php');
         exit();
     }

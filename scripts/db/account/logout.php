@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-if (!isset($_SESSION['userID'])) {
+if (!isset($_COOKIES['userID'])) {
     header("location: ../../../index.php");
     exit();
 }

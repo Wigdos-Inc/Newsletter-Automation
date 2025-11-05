@@ -403,7 +403,7 @@
     // Search functionality
     function performSearch(query) {
       if (query.trim()) {
-        document.getElementById('pageContent').src = 'pages/search_view.php?q=' + encodeURIComponent(query);
+        document.getElementById('pageContent').src = 'pages/search_view.php?query=' + encodeURIComponent(query);
       }
     }
 
