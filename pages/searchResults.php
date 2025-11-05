@@ -2,15 +2,23 @@
 
 require_once '../scripts/php/search.php';
 
+// Get old Data
+$rData = isset($_SESSION['searchData']) ? $_SESSION['searchData'] : null;
+
 // Get Query
-$query = isset($_GET['query']) ? str_replace('%20', ' ', $_GET['query']) : '';
+$query = isset($_SESSION['query']) ? $_SESSION['query'] : null;
+
+// Get new Data on Query Mismatch
+if ($query && $query != $rData['query']) {
+
+    search($query);
+    $rData = $_SESSION['searchData'];
+}
 
 // Get Filter Settings
 $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
 
-// Get Results
-$results = isset($_SESSION['qResults']) ? $_SESSION['qResults'] : null;
-if (!$results && $query) $results = search($query);
+
 
 ?>
 
@@ -20,19 +28,45 @@ if (!$results && $query) $results = search($query);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - Newswire AI</title>
+
+    <base href="../">
+    <link rel="stylesheet" href="bootstrap-5.3.6-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styling/main.css">
+    <link rel="stylesheet" href="styling/searchResults.css">
 </head>
 <body>
-    <h1>Search Results</h1>
+    
 
-    <?php
+    <div class="container py-5">
+        <h1 class='mb-3 text-center'>Search Results</h1>
 
-    // Testing Output
-    # https://102871.stu.sd-lab.nl/beroeps/newsletters/pages/searchResults.php
-    if ($results) print_r($results);
-    else if (!$query) echo 'No search query given.';
-    else echo 'No results.'
+        <!-- Initial Results Check & Output -->
+        <p class="text-muted text-center">
+            <?php 
+            if ($results) echo "Query yielded $rCount results.";
+            else if (!$query) echo 'No search query given.';
+            else echo 'No results found.';
+            ?>
+        </p>
 
-    ?>
+        <!-- Newsletter Results -->
+        <?php if ($results['newsletters']): ?>
+
+            <h2 class='mb-3 text-muted'><i>Newsletter Results</i></h2>
+
+        <?php endif; ?>
+
+        <!-- Category Results -->
+        <?php if ($results['categories']): ?>
+
+            <h2 class='mb-3 text-muted'><i>Category Results</i></h2>
+
+        <?php endif; ?>
+
+        <!-- Creator Results -->
+    </div>
+
+    
     
 </body>
 </html>
