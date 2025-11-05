@@ -18,7 +18,7 @@ $dob = $_POST['birthdate'];
 $password_old = sha1($_POST['oldpassword']);
 $password_new = sha1($_POST['password']);
 $password_confirm = sha1($_POST['passwordCheck']);
-$id = $_SESSION['user'];
+$id = $_COOKIES['userID'];
 
 // Validate required fields
 if(empty($username) || empty($email) || empty($dob)){
@@ -99,7 +99,7 @@ try{
     $stmt->execute();
     $result_usr = $stmt->fetch();
 
-    $_SESSION['user_data'] = $result_usr;
+    $_COOKIES['user_data'] = $result_usr;
     header('location: ../../../pages/profile_view.php?success=Profile updated successfully');
     exit();
 } catch (PDOException $e){

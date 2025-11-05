@@ -63,8 +63,8 @@ try {
     }
     
     // Set session variables
-    $_SESSION['userID'] = $result['user_ID'];
-    $_SESSION['user_data'] = $result;
+    $_COOKIES['userID'] = $result['user_ID'];
+    $_COOKIES['user_data'] = $result;
     header("location: ../../../pages/profile_view.php");
     exit();
     

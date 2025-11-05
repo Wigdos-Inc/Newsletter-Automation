@@ -8,7 +8,7 @@ try{
         exit();
     }
     else{
-        $userid = $_SESSION['userID'];
+        $userid = $_COOKIES['userID'];
         
         $query = "SELECT * FROM tab_users WHERE user_ID = :ID";
         $stmt = $pdo->prepare($query);
@@ -16,7 +16,7 @@ try{
         $stmt->execute();
 
         $result = $stmt->fetch();
-        $_SESSION['user_data'] = $result;
+        $_COOKIES['user_data'] = $result;
 
         header('location: ../../../pages/profile_view.php');
         exit();

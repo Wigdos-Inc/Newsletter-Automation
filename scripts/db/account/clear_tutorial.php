@@ -2,8 +2,8 @@
 session_start();
 
 // Clear the tutorial flag from session
-if (isset($_SESSION['show_tutorial'])) {
-    unset($_SESSION['show_tutorial']);
+if (isset($_COOKIES['show_tutorial'])) {
+    unset($_COOKIES['show_tutorial']);
 }
 
 // Return success response

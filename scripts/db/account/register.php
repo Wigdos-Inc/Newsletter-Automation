@@ -90,9 +90,9 @@ try {
         $stmt->execute();
         $userData = $stmt->fetch();
         
-        $_SESSION['userID'] = $id;
-        $_SESSION['user_data'] = $userData;
-        $_SESSION['show_tutorial'] = true; // Flag for new users
+        $_COOKIES['userID'] = $id;
+        $_COOKIES['user_data'] = $userData;
+        $_COOKIES['show_tutorial'] = true; // Flag for new users
         header("location: ../../../index.php");
         exit();
     } else {
