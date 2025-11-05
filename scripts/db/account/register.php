@@ -3,57 +3,77 @@ session_start();
 require '../config.php';
 
 if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-    header("../../../pages/register_view.php?err=Accessed page wihout POST");
+    header("location: ../../../pages/register_view.php?err=Accessed page without POST");
+    exit();
 }
 
-$name = $_POST['username'];
-$email = $_POST['email'];
-$password = sha1($_POST['password']);
-$passwordck = sha1($_POST['passwordCheck']);
+$name = trim($_POST['username']);
+$email = trim($_POST['email']);
+$password = trim($_POST['password']);
+$passwordck = trim($_POST['passwordCheck']);
 $dob = $_POST['birthdate'];
-$address = "unkown";
-$auth = "0";
 
+// Validate required fields
+if(empty($name) || empty($email) || empty($password) || empty($passwordck) || empty($dob)){
+    header('location: ../../../pages/register_view.php?err=All fields are required');
+    exit();
+}
+
+// Check password match
 if($password !== $passwordck){
-    header('location: ../../../pages/register_view.php?err="passwords did not match"');
+    header('location: ../../../pages/register_view.php?err=Passwords did not match');
+    exit();
+}
+
+// Validate password strength (minimum 6 characters)
+if(strlen($password) < 6){
+    header('location: ../../../pages/register_view.php?err=Password must be at least 6 characters');
+    exit();
+}
+
+// Validate email format
+if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
+    header('location: ../../../pages/register_view.php?err=Invalid email format');
     exit();
 }
 
 $date = date("Y-m-d");
 
-//if(strlen($password) <= 0 || strlen($name <= 0)){
-    //header("location: ../pages/register_view.php");
-//}
-
 try {
+    // Check if username exists
     $query = "SELECT * FROM tab_users WHERE username = :username";
     $stmt = $pdo->prepare($query);
-    $stmt->bindParam(':username', $name);
+    $stmt->bindParam(':username', $name, PDO::PARAM_STR);
     $stmt->execute();
     $result_name = $stmt->fetch();
 
+    // Check if email exists
     $query = "SELECT * FROM tab_users WHERE email = :email";
     $stmt = $pdo->prepare($query);
-    $stmt->bindParam(':email', $email);
+    $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->execute();
     $result_mail = $stmt->fetch();
 
     if($result_name){
-        header('location: ../../../pages/register_view.php?err="User already exists."');
+        header('location: ../../../pages/register_view.php?err=Username already exists');
         exit();
     }
     if($result_mail){
-        header('location: ../../../pages/register_view.php?err="Mail address has already been used"');
+        header('location: ../../../pages/register_view.php?err=Email address has already been used');
         exit();
     }
 
-    $query = "INSERT INTO tab_users (username, password, email, dob, role, creation_date)";
+    // Hash password securely
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // Insert new user
+    $query = "INSERT INTO tab_users (username, password, email, dob, role, creation_date) ";
     $query .= "VALUES (:username, :password, :email, :dob, :role, :creation_date)";
 
     $stmt = $pdo->prepare($query);
     $stmt->execute([
         'username' => $name,
-        'password' => $password,
+        'password' => $hashedPassword,
         'email' => $email,
         'dob' => $dob,
         'role' => "user",
@@ -62,12 +82,24 @@ try {
 
     if ($stmt->rowCount()) {
         $id = $pdo->lastInsertId();
-        $_SESSION['user'] = $id;
-        header("location: profile.php");
+        
+        // Fetch user data
+        $query = "SELECT * FROM tab_users WHERE user_ID = :id";
+        $stmt = $pdo->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $userData = $stmt->fetch();
+        
+        $_SESSION['userID'] = $id;
+        $_SESSION['user_data'] = $userData;
+        header("location: ../../../pages/profile_view.php");
+        exit();
     } else {
-        echo "FOUT bij toevoegen";
+        header('location: ../../../pages/register_view.php?err=Error creating account');
+        exit();
     }
 } catch (PDOException $e) {
-    echo $e->getMessage();
-    exit;
+    error_log($e->getMessage());
+    header('location: ../../../pages/register_view.php?err=An error occurred. Please try again.');
+    exit();
 }

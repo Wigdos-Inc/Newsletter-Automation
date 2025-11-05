@@ -1,5 +1,12 @@
 <?php
     session_start();
+    
+    // Check if user is logged in
+    if(!isset($_SESSION['userID']) || !isset($_SESSION['user_data'])){
+        header('location: login_view.php');
+        exit();
+    }
+    
     $result = $_SESSION['user_data'];
 ?>
 <!DOCTYPE html>
@@ -14,6 +21,20 @@
 <body>
     <div class="container m-5">
         <h2 class="mb-5 fw-bold text-dark text-center">Profile</h2>
+        
+        <?php if(isset($_GET['err'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Error:</strong> <?= htmlspecialchars($_GET['err']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+        
+        <?php if(isset($_GET['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success:</strong> <?= htmlspecialchars($_GET['success']) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
         <div class="d-flex">
             <div class="bg-cyan-dark p-3 list-unstyled">
                 <img style="-webkit-user-drag: none;" class="rounded-circle mb-2" src="https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png" alt="">
@@ -48,8 +69,8 @@
                             <label for="email">New E-mail ...</label>
                         </div>
                         <div class="form-floating mb-2">
-                            <input class="form-control" type="date" name="birthdate" id="birthdate" placeholder="New Date of birth ..." value="<?=$result['dob']?>">
-                            <label for="birthdate">New Date of birth ...</label>
+                            <input class="form-control" type="date" name="dob" id="dob" placeholder="New Date of birth ..." value="<?=$result['dob']?>">
+                            <label for="dob">New Date of birth ...</label>
                         </div>
                         <div class="form-floating mb-2 mt-5">
                             <input class="form-control" type="password" name="oldpassword" id="oldpassword" placeholder="Old Password ...">
@@ -76,5 +97,24 @@
 
     <script src="../bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
     <script src="../scripts/profilePage.js"></script>
+    <script>
+        // Listen for theme changes from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'themeChange') {
+                const theme = event.data.theme;
+                if (theme === 'light') {
+                    document.body.classList.add('light-mode');
+                } else {
+                    document.body.classList.remove('light-mode');
+                }
+            }
+        });
+
+        // Apply saved theme on load
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+        }
+    </script>
 </body>
 </html>

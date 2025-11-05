@@ -81,8 +81,6 @@ if ($userID) {
 
 }
 
-
-
 /* === Connection Table Queries === */
 
 // Loop Structure
