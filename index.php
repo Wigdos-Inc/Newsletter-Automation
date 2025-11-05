@@ -255,7 +255,7 @@
   </footer>
 
   <!-- Welcome Tutorial Overlay -->
-  <?php if (isset($_COOKIES['show_tutorial']) && $_COOKIES['show_tutorial']): ?>
+  <?php if (isset($_COOKIE['show_tutorial']) && $_COOKIE['show_tutorial']): ?>
   <div id="tutorialOverlay" class="tutorial-overlay">
     <div class="tutorial-container">
       <div class="tutorial-card" id="tutorialCard">

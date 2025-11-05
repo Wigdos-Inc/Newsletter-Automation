@@ -2,11 +2,12 @@
 session_start();
 require '../config.php';
 
-if (!isset($_COOKIES['user_ID'])) {
+if (!isset($_COOKIE['userID'])) {
     header("location: ../../../pages/login.php");
+    exit();
 }
 
-$id = $_COOKIES['user_ID'];
+$id = $_COOKIE['userID'];
 try {
     $query = "DELETE FROM tab_users WHERE user_ID = :ID";
     $stmt = $pdo->prepare($query);

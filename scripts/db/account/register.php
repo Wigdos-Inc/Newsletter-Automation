@@ -90,9 +90,11 @@ try {
         $stmt->execute();
         $userData = $stmt->fetch();
         
-        $_COOKIES['userID'] = $id;
-        $_COOKIES['user_data'] = $userData;
-        $_COOKIES['show_tutorial'] = true; // Flag for new users
+        // Set cookies
+        $expiry = time() + (30 * 24 * 60 * 60); // 30 days
+        setcookie('userID', $id, $expiry, '/', '', false, true);
+        setcookie('user_data', json_encode($userData), $expiry, '/', '', false, true);
+        setcookie('show_tutorial', '1', $expiry, '/', '', false, true); // Flag for new users
         header("location: ../../../index.php");
         exit();
     } else {

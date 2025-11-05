@@ -316,7 +316,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     
     // Check if user is logged in
-    $userID = isset($_COOKIES['userID']) ? intval($_COOKIES['userID']) : null;
+    $userID = isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : null;
     
     if (!$userID) {
         echo json_encode(['success' => false, 'error' => 'Not authenticated']);

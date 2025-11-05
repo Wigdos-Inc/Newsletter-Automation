@@ -62,9 +62,10 @@ try {
         ]);
     }
     
-    // Set session variables
-    $_COOKIES['userID'] = $result['user_ID'];
-    $_COOKIES['user_data'] = $result;
+    // Set cookies
+    $expiry = time() + (30 * 24 * 60 * 60); // 30 days
+    setcookie('userID', $result['user_ID'], $expiry, '/', '', false, true);
+    setcookie('user_data', json_encode($result), $expiry, '/', '', false, true);
     header("location: ../../../pages/profile_view.php");
     exit();
     

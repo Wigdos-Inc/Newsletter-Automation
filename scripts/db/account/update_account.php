@@ -7,7 +7,7 @@ if($_SERVER['REQUEST_METHOD'] !== 'POST'){
     exit();
 }
 
-if(!isset($_COOKIES['userID'])){
+if(!isset($_COOKIE['userID'])){
     header("location: ../../../pages/login_view.php");
     exit();
 }
@@ -18,7 +18,7 @@ $dob = $_POST['birthdate'];
 $password_old = sha1($_POST['oldpassword']);
 $password_new = sha1($_POST['password']);
 $password_confirm = sha1($_POST['passwordCheck']);
-$id = $_COOKIES['userID'];
+$id = $_COOKIE['userID'];
 
 // Validate required fields
 if(empty($username) || empty($email) || empty($dob)){
@@ -99,7 +99,9 @@ try{
     $stmt->execute();
     $result_usr = $stmt->fetch();
 
-    $_COOKIES['user_data'] = $result_usr;
+    // Update user_data cookie
+    $expiry = time() + (30 * 24 * 60 * 60); // 30 days
+    setcookie('user_data', json_encode($result_usr), $expiry, '/', '', false, true);
     header('location: ../../../pages/profile_view.php?success=Profile updated successfully');
     exit();
 } catch (PDOException $e){

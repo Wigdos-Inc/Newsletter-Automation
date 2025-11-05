@@ -3,12 +3,12 @@ session_start();
 require '../config.php';
 
 try{
-    if (!isset($_COOKIES['userID'])) {
+    if (!isset($_COOKIE['userID'])) {
         header("Location: ../../../pages/login_view.php");
         exit();
     }
     else{
-        $userid = $_COOKIES['userID'];
+        $userid = $_COOKIE['userID'];
         
         $query = "SELECT * FROM tab_users WHERE user_ID = :ID";
         $stmt = $pdo->prepare($query);
@@ -16,7 +16,10 @@ try{
         $stmt->execute();
 
         $result = $stmt->fetch();
-        $_COOKIES['user_data'] = $result;
+        
+        // Update user_data cookie
+        $expiry = time() + (30 * 24 * 60 * 60); // 30 days
+        setcookie('user_data', json_encode($result), $expiry, '/', '', false, true);
 
         header('location: ../../../pages/profile_view.php');
         exit();

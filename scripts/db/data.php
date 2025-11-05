@@ -5,7 +5,7 @@
 require_once 'config.php';
 
 // Get UserID
-$userID = isset($_COOKIES['userID']) ? intval($_COOKIES['userID']) : null;
+$userID = isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : null;
 
 
 

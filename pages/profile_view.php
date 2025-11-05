@@ -2,12 +2,13 @@
     session_start();
     
     // Check if user is logged in
-    if(!isset($_COOKIES['userID']) || !isset($_COOKIES['user_data'])){
+    if(!isset($_COOKIE['userID']) || !isset($_COOKIE['user_data'])){
         header('location: login_view.php');
         exit();
     }
     
-    $result = $_COOKIES['user_data'];
+    // Decode user_data from JSON
+    $result = json_decode($_COOKIE['user_data'], true);
 ?>
 <!DOCTYPE html>
 <html lang="en">
