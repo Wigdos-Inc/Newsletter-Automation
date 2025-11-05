@@ -45,6 +45,7 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
     <link rel="stylesheet" href="../bootstrap-5.3.6-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styling/main.css">
+    <link rel="stylesheet" href="../styling/inbox.css">
     <title>Inbox - Newswire AI</title>
 </head>
 <body>
@@ -172,6 +173,24 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
     </div>
 
     <script>
+        // Listen for theme changes from parent window
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'themeChange') {
+                const theme = event.data.theme;
+                if (theme === 'light') {
+                    document.body.classList.add('light-mode');
+                } else {
+                    document.body.classList.remove('light-mode');
+                }
+            }
+        });
+
+        // Apply saved theme on load
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
         // Track selected messages
         let selectedMessages = new Set();
 

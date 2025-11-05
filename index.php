@@ -358,6 +358,18 @@
       themeText.textContent = 'Light Mode';
     }
 
+    // Function to sync theme with iframe
+    function syncThemeToIframe(theme) {
+      const iframe = document.getElementById('pageContent');
+      if (iframe && iframe.contentWindow) {
+        try {
+          iframe.contentWindow.postMessage({ type: 'themeChange', theme: theme }, '*');
+        } catch (err) {
+          console.log('Could not sync theme to iframe:', err);
+        }
+      }
+    }
+
     // Toggle theme
     themeToggle.addEventListener('change', function() {
       if (this.checked) {
@@ -367,6 +379,7 @@
         themeIcon.classList.add('fa-moon');
         themeText.textContent = 'Dark Mode';
         localStorage.setItem('theme', 'dark');
+        syncThemeToIframe('dark');
       } else {
         // Switch to light mode
         document.body.classList.add('light-mode');
@@ -374,8 +387,18 @@
         themeIcon.classList.add('fa-sun');
         themeText.textContent = 'Light Mode';
         localStorage.setItem('theme', 'light');
+        syncThemeToIframe('light');
       }
     });
+
+    // Sync theme when iframe loads
+    const iframe = document.getElementById('pageContent');
+    if (iframe) {
+      iframe.addEventListener('load', function() {
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        syncThemeToIframe(currentTheme);
+      });
+    }
   </script>
 </body>
 </html>
