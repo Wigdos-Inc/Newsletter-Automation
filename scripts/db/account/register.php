@@ -92,7 +92,8 @@ try {
         
         $_SESSION['userID'] = $id;
         $_SESSION['user_data'] = $userData;
-        header("location: ../../../pages/profile_view.php");
+        $_SESSION['show_tutorial'] = true; // Flag for new users
+        header("location: ../../../index.php");
         exit();
     } else {
         header('location: ../../../pages/register_view.php?err=Error creating account');
