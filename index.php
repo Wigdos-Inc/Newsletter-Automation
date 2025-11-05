@@ -37,8 +37,8 @@
         
         <!-- Desktop Search Bar (centered) -->
         <div class="search-wrapper desktop-search d-none d-md-flex">
-          <input type="text" class="search-input" placeholder="Search...">
-          <button class="search-btn">
+          <input type="text" class="search-input" id="desktopSearchInput" placeholder="Search...">
+          <button class="search-btn" id="desktopSearchBtn">
             <i class="fas fa-search"></i>
           </button>
         </div>
@@ -129,8 +129,8 @@
       <!-- Mobile Search Bar -->
       <div class="mobile-search" id="mobileSearch" style="display: none;">
         <div class="search-wrapper mt-3">
-          <input type="text" class="search-input" placeholder="Search...">
-          <button class="search-btn">
+          <input type="text" class="search-input" id="mobileSearchInput" placeholder="Search...">
+          <button class="search-btn" id="mobileSearchBtn">
             <i class="fas fa-search"></i>
           </button>
         </div>
@@ -399,6 +399,29 @@
         syncThemeToIframe(currentTheme);
       });
     }
+
+    // Search functionality
+    function performSearch(query) {
+      if (query.trim()) {
+        document.getElementById('pageContent').src = 'pages/search_view.php?q=' + encodeURIComponent(query);
+      }
+    }
+
+    // Desktop search
+    document.getElementById('desktopSearchBtn')?.addEventListener('click', () => {
+      performSearch(document.getElementById('desktopSearchInput').value);
+    });
+    document.getElementById('desktopSearchInput')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch(e.target.value);
+    });
+
+    // Mobile search
+    document.getElementById('mobileSearchBtn')?.addEventListener('click', () => {
+      performSearch(document.getElementById('mobileSearchInput').value);
+    });
+    document.getElementById('mobileSearchInput')?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch(e.target.value);
+    });
   </script>
 </body>
 </html>
