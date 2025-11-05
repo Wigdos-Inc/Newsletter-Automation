@@ -18,6 +18,18 @@ document.getElementById('btn_tab_settings').addEventListener('click', (e) => {
     swapTab('tab_settings');
 });
 
+document.getElementById('delaccBtn').addEventListener('click', (e) => {
+    window.location.href = './profile_view.php?delac=1';
+});
+
+let params = new URLSearchParams(document.location.search);
+let delac = params.get("delac");
+
+if(delac){
+    swapTab('tab_settings');
+    document.getElementById('delconfirm').style.display = 'block';
+}
+
 // Check for hash on page load to show the correct tab
 window.addEventListener('load', () => {
     const hash = window.location.hash;

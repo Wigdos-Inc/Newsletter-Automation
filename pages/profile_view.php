@@ -89,7 +89,24 @@
 
                     <h3 class="text-danger">Danger Zone</h3>
                     <li class="border-top my-3"></li>
-                    <button class="btn btn-danger">Delete Account</button>
+                    <button class="btn btn-danger" id="delaccBtn">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="delconfirm" style="display: none">
+            <div class="container bg-body-secondary min-vh-100 min-vw-100 position-fixed align-self-center opacity-25"></div>
+            <div class="modal position-fixed d-flex align-items-center">
+                <div class="modal-dialog shadow rounded p-0">
+                    <div class="modal-content text-center p-4">
+                        <p>You are about to delete your account: '<?=$result['username']?>'.</p>
+                        <p>Do you want to proceed with this action?</p>
+                        <div>
+                            <button class="btn btn-success"><a class="nav-link fw-bold text-light" href="../scripts/db/account/delete_ac.php">Yes</a></button>
+                            <button class="btn btn-danger"><a class="nav-link fw-bold text-light" href="profile_view.php">No</a></button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
