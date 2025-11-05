@@ -1,9 +1,12 @@
 <?php
-if (!isset($_SESSION['user'])) {
+session_start();
+
+if (!isset($_SESSION['userID'])) {
     header("location: ../../../index.php");
+    exit();
 }
 
-session_start();
 session_unset();
 session_destroy();
 header("location: ../../../pages/login_view.php");
+exit();

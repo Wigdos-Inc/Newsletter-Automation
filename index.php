@@ -61,18 +61,18 @@
               <div class="inbox-items">
                 <?php if (isset($userID) && $userID): ?>
                   <?php
-                  $stmt = $pdo->prepare("SELECT * FROM tab_inbox WHERE user_ID = ? AND status = 'unread' ORDER BY created_at DESC LIMIT 5");
+                  $stmt = $pdo->prepare("SELECT * FROM tab_inbox WHERE user_ID = ? AND status = 'unread' ORDER BY date DESC LIMIT 5");
                   $stmt->execute([$userID]);
                   $inboxItems = $stmt->fetchAll(PDO::FETCH_ASSOC);
                   
                   if (count($inboxItems) > 0):
                     foreach ($inboxItems as $item):
                   ?>
-                    <a href="#" class="inbox-item" data-inbox-id="<?php echo $item['inbox_ID']; ?>">
+                    <a href="#" class="inbox-item" data-message-id="<?php echo $item['message_ID']; ?>">
                       <div class="inbox-item-content">
-                        <strong><?php echo htmlspecialchars($item['title'] ?? 'Notification'); ?></strong>
-                        <p class="mb-0"><?php echo htmlspecialchars(substr($item['message'] ?? '', 0, 50)); ?>...</p>
-                        <small class="text-muted"><?php echo date('M j, Y', strtotime($item['created_at'])); ?></small>
+                        <strong><?php echo htmlspecialchars($item['subject'] ?? 'Notification'); ?></strong>
+                        <p class="mb-0"><?php echo htmlspecialchars(substr($item['snippet'] ?? '', 0, 50)); ?>...</p>
+                        <small class="text-muted"><?php echo date('M j, Y', strtotime($item['date'])); ?></small>
                       </div>
                     </a>
                   <?php 
@@ -91,7 +91,7 @@
                   </div>
                 <?php endif; ?>
               </div>
-              <a href="#" class="inbox-footer" data-page="pages/inbox.php">
+              <a href="#" class="inbox-footer" data-page="pages/inbox_view.php">
                 View All Messages
               </a>
             </div>
@@ -103,9 +103,9 @@
               <i class="fas fa-user"></i>
             </div>
             <div class="profile-dropdown" id="profileDropdown">
-              <a href="#" data-page="pages/newsletters.php"><i class="fas fa-user me-2"></i> Profile</a>
-              <a href="#" data-page="pages/newsletters.php"><i class="fas fa-sign-in-alt me-2"></i> Login</a>
-              <a href="#" data-page="pages/newsletters.php"><i class="fas fa-user-plus me-2"></i> Register</a>
+              <a href="#" data-page="pages/profile_view.php"><i class="fas fa-user me-2"></i> Profile</a>
+              <a href="#" data-page="pages/login_view.php"><i class="fas fa-sign-in-alt me-2"></i> Login</a>
+              <a href="#" data-page="pages/register_view.php"><i class="fas fa-user-plus me-2"></i> Register</a>
               <div class="dropdown-divider"></div>
               <div class="theme-toggle-container">
                 <i class="fas fa-moon me-2"></i>
@@ -167,18 +167,18 @@
       
       <div class="sidebar-divider"></div>
       
-      <a href="#" class="sidebar-link" data-page="pages/inbox.php">
+      <a href="#" class="sidebar-link" data-page="pages/inbox_view.php">
         <i class="fas fa-inbox"></i>
         <span>Inbox</span>
         <?php if (isset($inboxAmount) && $inboxAmount > 0): ?>
           <span class="sidebar-badge"><?php echo $inboxAmount; ?></span>
         <?php endif; ?>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/profile_view.php">
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#profile">
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/profile_view.php">
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#settings">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>

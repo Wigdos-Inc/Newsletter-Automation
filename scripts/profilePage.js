@@ -17,3 +17,15 @@ document.getElementById('btn_tab_about').addEventListener('click', (e) => {
 document.getElementById('btn_tab_settings').addEventListener('click', (e) => {
     swapTab('tab_settings');
 });
+
+// Check for hash on page load to show the correct tab
+window.addEventListener('load', () => {
+    const hash = window.location.hash;
+    if (hash === '#settings') {
+        swapTab('tab_settings');
+    } else if (hash === '#profile') {
+        swapTab('tab_about');
+    } else {
+        swapTab('tab_about'); // Default to about tab
+    }
+});
