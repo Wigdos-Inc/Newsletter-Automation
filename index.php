@@ -148,15 +148,15 @@
     </div>
     
     <nav class="sidebar-nav">
-      <a href="#" class="sidebar-link active" data-page="pages/newsletters.php">
+      <a href="#" class="sidebar-link active" data-page="pages/newsletter_view.php">
         <i class="fas fa-home"></i>
         <span>Home</span>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/categories.php">
+      <a href="#" class="sidebar-link" data-page="pages/category_view.php">
         <i class="fas fa-th-large"></i>
         <span>Categories</span>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/newsletters.php">
+      <a href="#" class="sidebar-link" data-page="pages/newsletter_view.php">
         <i class="fas fa-newspaper"></i>
         <span>Newsletters</span>
       </a>
@@ -206,7 +206,7 @@
   <!-- Main Content -->
   <main class="flex-grow-1 py-5 main-content">
     <div class="container">
-      <iframe id="pageContent" src="pages/newsletters.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
+      <iframe id="pageContent" src="pages/newsletter_view.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
     </div>
   </main>
 
