@@ -11,7 +11,7 @@ if (empty($query)) {
 }
 
 // Your n8n webhook URL
-$webhookUrl = 'https://harveygrowthproperties.app.n8n.cloud/webhook-test/066f9c41-8e73-499a-9f94-b58b806ba922';
+$webhookUrl = 'https://harveygrowthproperties.app.n8n.cloud/webhook/066f9c41-8e73-499a-9f94-b58b806ba922';
 
 // Send to n8n
 $ch = curl_init($webhookUrl);

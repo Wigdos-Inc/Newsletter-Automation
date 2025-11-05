@@ -12,10 +12,13 @@ if(!isset($_SESSION['userID'])){
     exit();
 }
 
-$username = trim($_POST['username']);
-$email = trim($_POST['email']);
-$dob = $_POST['dob'];
-$id = $_SESSION['userID'];
+$username = $_POST['username'];
+$email = $_POST['email'];
+$dob = $_POST['birthdate'];
+$password_old = sha1($_POST['oldpassword']);
+$password_new = sha1($_POST['password']);
+$password_confirm = sha1($_POST['passwordCheck']);
+$id = $_SESSION['user'];
 
 // Validate required fields
 if(empty($username) || empty($email) || empty($dob)){
@@ -56,14 +59,37 @@ try{
         exit();
     }
 
+    if(!isset($_POST['username'])){$username = $result_usr['username'];}
+    if(!isset($_POST['email'])){$email = $result_usr['email'];}
+    if(!isset($_POST['birthdate'])){$dob = $result_usr['dob'];}
+
+    if($_POST['password'] != ''){
+        if($password_old != $result_usr['password'] || $password_new != $password_confirm){
+            header("location: ../../../pages/profile_view.php?err=Password doesn't match");
+            exit();
+        }
+        else {
+            if ($password_new == $result_usr['password']) {
+                header("location: ../../../pages/profile_view.php?err=Password is the same as old password.");
+                exit();
+            }
+        }
+    }
+    else{
+        $password_new = $result_usr['password'];
+    }
+
     // Update user information
     $query = "UPDATE tab_users SET username = :username, email = :email, dob = :dob WHERE user_ID = :ID";
     $stmt = $pdo->prepare($query);
     $stmt->execute([
         'ID' => $id,
         'username' => $username,
+        'password' => $password_new,
         'email' => $email,
-        'dob' => $dob
+        'dob' => $dob,
+        'role' => $result_usr['role'],
+        'creation_date' => $result_usr['creation_date']
     ]);
 
     // Fetch updated user data

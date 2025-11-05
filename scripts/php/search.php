@@ -15,9 +15,9 @@ function search(string $query) {
 
     // Prep Results
     $results = [
-        'n' => [],  // Newsletters
-        'c' => [],  // Categories
-        'u' => []   // Users/Creators
+        'newsletters' => [],  // Newsletters
+        'categories' => [],   // Categories
+        'users' => []         // Users/Creators
     ];
 
 
@@ -35,21 +35,21 @@ function search(string $query) {
     foreach ($newsletters as $id => $data) {
 
         $score = relevance($query, $sTerms, [$data['title'], $data['content']]);
-        if ($score > 5) $results['n'][] = [$id, $score];
+        if ($score > 5) $results['newsletters'][] = [$id, $score];
     }
 
     // Store Relevant Categories
     foreach ($categories as $id => $data) {
 
         $score = relevance($query, $sTerms, [$data['name']]);
-        if ($score > 5) $results['c'][] = [$id, $score];
+        if ($score > 5) $results['categories'][] = [$id, $score];
     }
 
     // Store Relevant Creators
     foreach ($users as $id => $data) {
 
         $score = relevance($query, $sTerms, [$data['username']]);
-        if ($score > 5) $results['u'][] = [$id, $score];
+        if ($score > 5) $results['users'][] = [$id, $score];
     }
 
 
@@ -62,13 +62,15 @@ function search(string $query) {
     foreach ($results as $type) $rAmount += count($type);
 
     if ($rAmount) {
-        $_SESSION['qResults'] = $results;   // Store for faster Reload
-        return $results;
+
+        $_SESSION['searchData'] = [
+            'amount'  => $rAmount,
+            'results' => $results,
+            'query'   => $query
+        ];
+
     }
-    else {
-        $_SESSION['qResults'] = null;       // Empty to prevent Confusion
-        return null;
-    }
+    else $_SESSION['searchData'] = null;
 }
 
 
@@ -92,8 +94,8 @@ function relevance(string $query, array $qTerms, array $data) {
         );
 
         // Query Match or Appearance
-        if      ($query == $text)                                       $tScore = $weight*10;
-        else if (strpos($text, $query) !== false && strlen($query) > 5) $tScore = $weight*8;
+        if      ($query == $text)                                       $tScore = $weight*20;
+        else if (strpos($text, $query) !== false && strlen($query) > 3) $tScore = $weight*10;
         else {
 
             // Term Matching
