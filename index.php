@@ -148,7 +148,7 @@
     </div>
     
     <nav class="sidebar-nav">
-      <a href="#" class="sidebar-link active" data-page="pages/newsletter_view.php">
+      <a href="#" class="sidebar-link active" data-page="pages/home_view.php">
         <i class="fas fa-home"></i>
         <span>Home</span>
       </a>
@@ -206,7 +206,7 @@
   <!-- Main Content -->
   <main class="flex-grow-1 py-5 main-content">
     <div class="container">
-      <iframe id="pageContent" src="pages/newsletter_view.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
+      <iframe id="pageContent" src="pages/home_view.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
     </div>
   </main>
 
