@@ -18,10 +18,11 @@ try {
 $popularNewsletters = [];
 try {
     $stmt = $pdo->query("
-        SELECT n.*, COUNT(f.user_ID) as fav_count 
+        SELECT n.newsletter_ID, n.newsletter_name, n.description, n.creation_date, 
+               COUNT(f.user_ID) as fav_count 
         FROM tab_newsletters n 
         LEFT JOIN con_favorites_newsletters f ON n.newsletter_ID = f.newsletter_ID 
-        GROUP BY n.newsletter_ID 
+        GROUP BY n.newsletter_ID, n.newsletter_name, n.description, n.creation_date 
         ORDER BY fav_count DESC, n.creation_date DESC 
         LIMIT 6
     ");
@@ -230,7 +231,7 @@ if ($userID) {
                                 </div>
                                 <div class="popular-content">
                                     <h4 class="popular-title">
-                                        <?php echo htmlspecialchars($newsletter['newsletter_name']); ?>
+                                        <?php echo htmlspecialchars($newsletter['newsletter_name'] ?? 'Untitled Newsletter'); ?>
                                     </h4>
                                     <p class="popular-desc">
                                         <?php echo htmlspecialchars(substr($newsletter['description'] ?? 'Discover trending content', 0, 100)); ?>...
