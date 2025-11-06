@@ -53,4 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Listen for navigation messages from iframe
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'navigateTo') {
+      const targetLink = navLinks.find(link => link.getAttribute('data-page') === event.data.page);
+      loadPage(event.data.page, targetLink);
+    }
+  });
+
 });
