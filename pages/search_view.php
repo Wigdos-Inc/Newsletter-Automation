@@ -12,6 +12,9 @@ if ($query) {
     search(str_replace('%20', ' ', $_GET['query']));
     $rData = $_SESSION['searchData'];
 }
+$query = $rData['query'] ?? $query ?? null;
+$results = $rData['results'] ?? null;
+$rAmount = $rData['amount'] ?? null;
 
 // Get Filter Settings
 $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
@@ -29,6 +32,7 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
 
     <base href="../">
     <link rel="stylesheet" href="bootstrap-5.3.6-dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styling/main.css">
     <link rel="stylesheet" href="styling/search.css">
 </head>
@@ -39,26 +43,29 @@ $filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
         <h1 class='mb-3 text-center'>Search Results</h1>
 
         <!-- Initial Results Check & Output -->
-        <p class="text-center">
+        <p class="text-center mb-4">
             <?php 
             if ($rData['results']) echo "Query yielded {$rData['amount']} results.";
-            else if (!$rData['query'] && !$query) echo 'No search query given.';
+            else if (!$query) echo 'No search query given.';
             else echo 'No results found.';
+
+            // Testing
+            print_r($results);
             ?>
         </p>
 
         <!-- Newsletter Results -->
         <?php if ($results['newsletters']): ?>
 
-            <h2 class='mb-3'><i>Newsletter Results</i></h2>
+            <h3 class='opacity-50'><i>Newsletter Results</i></h3>
 
             <div class="resultBox">
 
             <?php foreach ($results['newsletters'] as $result): ?>
 
                 <div class="resultItem">
-                    <h2><?= $newsletters[$result[0]]['title'] ?></h2>
-                    <p><?= $result[1] ?></p>
+                    <h4><?= $newsletters[$result[0]]['title'] ?></h4>
+                    <p><?= $newsletters[$result[0]]['content'] ?></p>
                 </div>
 
             <?php endforeach; ?>
