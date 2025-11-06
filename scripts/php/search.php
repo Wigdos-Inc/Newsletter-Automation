@@ -2,16 +2,15 @@
 
 session_start();
 
+// Easier Access
+$newsletters = &$_SESSION['newsletters'];
+$categories  = &$_SESSION['categories'];
+$users       = &$_SESSION['users'];
+
 function search(string $query) {
 
     // Return if Empty or Null
     if (!isset($query) || !strlen($query)) return null;
-
-
-    // Easier Access
-    $newsletters = &$_SESSION['newsletters'];
-    $categories  = &$_SESSION['categories'];
-    $users       = &$_SESSION['users'];
 
     // Prep Results
     $results = [
