@@ -9,6 +9,8 @@ $users       = &$_SESSION['users'];
 
 function search(string $query) {
 
+    global $newsletters, $categories, $users;
+
     // Return if Empty or Null
     if (!isset($query) || !strlen($query)) return null;
 

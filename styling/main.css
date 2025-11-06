@@ -925,3 +925,311 @@ body.light-mode .social-icon {
         margin-bottom: 40px;
     }
 }
+
+/* ===== GLOBAL MODAL STYLES ===== */
+.global-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.global-modal-wrapper {
+    background: var(--bg-gradient);
+    border-radius: 20px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.4s ease;
+    position: relative;
+}
+
+.global-modal-header {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: sticky;
+    top: 0;
+    background: var(--bg-gradient);
+    z-index: 1;
+    border-radius: 20px 20px 0 0;
+}
+
+.global-modal-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    flex: 1;
+    padding-right: 1rem;
+}
+
+.global-modal-close {
+    background: rgba(231, 76, 60, 0.2);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.global-modal-close:hover {
+    background: rgba(231, 76, 60, 0.4);
+    transform: rotate(90deg);
+}
+
+.global-modal-body {
+    padding: 2rem;
+}
+
+.global-modal-section {
+    margin-bottom: 2rem;
+}
+
+.global-modal-section:last-child {
+    margin-bottom: 0;
+}
+
+.global-modal-label {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.global-modal-value {
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.global-modal-content {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.8;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.global-modal-content h1,
+.global-modal-content h2,
+.global-modal-content h3,
+.global-modal-content h4,
+.global-modal-content h5,
+.global-modal-content h6 {
+    color: var(--text-primary);
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.global-modal-content p {
+    margin-bottom: 1rem;
+}
+
+.global-modal-content ul,
+.global-modal-content ol {
+    margin-bottom: 1rem;
+    padding-left: 2rem;
+}
+
+.global-modal-content a {
+    color: var(--accent-blue);
+    text-decoration: none;
+}
+
+.global-modal-content a:hover {
+    color: var(--accent-green);
+    text-decoration: underline;
+}
+
+.global-modal-meta {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.global-modal-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+/* Newsletter Cards in Modals */
+.newsletters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.newsletter-card-mini {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.newsletter-card-mini:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--shadow);
+    border-color: var(--accent-blue);
+}
+
+.newsletter-card-mini-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.newsletter-card-mini-header i {
+    color: var(--accent-blue);
+    font-size: 1.2rem;
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.newsletter-card-mini-header h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.newsletter-card-mini p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+}
+
+.newsletter-card-mini-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.newsletter-card-mini-footer small {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.newsletter-card-mini-footer i {
+    font-size: 0.75rem;
+}
+
+/* Creator Header in Modal */
+.creator-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.creator-avatar-large {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3498db, #2ecc71);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    flex-shrink: 0;
+}
+
+/* Text muted helper */
+.text-muted {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Modal scrollbar */
+.global-modal-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.global-modal-wrapper::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.global-modal-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(52, 152, 219, 0.5);
+    border-radius: 10px;
+}
+
+.global-modal-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(52, 152, 219, 0.7);
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+    .global-modal-overlay {
+        padding: 1rem;
+    }
+
+    .global-modal-header,
+    .global-modal-body {
+        padding: 1.5rem;
+    }
+
+    .global-modal-title {
+        font-size: 1.5rem;
+    }
+
+    .global-modal-meta {
+        gap: 1rem;
+    }
+
+    .newsletters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .creator-avatar-large {
+        width: 60px;
+        height: 60px;
+        font-size: 1.6rem;
+    }
+}
