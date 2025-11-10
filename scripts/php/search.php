@@ -26,6 +26,8 @@ function search(string $query) {
 
     // Format Query
     $query = strtolower(trim($query));
+    
+    $threshold = 5;
 
     // Split Search into Terms/Words
     $sTerms = array_filter(
@@ -35,44 +37,29 @@ function search(string $query) {
 
 
     // Store Relevant Newsletters
-    echo 'Newsletters: <br/>';
     foreach ($newsletters as $id => $data) {
-
         // Check that Newsletter is Released
         if ($data['status'] == 'published') {
             $score = relevance($query, $sTerms, [$data['title'], $data['content']]);
-            if ($score > 5) $results['newsletters'][] = [$id, $score];
-
-            echo "$id {$data['title']} $score <br/>";
+            if ($score >= $threshold) $results['newsletters'][] = [$id, $score];
         }
     }
-    echo '<br/><br/>';
 
     // Store Relevant Categories
-    echo 'Categories: <br/>';
     foreach ($categories as $id => $data) {
-
         $score = relevance($query, $sTerms, [$data['name']]);
-        if ($score > 5) $results['categories'][] = [$id, $score];
-
-        echo "$id {$data['name']} $score <br/>";
+        if ($score >= $threshold) $results['categories'][] = [$id, $score];
     }
-    echo '<br/><br/>';
 
     // Store Relevant Creators
-    echo 'Creators: <br/>';
     foreach ($users as $id => $data) {
-
         $score = relevance($query, $sTerms, [$data['username']]);
-        if ($score > 5) $results['users'][] = [$id, $score];
-
-        echo "$id {$data['username']} $score <br/>";
+        if ($score >= $threshold) $results['users'][] = [$id, $score];
     }
-    echo '<br/><br/>';
-
 
     // Sort results by Score
     foreach ($results as &$type) usort($type, fn($a, $b) => $b[1] <=> $a[1]);
+    unset($type); // IMPORTANT: Break the reference to avoid bugs
 
     
     // Check Result Count
@@ -120,10 +107,11 @@ function relevance(string $query, array $qTerms, array $data) {
             foreach($qTerms as $term) {
 
                 $term = trim($term, '.,!?;:/|=');
+                if (strlen($term) == 1) $term = " $term ";
 
                 // Term Appearance
                 if (strpos($text, $term) !== false) {
-                    $tScore += round($weight / count($qTerms) * 5, 2);
+                    $tScore += round($weight / (count($qTerms) * count($tWords)) * 5, 2);
                     continue;
                 }
 
@@ -135,13 +123,13 @@ function relevance(string $query, array $qTerms, array $data) {
                     // Word Similarity (for Typos)
                     $similarity = round(similar_text($term, $word) / max(strlen($term), strlen($word)), 2);
                     if ($similarity > 0.6) {
-                        $tScore += round($weight * $similarity / count($qTerms) * 2, 2);
+                        $tScore += round($weight * $similarity / (count($qTerms) * count($tWords)) * 2, 2);
                         $found++;
                     }
 
                     // Phonetic Match
                     if (metaphone($term) === metaphone($word)) {
-                        $tScore += round($weight / count($qTerms), 2);
+                        $tScore += round($weight / (count($qTerms) * count($tWords)), 2);
                         $found++;
                     }
 

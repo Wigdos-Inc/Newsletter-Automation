@@ -157,15 +157,6 @@
                 </div>
             <?php endif; ?>
 
-        <?php else: ?>
-            <!-- Empty State -->
-            <div class="emptyRes">
-                <div class="emptyIcon">
-                    <i class="fas fa-search"></i>
-                </div>
-                <h2 class="emptyTitle">No results found</h2>
-                <p class="emptyText">Try adjusting your search query or browse our categories</p>
-            </div>
         <?php endif; ?>
     </div>
 
