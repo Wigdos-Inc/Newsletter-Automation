@@ -3,32 +3,6 @@
 session_start();
 
 
-// Get old Data
-$rData = isset($_SESSION['searchData']) ? $_SESSION['searchData'] : null;
-
-// Get new Data on Query Mismatch
-$query = isset($_GET['query']) ? $_GET['query'] : null;
-if ($query) {
-
-    search(str_replace('%20', ' ', $_GET['query']));
-    $rData = $_SESSION['searchData'];
-}
-$query = $rData['query'] ?? $query ?? null;
-$results = $rData['results'] ?? null;
-$rAmount = $rData['amount'] ?? null;
-
-// Get Filter Settings
-$filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
-
-// Helper function to truncate text and strip HTML
-function truncateText($text, $maxLength = 200) {
-    // Strip HTML tags
-    $stripped = strip_tags($text);
-    if (strlen($stripped) <= $maxLength) return $stripped;
-    return substr($stripped, 0, $maxLength) . '...';
-}
-
-
 // Easier Access
 $newsletters = &$_SESSION['newsletters'];
 $categories  = &$_SESSION['categories'];
@@ -61,25 +35,40 @@ function search(string $query) {
 
 
     // Store Relevant Newsletters
+    echo 'Newsletters: <br/>';
     foreach ($newsletters as $id => $data) {
 
-        $score = relevance($query, $sTerms, [$data['title'], $data['content']]);
-        if ($score > 5) $results['newsletters'][] = [$id, $score];
+        // Check that Newsletter is Released
+        if ($data['status'] == 'published') {
+            $score = relevance($query, $sTerms, [$data['title'], $data['content']]);
+            if ($score > 5) $results['newsletters'][] = [$id, $score];
+
+            echo "$id {$data['title']} $score <br/>";
+        }
     }
+    echo '<br/><br/>';
 
     // Store Relevant Categories
+    echo 'Categories: <br/>';
     foreach ($categories as $id => $data) {
 
         $score = relevance($query, $sTerms, [$data['name']]);
         if ($score > 5) $results['categories'][] = [$id, $score];
+
+        echo "$id {$data['name']} $score <br/>";
     }
+    echo '<br/><br/>';
 
     // Store Relevant Creators
+    echo 'Creators: <br/>';
     foreach ($users as $id => $data) {
 
         $score = relevance($query, $sTerms, [$data['username']]);
         if ($score > 5) $results['users'][] = [$id, $score];
+
+        echo "$id {$data['username']} $score <br/>";
     }
+    echo '<br/><br/>';
 
 
     // Sort results by Score
@@ -169,3 +158,30 @@ function relevance(string $query, array $qTerms, array $data) {
 
     return $score;
 }
+
+function truncateText($text, $maxLength = 200) {
+
+    // Strip HTML tags
+    $stripped = strip_tags($text);
+
+    if (strlen($stripped) <= $maxLength) return $stripped;   // Return Full Text
+    return substr($stripped, 0, $maxLength) . '...';         // Return Truncated
+}
+
+
+// Get old Data
+$rData = isset($_SESSION['searchData']) ? $_SESSION['searchData'] : null;
+
+// Get new Data on Query Mismatch
+$query = isset($_GET['query']) ? $_GET['query'] : null;
+if ($query) {
+
+    search(str_replace('%20', ' ', $_GET['query']));
+    $rData = $_SESSION['searchData'];
+}
+$query   = $rData['query'] ?? $query ?? null;
+$results = $rData['results'] ?? null;
+$rAmount = $rData['amount'] ?? null;
+
+// Get Filter Settings
+$filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
