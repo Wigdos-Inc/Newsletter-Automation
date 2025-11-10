@@ -17,16 +17,16 @@
     
     <div class="container py-5">
         <!-- Search Header -->
-        <div class="search-header text-center">
-            <h1 class="search-title">Search Results</h1>
-            <p class="search-info">
+        <div class="searchHeader text-center">
+            <h1 class="searchTitle">Search Results</h1>
+            <p class="searchInfo">
                 <?php 
                 if ($results && $rAmount > 0) {
-                    echo "Found <span class='search-query-highlight'>$rAmount</span> result" . ($rAmount != 1 ? 's' : '') . " for \"<span class='search-query-highlight'>" . htmlspecialchars($query) . "</span>\"";
+                    echo "Found <span class='queryHighlight'>$rAmount</span> result" . ($rAmount != 1 ? 's' : '') . " for \"<span class='queryHighlight'>$query</span>\"";
                 } else if (!$query) {
                     echo 'No search query provided.';
                 } else {
-                    echo 'No results found for "' . htmlspecialchars($query) . '"';
+                    echo "No results found for \"$query\".";
                 }
                 ?>
             </p>
@@ -36,7 +36,7 @@
 
             <!-- Newsletter Results -->
             <?php if (!empty($results['newsletters'])): ?>
-                <div class="results-section">
+                <div class="resSection">
                     <div class="section-header">
                         <i class="fas fa-newspaper"></i>
                         <h2 class="section-title">Newsletters</h2>
@@ -47,19 +47,19 @@
                         $newsletter = $newsletters[$result[0]];
                         $newsletterID = $result[0];
                     ?>
-                        <div class="result-card newsletter-card" onclick="openNewsletterPopup(<?= $newsletterID ?>)">
-                            <div class="card-header">
-                                <h3 class="newsletter-title"><?= htmlspecialchars($newsletter['title']) ?></h3>
-                                <div class="newsletter-date">
+                        <div class="resCard newsCard" onclick="openNewsletterPopup(<?= $newsletterID ?>)">
+                            <div class="cardHeader">
+                                <h3 class="newsTitle"><?= htmlspecialchars($newsletter['title']) ?></h3>
+                                <div class="newsDate">
                                     <i class="fas fa-calendar-alt"></i>
                                     <?= date('M j, Y', strtotime($newsletter['creation_date'])) ?>
                                 </div>
                             </div>
-                            <p class="newsletter-content">
+                            <p class="newsContent">
                                 <?= htmlspecialchars(truncateText($newsletter['content'], 250)) ?>
                             </p>
-                            <div class="newsletter-footer">
-                                <span class="read-more">
+                            <div class="newsFooter">
+                                <span class="readMore">
                                     Read more <i class="fas fa-arrow-right"></i>
                                 </span>
                             </div>
@@ -70,7 +70,7 @@
 
             <!-- Category Results -->
             <?php if (!empty($results['categories'])): ?>
-                <div class="results-section">
+                <div class="resSection">
                     <div class="section-header">
                         <i class="fas fa-th-large"></i>
                         <h2 class="section-title">Categories</h2>
@@ -82,17 +82,17 @@
                         $categoryID = $result[0];
                         $newsletterCount = count($category['newsletters']);
                     ?>
-                        <div class="result-card category-card" onclick="openCategoryPopup(<?= $categoryID ?>)">
-                            <div class="card-header">
-                                <div class="category-icon">
+                        <div class="resCard catCard" onclick="openCategoryPopup(<?= $categoryID ?>)">
+                            <div class="cardHeader">
+                                <div class="catIcon">
                                     <i class="fas fa-folder"></i>
                                 </div>
-                                <div class="category-info">
-                                    <h3 class="category-name"><?= htmlspecialchars($category['name']) ?></h3>
-                                    <div class="category-stats">
-                                        <div class="stat-item">
+                                <div class="catInfo">
+                                    <h3 class="catName"><?= htmlspecialchars($category['name']) ?></h3>
+                                    <div class="catStats">
+                                        <div class="statItem">
                                             <i class="fas fa-newspaper"></i>
-                                            <span class="stat-value"><?= $newsletterCount ?></span> Newsletter<?= $newsletterCount != 1 ? 's' : '' ?>
+                                            <span class="statVal"><?= $newsletterCount ?></span> Newsletter<?= $newsletterCount != 1 ? 's' : '' ?>
                                         </div>
                                     </div>
                                 </div>
@@ -104,7 +104,7 @@
 
             <!-- Creator Results -->
             <?php if (!empty($results['users'])): ?>
-                <div class="results-section">
+                <div class="resSection">
                     <div class="section-header">
                         <i class="fas fa-users"></i>
                         <h2 class="section-title">Creators</h2>
@@ -115,47 +115,38 @@
                         $user = $users[$result[0]];
                         $userID = $result[0];
                         
-                        // Only show admin and owner roles
-                        if (!in_array(strtolower($user['role']), ['admin', 'owner'])) continue;
-                        
-                        $createdCount = count($user['c_newsletters']);
-                        $contributedCount = 0;
-                        // Count newsletters where user is a contributor but not creator
-                        foreach ($newsletters as $nID => $nData) {
-                            if (in_array($userID, $nData['contributors']) && $nData['creator_ID'] != $userID) {
-                                $contributedCount++;
-                            }
-                        }
+                        $creations = 0;  // Placeholder
+                        $contributions = count($user['c_newsletters']);
                     ?>
-                        <div class="result-card creator-card" onclick="openCreatorPopup(<?= $userID ?>)">
-                            <div class="card-header">
-                                <div class="creator-avatar">
+                        <div class="resCard creatorCard" onclick="openCreatorPopup(<?= $userID ?>)">
+                            <div class="cardHeader">
+                                <div class="creatorAvatar">
                                     <?= strtoupper(substr($user['username'], 0, 1)) ?>
                                 </div>
-                                <div class="creator-info">
-                                    <h3 class="creator-name">
+                                <div class="creatorInfo">
+                                    <h3 class="creatorName">
                                         <?= htmlspecialchars($user['username']) ?>
-                                        <span class="creator-role <?= strtolower($user['role']) ?>">
+                                        <span class="creatorRole <?= strtolower($user['role']) ?>">
                                             <?= htmlspecialchars($user['role']) ?>
                                         </span>
                                     </h3>
-                                    <div class="creator-joined">
+                                    <div class="creatorJoined">
                                         <i class="fas fa-calendar-alt"></i>
                                         Joined <?= date('M j, Y', strtotime($user['creation_date'])) ?>
                                     </div>
                                 </div>
                             </div>
-                            <div class="creator-stats">
-                                <div class="creator-stat">
-                                    <span class="creator-stat-label">Created</span>
-                                    <span class="creator-stat-value">
+                            <div class="creatorStats">
+                                <div class="creatorStat">
+                                    <span class="statLabel">Created</span>
+                                    <span class="statVal">
                                         <i class="fas fa-newspaper"></i>
                                         <?= $createdCount ?>
                                     </span>
                                 </div>
-                                <div class="creator-stat">
-                                    <span class="creator-stat-label">Contributed To</span>
-                                    <span class="creator-stat-value">
+                                <div class="creatorStat">
+                                    <span class="statLabel">Contributed To</span>
+                                    <span class="statVal">
                                         <i class="fas fa-hands-helping"></i>
                                         <?= $contributedCount ?>
                                     </span>
@@ -168,12 +159,12 @@
 
         <?php else: ?>
             <!-- Empty State -->
-            <div class="empty-results">
-                <div class="empty-icon">
+            <div class="emptyRes">
+                <div class="emptyIcon">
                     <i class="fas fa-search"></i>
                 </div>
-                <h2 class="empty-title">No results found</h2>
-                <p class="empty-text">Try adjusting your search query or browse our categories</p>
+                <h2 class="emptyTitle">No results found</h2>
+                <p class="emptyText">Try adjusting your search query or browse our categories</p>
             </div>
         <?php endif; ?>
     </div>

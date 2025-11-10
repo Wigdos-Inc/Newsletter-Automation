@@ -1,10 +1,10 @@
 /* Search Results Page Styling */
 
-.search-header {
+.searchHeader {
     margin-bottom: 2rem;
 }
 
-.search-title {
+.searchTitle {
     font-size: 2.5rem;
     font-weight: 700;
     background: linear-gradient(45deg, #3498db, #2ecc71);
@@ -14,18 +14,18 @@
     margin-bottom: 0.5rem;
 }
 
-.search-info {
+.searchInfo {
     color: var(--text-secondary);
     font-size: 1rem;
 }
 
-.search-query-highlight {
+.queryHighlight {
     color: var(--accent-blue);
     font-weight: 600;
 }
 
 /* Section Headers */
-.results-section {
+.resSection {
     margin-bottom: 3rem;
 }
 
@@ -61,7 +61,7 @@
 }
 
 /* Result Cards */
-.result-card {
+.resCard {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
@@ -73,7 +73,7 @@
     overflow: hidden;
 }
 
-.result-card::before {
+.resCard::before {
     content: '';
     position: absolute;
     left: 0;
@@ -85,34 +85,34 @@
     transition: transform 0.3s ease;
 }
 
-.result-card:hover {
+.resCard:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 25px var(--shadow);
     border-color: var(--accent-blue);
 }
 
-.result-card:hover::before {
+.resCard:hover::before {
     transform: scaleY(1);
 }
 
-body.light-mode .result-card {
+body.light-mode .resCard {
     background: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-body.light-mode .result-card:hover {
+body.light-mode .resCard:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 /* Newsletter Card */
-.newsletter-card .card-header {
+.newsCard .cardHeader {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     margin-bottom: 0.75rem;
 }
 
-.newsletter-title {
+.newsTitle {
     font-size: 1.4rem;
     font-weight: 600;
     color: var(--accent-blue);
@@ -122,11 +122,11 @@ body.light-mode .result-card:hover {
     transition: color 0.3s ease;
 }
 
-.result-card:hover .newsletter-title {
+.resCard:hover .newsTitle {
     color: var(--accent-green);
 }
 
-.newsletter-date {
+.newsDate {
     color: var(--text-muted);
     font-size: 0.85rem;
     display: flex;
@@ -136,17 +136,17 @@ body.light-mode .result-card:hover {
     margin-left: 1rem;
 }
 
-.newsletter-date i {
+.newsDate i {
     font-size: 0.75rem;
 }
 
-.newsletter-content {
+.newsContent {
     color: var(--text-secondary);
     line-height: 1.6;
     margin-bottom: 0.75rem;
 }
 
-.newsletter-footer {
+.newsFooter {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -155,7 +155,7 @@ body.light-mode .result-card:hover {
     border-top: 1px solid var(--border-color);
 }
 
-.read-more {
+.readMore {
     color: var(--accent-blue);
     font-size: 0.9rem;
     font-weight: 600;
@@ -165,19 +165,19 @@ body.light-mode .result-card:hover {
     text-decoration: none;
 }
 
-.read-more:hover {
+.readMore:hover {
     color: var(--accent-green);
 }
 
 /* Category Card */
-.category-card .card-header {
+.catCard .cardHeader {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-bottom: 0.75rem;
 }
 
-.category-icon {
+.catIcon {
     width: 50px;
     height: 50px;
     border-radius: 12px;
@@ -190,18 +190,18 @@ body.light-mode .result-card:hover {
     flex-shrink: 0;
 }
 
-.category-info {
+.catInfo {
     flex: 1;
 }
 
-.category-name {
+.catName {
     font-size: 1.4rem;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0 0 0.25rem 0;
 }
 
-.category-stats {
+.catStats {
     display: flex;
     align-items: center;
     gap: 1.5rem;
@@ -209,31 +209,31 @@ body.light-mode .result-card:hover {
     font-size: 0.9rem;
 }
 
-.stat-item {
+.statItem {
     display: flex;
     align-items: center;
     gap: 0.4rem;
 }
 
-.stat-item i {
+.statItem i {
     color: var(--accent-blue);
     font-size: 0.85rem;
 }
 
-.stat-value {
+.statVal {
     font-weight: 600;
     color: var(--text-primary);
 }
 
 /* Creator Card */
-.creator-card .card-header {
+.creatorCard .cardHeader {
     display: flex;
     align-items: center;
     gap: 1rem;
     margin-bottom: 1rem;
 }
 
-.creator-avatar {
+.creatorAvatar {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -248,11 +248,11 @@ body.light-mode .result-card:hover {
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
-.creator-info {
+.creatorInfo {
     flex: 1;
 }
 
-.creator-name {
+.creatorName {
     font-size: 1.4rem;
     font-weight: 600;
     color: var(--text-primary);
@@ -262,7 +262,7 @@ body.light-mode .result-card:hover {
     gap: 0.5rem;
 }
 
-.creator-role {
+.creatorRole {
     background: linear-gradient(135deg, #e74c3c, #c0392b);
     color: #ffffff;
     padding: 0.15rem 0.6rem;
@@ -272,11 +272,11 @@ body.light-mode .result-card:hover {
     text-transform: uppercase;
 }
 
-.creator-role.owner {
+.creatorRole.owner {
     background: linear-gradient(135deg, #f39c12, #e67e22);
 }
 
-.creator-joined {
+.creatorJoined {
     color: var(--text-muted);
     font-size: 0.85rem;
     display: flex;
@@ -284,7 +284,7 @@ body.light-mode .result-card:hover {
     gap: 0.4rem;
 }
 
-.creator-stats {
+.creatorStats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
@@ -293,18 +293,18 @@ body.light-mode .result-card:hover {
     border-top: 1px solid var(--border-color);
 }
 
-.creator-stat {
+.creatorStat {
     display: flex;
     flex-direction: column;
 }
 
-.creator-stat-label {
+.statLabel {
     color: var(--text-muted);
     font-size: 0.85rem;
     margin-bottom: 0.25rem;
 }
 
-.creator-stat-value {
+.statVal {
     color: var(--text-primary);
     font-size: 1.3rem;
     font-weight: 700;
@@ -313,39 +313,39 @@ body.light-mode .result-card:hover {
     gap: 0.5rem;
 }
 
-.creator-stat-value i {
+.statVal i {
     color: var(--accent-blue);
     font-size: 1rem;
 }
 
 /* Empty State */
-.empty-results {
+.emptyRes {
     text-align: center;
     padding: 4rem 2rem;
 }
 
-.empty-icon {
+.emptyIcon {
     font-size: 4rem;
     color: var(--text-muted);
     margin-bottom: 1rem;
     opacity: 0.5;
 }
 
-.empty-title {
+.emptyTitle {
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
-.empty-text {
+.emptyText {
     color: var(--text-secondary);
     font-size: 1rem;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .search-title {
+    .searchTitle {
         font-size: 2rem;
     }
 
@@ -353,30 +353,30 @@ body.light-mode .result-card:hover {
         font-size: 1.5rem;
     }
 
-    .result-card {
+    .resCard {
         padding: 1rem;
     }
 
-    .newsletter-title,
-    .category-name,
-    .creator-name {
+    .newsTitle,
+    .catName,
+    .creatorName {
         font-size: 1.2rem;
     }
 
-    .newsletter-card .card-header {
+    .newsCard .cardHeader {
         flex-direction: column;
         gap: 0.5rem;
     }
 
-    .newsletter-date {
+    .newsDate {
         margin-left: 0;
     }
 
-    .creator-stats {
+    .creatorStats {
         grid-template-columns: 1fr;
     }
 
-    .category-stats {
+    .catStats {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
