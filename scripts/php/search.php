@@ -2,10 +2,38 @@
 
 session_start();
 
+
+// Get old Data
+$rData = isset($_SESSION['searchData']) ? $_SESSION['searchData'] : null;
+
+// Get new Data on Query Mismatch
+$query = isset($_GET['query']) ? $_GET['query'] : null;
+if ($query) {
+
+    search(str_replace('%20', ' ', $_GET['query']));
+    $rData = $_SESSION['searchData'];
+}
+$query = $rData['query'] ?? $query ?? null;
+$results = $rData['results'] ?? null;
+$rAmount = $rData['amount'] ?? null;
+
+// Get Filter Settings
+$filters = isset($_GET['filters']) ? json_encode($_GET['filters']) : null;
+
+// Helper function to truncate text and strip HTML
+function truncateText($text, $maxLength = 200) {
+    // Strip HTML tags
+    $stripped = strip_tags($text);
+    if (strlen($stripped) <= $maxLength) return $stripped;
+    return substr($stripped, 0, $maxLength) . '...';
+}
+
+
 // Easier Access
 $newsletters = &$_SESSION['newsletters'];
 $categories  = &$_SESSION['categories'];
 $users       = &$_SESSION['users'];
+
 
 function search(string $query) {
 
