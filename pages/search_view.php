@@ -125,12 +125,12 @@
                                 </div>
                                 <div class="creatorInfo">
                                     <h3 class="creatorName">
-                                        <?= htmlspecialchars($user['username']) ?>
+                                        <?= $user['username'] ?>
                                         <span class="creatorRole <?= strtolower($user['role']) ?>">
-                                            <?= htmlspecialchars($user['role']) ?>
+                                            <?= $user['role'] ?>
                                         </span>
                                     </h3>
-                                    <div class="creatorJoined">
+                                    <div class="creatorJoinDate">
                                         <i class="fas fa-calendar-alt"></i>
                                         Joined <?= date('M j, Y', strtotime($user['creation_date'])) ?>
                                     </div>
@@ -141,14 +141,14 @@
                                     <span class="statLabel">Created</span>
                                     <span class="statVal">
                                         <i class="fas fa-newspaper"></i>
-                                        <?= $createdCount ?>
+                                        <?= $creations ?>
                                     </span>
                                 </div>
                                 <div class="creatorStat">
                                     <span class="statLabel">Contributed To</span>
                                     <span class="statVal">
                                         <i class="fas fa-hands-helping"></i>
-                                        <?= $contributedCount ?>
+                                        <?= $contributions ?>
                                     </span>
                                 </div>
                             </div>
@@ -179,26 +179,24 @@
             );
         }
 
-        // Reference parent window's popup functions
-        function newsPopup(id) {
-            if (window.parent && window.parent.newsPopup) {
-                window.parent.newsPopup(id);
-            }
+    // Reference parent window's popup functions
+    function newsPopup(id) {
+        if (window.parent && window.parent.popupSystem) {
+            window.parent.popupSystem.newsPopup(id);
         }
+    }
 
-        function categoryPopup(id) {
-            if (window.parent && window.parent.categoryPopup) {
-                window.parent.categoryPopup(id);
-            }
+    function categoryPopup(id) {
+        if (window.parent && window.parent.popupSystem) {
+            window.parent.popupSystem.categoryPopup(id);
         }
+    }
 
-        function creatorPopup(id) {
-            if (window.parent && window.parent.creatorPopup) {
-                window.parent.creatorPopup(id);
-            }
+    function creatorPopup(id) {
+        if (window.parent && window.parent.popupSystem) {
+            window.parent.popupSystem.creatorPopup(id);
         }
-
-        // Listen for theme changes from parent window
+    }        // Listen for theme changes from parent window
         window.addEventListener('message', function(event) {
             if (event.data && event.data.type === 'themeChange') {
                 const theme = event.data.theme;

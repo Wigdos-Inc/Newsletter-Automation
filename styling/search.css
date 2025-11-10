@@ -276,7 +276,7 @@ body.light-mode .resCard:hover {
     background: linear-gradient(135deg, #f39c12, #e67e22);
 }
 
-.creatorJoined {
+.creatorJoinDate {
     color: var(--text-muted);
     font-size: 0.85rem;
     display: flex;
