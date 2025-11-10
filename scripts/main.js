@@ -29,7 +29,7 @@ window.popupSystem = {
   },
 
   // Open Newsletter Popup
-  openNewsletterPopup: function(id) {
+  newsPopup: function(id) {
     const newsletter = this.newsletters[id];
     if (!newsletter) return;
 
@@ -90,7 +90,7 @@ window.popupSystem = {
 
     const recentHTML = recentNewsletters.length > 0 
       ? recentNewsletters.map(n => `
-          <div class="newsletter-card-mini" onclick="window.popupSystem.openNewsletterPopup(${n.id})">
+          <div class="newsletter-card-mini" onclick="window.popupSystem.newsPopup(${n.id})">
             <div class="newsletter-card-mini-header">
               <i class="fas fa-newspaper"></i>
               <h4>${this.escapeHtml(n.data.title)}</h4>
@@ -105,7 +105,7 @@ window.popupSystem = {
 
     const favoritedHTML = favoritedNewsletters.length > 0
       ? favoritedNewsletters.map(n => `
-          <div class="newsletter-card-mini" onclick="window.popupSystem.openNewsletterPopup(${n.id})">
+          <div class="newsletter-card-mini" onclick="window.popupSystem.newsPopup(${n.id})">
             <div class="newsletter-card-mini-header">
               <i class="fas fa-newspaper"></i>
               <h4>${this.escapeHtml(n.data.title)}</h4>
@@ -185,7 +185,7 @@ window.popupSystem = {
 
     const createdHTML = createdNewsletters.length > 0
       ? createdNewsletters.map(n => `
-          <div class="newsletter-card-mini" onclick="window.popupSystem.openNewsletterPopup(${n.id})">
+          <div class="newsletter-card-mini" onclick="window.popupSystem.newsPopup(${n.id})">
             <div class="newsletter-card-mini-header">
               <i class="fas fa-newspaper"></i>
               <h4>${this.escapeHtml(n.data.title)}</h4>
@@ -200,7 +200,7 @@ window.popupSystem = {
 
     const contributedHTML = recentContributions.length > 0
       ? recentContributions.map(n => `
-          <div class="newsletter-card-mini" onclick="window.popupSystem.openNewsletterPopup(${n.id})">
+          <div class="newsletter-card-mini" onclick="window.popupSystem.newsPopup(${n.id})">
             <div class="newsletter-card-mini-header">
               <i class="fas fa-newspaper"></i>
               <h4>${this.escapeHtml(n.data.title)}</h4>
@@ -315,7 +315,7 @@ window.popupSystem = {
 };
 
 // Make popup functions globally accessible from iframes
-window.openNewsletterPopup = (id) => window.popupSystem.openNewsletterPopup(id);
+window.newsPopup = (id) => window.popupSystem.newsPopup(id);
 window.openCategoryPopup = (id) => window.popupSystem.openCategoryPopup(id);
 window.openCreatorPopup = (id) => window.popupSystem.openCreatorPopup(id);
 

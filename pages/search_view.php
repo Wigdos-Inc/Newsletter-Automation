@@ -47,7 +47,7 @@
                         $newsletter = $newsletters[$result[0]];
                         $newsletterID = $result[0];
                     ?>
-                        <div class="resCard newsCard" onclick="openNewsletterPopup(<?= $newsletterID ?>)">
+                        <div class="resCard newsCard" onclick="newsPopup(<?= $newsletterID ?>)">
                             <div class="cardHeader">
                                 <h3 class="newsTitle"><?= htmlspecialchars($newsletter['title']) ?></h3>
                                 <div class="newsDate">
@@ -180,9 +180,9 @@
         }
 
         // Reference parent window's popup functions
-        function openNewsletterPopup(id) {
-            if (window.parent && window.parent.openNewsletterPopup) {
-                window.parent.openNewsletterPopup(id);
+        function newsPopup(id) {
+            if (window.parent && window.parent.newsPopup) {
+                window.parent.newsPopup(id);
             }
         }
 
