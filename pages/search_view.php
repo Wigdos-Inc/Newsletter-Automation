@@ -82,7 +82,7 @@
                         $categoryID = $result[0];
                         $newsletterCount = count($category['newsletters']);
                     ?>
-                        <div class="resCard catCard" onclick="openCategoryPopup(<?= $categoryID ?>)">
+                        <div class="resCard catCard" onclick="categoryPopup(<?= $categoryID ?>)">
                             <div class="cardHeader">
                                 <div class="catIcon">
                                     <i class="fas fa-folder"></i>
@@ -118,7 +118,7 @@
                         $creations = 0;  // Placeholder
                         $contributions = count($user['c_newsletters']);
                     ?>
-                        <div class="resCard creatorCard" onclick="openCreatorPopup(<?= $userID ?>)">
+                        <div class="resCard creatorCard" onclick="creatorPopup(<?= $userID ?>)">
                             <div class="cardHeader">
                                 <div class="creatorAvatar">
                                     <?= strtoupper(substr($user['username'], 0, 1)) ?>
@@ -186,15 +186,15 @@
             }
         }
 
-        function openCategoryPopup(id) {
-            if (window.parent && window.parent.openCategoryPopup) {
-                window.parent.openCategoryPopup(id);
+        function categoryPopup(id) {
+            if (window.parent && window.parent.categoryPopup) {
+                window.parent.categoryPopup(id);
             }
         }
 
-        function openCreatorPopup(id) {
-            if (window.parent && window.parent.openCreatorPopup) {
-                window.parent.openCreatorPopup(id);
+        function creatorPopup(id) {
+            if (window.parent && window.parent.creatorPopup) {
+                window.parent.creatorPopup(id);
             }
         }
 

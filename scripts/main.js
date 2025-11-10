@@ -70,7 +70,7 @@ window.popupSystem = {
   },
 
   // Open Category Popup
-  openCategoryPopup: function(id) {
+  categoryPopup: function(id) {
     const category = this.categories[id];
     if (!category) return;
 
@@ -161,7 +161,7 @@ window.popupSystem = {
   },
 
   // Open Creator Popup
-  openCreatorPopup: function(id) {
+  creatorPopup: function(id) {
     const user = this.users[id];
     if (!user) return;
 
@@ -316,8 +316,8 @@ window.popupSystem = {
 
 // Make popup functions globally accessible from iframes
 window.newsPopup = (id) => window.popupSystem.newsPopup(id);
-window.openCategoryPopup = (id) => window.popupSystem.openCategoryPopup(id);
-window.openCreatorPopup = (id) => window.popupSystem.openCreatorPopup(id);
+window.categoryPopup = (id) => window.popupSystem.categoryPopup(id);
+window.creatorPopup = (id) => window.popupSystem.creatorPopup(id);
 
 async function search() {
 
