@@ -40,20 +40,20 @@ function search(string $query) {
     foreach ($newsletters as $id => $data) {
         // Check that Newsletter is Released
         if ($data['status'] == 'published') {
-            $score = relevance($query, $sTerms, [$data['title'], $data['content']]);
+            $score = relevance($query, $sTerms, [$data['title'], $data['content'], $id]);
             if ($score >= $threshold) $results['newsletters'][] = [$id, $score];
         }
     }
 
     // Store Relevant Categories
     foreach ($categories as $id => $data) {
-        $score = relevance($query, $sTerms, [$data['name']]);
+        $score = relevance($query, $sTerms, [$data['name'], $id]);
         if ($score >= $threshold) $results['categories'][] = [$id, $score];
     }
 
     // Store Relevant Creators
     foreach ($users as $id => $data) {
-        $score = relevance($query, $sTerms, [$data['username']]);
+        $score = relevance($query, $sTerms, [$data['username'], $id]);
         if ($score >= $threshold) $results['users'][] = [$id, $score];
     }
 
@@ -107,11 +107,14 @@ function relevance(string $query, array $qTerms, array $data) {
             foreach($qTerms as $term) {
 
                 $term = trim($term, '.,!?;:/|=');
-                if (strlen($term) == 1) $term = " $term ";
 
                 // Term Appearance
-                if (strpos($text, $term) !== false) {
-                    $tScore += round($weight / (count($qTerms) * count($tWords)) * 5, 2);
+                if (preg_match('/\b' . preg_quote($term, '/') . '\b/i', $text)) {            // Term appears as Word
+                    $tScore += $weight;
+                    continue;
+                } 
+                else if (strpos($text, $term) !== false) {
+                    $tScore += round($weight / (count($qTerms) * count($tWords)) * 5, 2);    // Term appears within Word
                     continue;
                 }
 
