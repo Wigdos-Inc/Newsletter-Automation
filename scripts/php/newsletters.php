@@ -3,6 +3,7 @@ header('Content-Type: application/json');
 
 // Include database connection
 require_once '../db/config.php';
+require_once '../db/notifications.php';
 
 // Get the user's query
 $input = json_decode(file_get_contents('php://input'), true);
@@ -91,6 +92,9 @@ if ($action === 'update') {
         
         $pdo->commit();
         
+        // Send notifications to users who favorited this newsletter
+        notifyNewsletterEdited($pdo, $newsletterID, false);
+        
         echo json_encode(['success' => true, 'message' => 'Newsletter updated successfully']);
     } catch (PDOException $e) {
         $pdo->rollBack();
@@ -134,6 +138,9 @@ if ($action === 'unpublish') {
         $stmt = $pdo->prepare("UPDATE tab_newsletters SET status = 'draft' WHERE newsletter_ID = ? AND user_ID = ?");
         $stmt->execute([$newsletterID, $userID]);
         
+        // Notify users who favorited this newsletter
+        notifyNewsletterUnpublished($pdo, $newsletterID);
+        
         echo json_encode(['success' => true, 'message' => 'Newsletter unpublished successfully']);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
@@ -157,6 +164,12 @@ if ($action === 'publish') {
     try {
         // Start transaction
         $pdo->beginTransaction();
+        
+        // Get old status to check if this is a republish
+        $stmt = $pdo->prepare("SELECT status FROM tab_newsletters WHERE newsletter_ID = ?");
+        $stmt->execute([$newsletterID]);
+        $oldNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+        $wasUnpublished = $oldNewsletter && $oldNewsletter['status'] === 'draft';
         
         // If title and content are provided, update them first
         if ($title !== null && $content !== null) {
@@ -194,6 +207,17 @@ if ($action === 'publish') {
         }
         
         $pdo->commit();
+        
+        // Send appropriate notification
+        if ($wasUnpublished) {
+            // Notify users that the newsletter is back
+            notifyNewsletterRepublished($pdo, $newsletterID);
+        }
+        
+        // If this is a new publication with categories, notify users who favorited those categories
+        if ($categoryIDs !== null && !empty($categoryIDs)) {
+            notifyNewNewsletterInFavoritedCategory($pdo, $newsletterID, $categoryIDs);
+        }
         
         echo json_encode(['success' => true, 'message' => 'Newsletter published successfully']);
     } catch (PDOException $e) {
@@ -233,6 +257,11 @@ if ($action === 'save') {
         }
         
         $pdo->commit();
+        
+        // If the newsletter is published, notify users who favorited the categories
+        if ($status === 'published' && !empty($categoryIDs)) {
+            notifyNewNewsletterInFavoritedCategory($pdo, $newsletterID, $categoryIDs);
+        }
         
         echo json_encode(['success' => true, 'newsletter_ID' => $newsletterID, 'message' => 'Newsletter saved successfully']);
     } catch (PDOException $e) {

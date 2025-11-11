@@ -127,10 +127,16 @@
     cursor: pointer;
     transition: all 0.3s ease;
     box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .btn-read-digest:hover,
 .btn-explore:hover {
+    color: #ffffff;
+    text-decoration: none;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
 }
@@ -230,10 +236,16 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
 .btn-view-category:hover {
     background: #2980b9;
+    color: #ffffff;
+    text-decoration: none;
     transform: translateX(5px);
 }
 
@@ -353,9 +365,16 @@
     transition: all 0.3s ease;
     width: 100%;
     box-shadow: 0 3px 10px rgba(231, 76, 60, 0.3);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
 }
 
 .btn-read-popular:hover {
+    color: #ffffff;
+    text-decoration: none;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
