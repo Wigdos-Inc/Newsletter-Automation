@@ -104,8 +104,12 @@
             </div>
             <div class="profile-dropdown" id="profileDropdown">
               <a href="#" data-page="pages/profile_view.php"><i class="fas fa-user me-2"></i> Profile</a>
-              <a href="#" data-page="pages/login_view.php"><i class="fas fa-sign-in-alt me-2"></i> Login</a>
-              <a href="#" data-page="pages/register_view.php"><i class="fas fa-user-plus me-2"></i> Register</a>
+              <?php if (isset($userID) && $userID): ?>
+                <a href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
+              <?php else: ?>
+                <a href="#" data-page="pages/login_view.php"><i class="fas fa-sign-in-alt me-2"></i> Login</a>
+                <a href="#" data-page="pages/register_view.php"><i class="fas fa-user-plus me-2"></i> Register</a>
+              <?php endif; ?>
               <div class="dropdown-divider"></div>
               <div class="theme-toggle-container">
                 <i class="fas fa-moon me-2"></i>
@@ -185,14 +189,21 @@
       
       <div class="sidebar-divider"></div>
       
-      <a href="#" class="sidebar-link" data-page="pages/login_view.php">
-        <i class="fas fa-sign-in-alt"></i>
-        <span>Login</span>
-      </a>
-      <a href="#" class="sidebar-link" data-page="pages/register_view.php">
-        <i class="fas fa-user-plus"></i>
-        <span>Register</span>
-      </a>
+      <?php if (isset($userID) && $userID): ?>
+        <a href="#" class="sidebar-link" onclick="logout(); return false;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      <?php else: ?>
+        <a href="#" class="sidebar-link" data-page="pages/login_view.php">
+          <i class="fas fa-sign-in-alt"></i>
+          <span>Login</span>
+        </a>
+        <a href="#" class="sidebar-link" data-page="pages/register_view.php">
+          <i class="fas fa-user-plus"></i>
+          <span>Register</span>
+        </a>
+      <?php endif; ?>
     </nav>
 
     <div class="sidebar-footer">
@@ -864,6 +875,29 @@
     document.getElementById('mobileSearchInput')?.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') performSearch(e.target.value);
     });
+
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        fetch('scripts/db/account/logout.php', { 
+          method: 'POST',
+          credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+          } else {
+            alert('Logout failed. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Reload anyway as a fallback
+          window.location.reload();
+        });
+      }
+    }
   </script>
 </body>
 </html>
