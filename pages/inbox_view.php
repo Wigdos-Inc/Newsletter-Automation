@@ -57,6 +57,9 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
                 Inbox
             </h2>
             <div class="inbox-actions">
+                <button class="action-btn" id="refreshBtn" onclick="location.reload()" title="Refresh inbox">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
                 <button class="action-btn" id="selectAllBtn" onclick="toggleSelectAll()">
                     <i class="fas fa-check-square"></i> Select All
                 </button>
@@ -350,6 +353,161 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
                 alert('An error occurred. Please try again.');
             });
         }
+
+        // Auto-refresh inbox every 30 seconds to check for new messages
+        let autoRefreshInterval;
+        
+        function startAutoRefresh() {
+            // Clear any existing interval
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            // Refresh every 30 seconds
+            autoRefreshInterval = setInterval(() => {
+                checkForNewMessages();
+            }, 30000);
+        }
+        
+        function checkForNewMessages() {
+            const currentFilter = new URLSearchParams(window.location.search).get('filter') || 'all';
+            
+            fetch('../scripts/php/inbox_api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'get_all_messages',
+                    status: currentFilter,
+                    limit: 50,
+                    offset: 0
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update counts in filter badges
+                    updateFilterBadges(data.counts);
+                    
+                    // Update the parent window's inbox badge
+                    updateParentInboxBadge(data.counts.unread);
+                    
+                    // If there are new messages, show a notification
+                    const currentMessageCount = document.querySelectorAll('.message-card').length;
+                    if (data.messages.length > currentMessageCount) {
+                        showNewMessageNotification();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking for new messages:', error);
+            });
+        }
+        
+        function updateFilterBadges(counts) {
+            const filterBadges = {
+                'all': counts.all,
+                'unread': counts.unread,
+                'read': counts.read,
+                'archived': counts.archived
+            };
+            
+            Object.keys(filterBadges).forEach(filter => {
+                const badge = document.querySelector(`a[href="?filter=${filter}"] .filter-badge`);
+                if (badge) {
+                    badge.textContent = filterBadges[filter];
+                }
+            });
+        }
+        
+        function updateParentInboxBadge(unreadCount) {
+            try {
+                const parentWindow = window.parent && window.parent !== window ? window.parent : null;
+                
+                if (parentWindow) {
+                    const badge = parentWindow.document.querySelector('.inbox-badge');
+                    const dropdownBadge = parentWindow.document.querySelector('.inbox-header .badge');
+                    
+                    if (unreadCount > 0) {
+                        if (badge) {
+                            badge.textContent = unreadCount;
+                            badge.style.display = 'inline-block';
+                        }
+                        if (dropdownBadge) {
+                            dropdownBadge.textContent = `${unreadCount} unread`;
+                        }
+                    } else {
+                        if (badge) {
+                            badge.style.display = 'none';
+                        }
+                        if (dropdownBadge) {
+                            dropdownBadge.textContent = '0 unread';
+                        }
+                    }
+                }
+            } catch (error) {
+                // Ignore cross-origin errors
+                console.log('Cannot update parent inbox badge (cross-origin)');
+            }
+        }
+        
+        function showNewMessageNotification() {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #3498db;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-envelope"></i>
+                <strong>New Message!</strong>
+                <button onclick="location.reload()" style="margin-left: 10px; background: white; color: #3498db; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">
+                    Refresh
+                </button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // Start auto-refresh when page loads
+        startAutoRefresh();
+        
+        // Stop auto-refresh when page is hidden/closed
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (autoRefreshInterval) {
+                    clearInterval(autoRefreshInterval);
+                }
+            } else {
+                startAutoRefresh();
+                checkForNewMessages(); // Check immediately when page becomes visible
+            }
+        });
     </script>
+    
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+    </style>
 </body>
 </html>
