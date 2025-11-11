@@ -14,6 +14,9 @@ function swapTab(tabID){
 document.getElementById('btn_tab_create').addEventListener('click', (e) => {
     swapTab('tab_create');
 });
+document.getElementById('btn_tab_generator').addEventListener('click', (e) => {
+    swapTab('tab_generator');
+});
 document.getElementById('btn_tab_viewLetters').addEventListener('click', (e) => {
     swapTab('tab_viewLetters');
 });

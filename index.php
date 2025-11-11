@@ -1,4 +1,13 @@
-<?php require_once 'scripts/db/data.php'; ?>
+<?php 
+require_once 'scripts/db/data.php'; 
+
+// Check if user is admin or owner
+$isAdminOrOwner = false;
+if ($userID && isset($users[$userID])) {
+    $userRole = $users[$userID]['role'];
+    $isAdminOrOwner = ($userRole === 'admin' || $userRole === 'owner');
+}
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -104,6 +113,9 @@
             </div>
             <div class="profile-dropdown" id="profileDropdown">
               <a href="#" data-page="pages/profile_view.php"><i class="fas fa-user me-2"></i> Profile</a>
+              <?php if ($isAdminOrOwner): ?>
+                <a href="#" data-page="pages/adminPanel.php"><i class="fas fa-user-shield me-2"></i> Admin Panel</a>
+              <?php endif; ?>
               <?php if (isset($userID) && $userID): ?>
                 <a href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
               <?php else: ?>
@@ -182,6 +194,12 @@
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
+      <?php if ($isAdminOrOwner): ?>
+        <a href="#" class="sidebar-link" data-page="pages/adminPanel.php">
+          <i class="fas fa-user-shield"></i>
+          <span>Admin Panel</span>
+        </a>
+      <?php endif; ?>
       <a href="#" class="sidebar-link" data-page="pages/profile_view.php#settings">
         <i class="fas fa-cog"></i>
         <span>Settings</span>

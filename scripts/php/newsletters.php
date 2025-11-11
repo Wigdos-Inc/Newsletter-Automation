@@ -9,6 +9,42 @@ $input = json_decode(file_get_contents('php://input'), true);
 $query = $input['query'] ?? '';
 $action = $input['action'] ?? 'generate';
 
+// Fetch single newsletter for editing
+if ($action === 'fetch_single') {
+    $newsletterID = $input['newsletter_ID'] ?? null;
+    
+    if (!$newsletterID) {
+        echo json_encode(['success' => false, 'error' => 'Newsletter ID required']);
+        exit;
+    }
+    
+    try {
+        // Fetch newsletter
+        $stmt = $pdo->prepare("SELECT * FROM tab_newsletters WHERE newsletter_ID = ?");
+        $stmt->execute([$newsletterID]);
+        $newsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$newsletter) {
+            echo json_encode(['success' => false, 'error' => 'Newsletter not found']);
+            exit;
+        }
+        
+        // Fetch categories
+        $stmt = $pdo->prepare("SELECT category_ID FROM con_newsletter_categories WHERE newsletter_ID = ?");
+        $stmt->execute([$newsletterID]);
+        $categories = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        
+        echo json_encode([
+            'success' => true,
+            'newsletter' => $newsletter,
+            'categories' => $categories
+        ]);
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+    }
+    exit;
+}
+
 // Handle AI edit action
 if ($action === 'ai_edit') {
     $content = $input['content'] ?? '';
@@ -60,12 +96,24 @@ if ($action === 'update') {
         // Start transaction
         $pdo->beginTransaction();
         
-        // Verify ownership
+        // Check if newsletter exists and verify permissions
         $stmt = $pdo->prepare("SELECT user_ID FROM tab_newsletters WHERE newsletter_ID = ?");
         $stmt->execute([$newsletterID]);
         $newsletter = $stmt->fetch(PDO::FETCH_ASSOC);
         
-        if (!$newsletter || $newsletter['user_ID'] != $userID) {
+        if (!$newsletter) {
+            $pdo->rollBack();
+            echo json_encode(['success' => false, 'error' => 'Newsletter not found']);
+            exit;
+        }
+        
+        // Get user role
+        $stmt = $pdo->prepare("SELECT role FROM tab_users WHERE user_ID = ?");
+        $stmt->execute([$userID]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Allow if user is owner/admin or if it's their own newsletter
+        if ($newsletter['user_ID'] != $userID && (!$user || !in_array($user['role'], ['admin', 'owner']))) {
             $pdo->rollBack();
             echo json_encode(['success' => false, 'error' => 'Unauthorized']);
             exit;
