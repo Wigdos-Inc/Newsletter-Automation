@@ -236,7 +236,7 @@ if ($userID && isset($users[$userID])) {
   <!-- Main Content -->
   <main class="flex-grow-1 py-5 main-content">
     <div class="container">
-      <iframe id="pageContent" src="pages/home_view.php" title="Page content" style="width:100%; min-height:65vh; border:0;" loading="lazy"></iframe>
+      <iframe id="pageContent" src="pages/home_view.php" title="Page content" style="width:100%; border:0; overflow:hidden; display:block;" loading="lazy"></iframe>
     </div>
   </main>
 

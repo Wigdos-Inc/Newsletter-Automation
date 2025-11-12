@@ -1,14 +1,39 @@
 const profile_tabs = document.getElementById('profile_tabs');
 
 function swapTab(tabID){
-    document.getElementById(tabID);
-
+    // Hide all tabs and show the selected one
     for(let i = 0; i < (profile_tabs.childNodes.length - 1) / 2; i++){
         let offset = i * 2;
-        const curNode = profile_tabs.childNodes[offset +1];
-        if(curNode.id == tabID){curNode.style.display = 'block';}
-        else{curNode.style.display = 'none';}
+        const curNode = profile_tabs.childNodes[offset + 1];
+        if(curNode.id == tabID){
+            curNode.style.display = 'block';
+        } else {
+            curNode.style.display = 'none';
+        }
     }
+    
+    // Update active state on navigation links
+    document.querySelectorAll('.admin-nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // Find and activate the corresponding button
+    const activeButton = document.getElementById('btn_' + tabID);
+    if(activeButton){
+        activeButton.classList.add('active');
+    }
+    
+    // Force layout recalculation
+    profile_tabs.style.display = 'none';
+    profile_tabs.offsetHeight; // Trigger reflow
+    profile_tabs.style.display = 'flex';
+    
+    // Notify parent to resize iframe after DOM settles
+    setTimeout(() => {
+        if (window.parent) {
+            window.parent.postMessage({ type: 'resizeIframe' }, '*');
+        }
+    }, 10);
 }
 
 document.getElementById('btn_tab_about').addEventListener('click', (e) => {

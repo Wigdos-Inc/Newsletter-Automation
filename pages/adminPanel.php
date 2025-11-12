@@ -33,7 +33,7 @@
     <title>Admin Panel</title>
     <link rel="stylesheet" href="../bootstrap-5.3.6-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../styling/main.css">
+    <!-- <link rel="stylesheet" href="../styling/main.css"> -->
     <link rel="stylesheet" href="../styling/profile.css">
     <style>
         /* Override for iframe embedding - remove margins and ensure proper layout */
@@ -75,8 +75,6 @@
         </div>
     <?php endif; ?>
     
-    <h2 class="mb-4 fw-bold text-center" style="color: var(--text-primary);">Admin Panel</h2>
-    
     <div class="d-flex flex-column flex-md-row gap-3">
         <div class="admin-sidebar">
             <div class="text-center mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -108,17 +106,17 @@
                     <h2>Newsletters</h2>
                     <p style="color: var(--text-secondary)">Here you can view, edit and delete NewsLetters.</p>
                 </div>
-                <div class="mb-3">
-                    <div class="input-group mb-2">
-                        <input type="text" class="form-control" id="searchNewsLetter" placeholder="Search newsletters...">
-                        <button class="btn btn-primary" type="button" id="search-newsletter-btn"><i class="fas fa-search"></i></button>
+                <div class="admin-content-container">
+                    <div class="admin-search-section">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchNewsLetter" placeholder="Search newsletters...">
+                            <button class="btn btn-primary" type="button" id="search-newsletter-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <button class="btn btn-danger" id="delete-selected-newsletters">
+                            <i class="fas fa-trash me-1"></i>Delete selected
+                        </button>
                     </div>
-                    <button class="btn btn-danger" id="delete-selected-newsletters">
-                        <i class="fas fa-trash me-1"></i>Delete selected
-                    </button>
-                </div>
-                <div id="newsletters_view" class="overflow-y-auto">
-                    <div class="card-body overflow-hidden">
+                    <div class="admin-table-section">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -272,14 +270,15 @@
                     <h2>Users</h2>
                     <p style="color: var(--text-secondary)">Here you can view all user accounts.</p>
                 </div>
-                <div class="mb-3" style="padding: 0 1.5rem;">
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="searchUsername" placeholder="Search users...">
-                        <button class="btn btn-primary" type="button" id="search-user-btn"><i class="fas fa-search"></i></button>
+                <div class="admin-content-container">
+                    <div class="admin-search-section">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="searchUsername" placeholder="Search users...">
+                            <button class="btn btn-primary" type="button" id="search-user-btn"><i class="fas fa-search"></i></button>
+                        </div>
                     </div>
-                </div>
-                <div class="overflow-y-auto">
-                    <table class="table table-hover">
+                    <div class="admin-table-section">
+                        <table class="table table-hover">
                         <thead>
                             <tr>
                                 <th>Username</th>
@@ -307,27 +306,30 @@
                     </table>
                 </div>
             </div>
+        </div>
 
-            <div id="tab_viewCategories" class="list-unstyled admin-tab-content" style="display: none;">
-                <div class="admin-tab-header">
-                    <h2>Categories</h2>
-                    <p style="color: var(--text-secondary)">Here you can view and delete Categories.</p>
-                </div>
-                <div class="mb-3" style="padding: 0 1.5rem;">
-                    <div class="input-group mb-2">
+        <div id="tab_viewCategories" class="list-unstyled admin-tab-content" style="display: none;">
+            <div class="admin-tab-header">
+                <h2>Categories</h2>
+                <p style="color: var(--text-secondary)">Here you can view and delete Categories.</p>
+            </div>
+            <div class="admin-content-container">
+                <div class="admin-search-section">
+                    <div class="input-group">
                         <input type="text" class="form-control" id="searchCategories" placeholder="Search categories...">
                         <button class="btn btn-primary" type="button" id="search-category-btn"><i class="fas fa-search"></i></button>
                     </div>
-                    <button class="btn btn-success me-2" id="create-category-tab-btn">
-                        <i class="fas fa-plus me-1"></i>Create New Category
-                    </button>
-                    <button class="btn btn-danger" id="delete-selected-categories">
-                        <i class="fas fa-trash me-1"></i>Delete selected
-                    </button>
+                    <div class="admin-button-group">
+                        <button class="btn btn-success" id="create-category-tab-btn">
+                            <i class="fas fa-plus me-1"></i>Create New Category
+                        </button>
+                        <button class="btn btn-danger" id="delete-selected-categories">
+                            <i class="fas fa-trash me-1"></i>Delete selected
+                        </button>
+                    </div>
                 </div>
-                <div id="categories_view" class="overflow-y-auto">
-                    <div class="card-body overflow-hidden">
-                        <table class="table table-hover">
+                <div class="admin-table-section">
+                    <table class="table table-hover">
                             <thead>
                                 <tr>
                                     <th><input type="checkbox" id="select-all-categories"></th>
@@ -356,7 +358,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 
     <!-- Delete NewsLetters Confirmation Modal -->
