@@ -255,7 +255,9 @@ body.sidebar-open .main-content {
     background: var(--bg-gradient);
     padding: 1rem 0;
     box-shadow: 0 2px 10px var(--shadow);
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 900;
     margin-left: 0;
     transition: margin-left 0.3s ease, background 0.3s ease;
 }

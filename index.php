@@ -244,43 +244,35 @@ if ($userID && isset($users[$userID])) {
   <!-- Footer -->
   <footer class="footer mt-auto">
     <div class="container">
-      <div class="row g-4">
-        <div class="col-lg-4 footer-section">
-          <div class="footer-logo">Newswire AI</div>
-          <p class="footer-about">We provide the best service and innovative solutions that make a difference in people's lives.</p>
-          <div class="social-links">
+      <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8 text-center">
+          
+          <!-- Logo -->
+          <div class="footer-logo mb-3">Newswire AI</div>
+          
+          <!-- Description -->
+          <p class="footer-about mb-4">Subscribe for updates, news, and exclusive offers.</p>
+          
+          <!-- Newsletter Signup -->
+          <div class="footer-newsletter mb-4">
+            <input type="email" placeholder="Enter your email">
+            <button class="newsletter-btn"><i class="fas fa-paper-plane"></i></button>
+          </div>
+          
+          <!-- Social Links -->
+          <div class="social-links justify-content-center mb-4">
             <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
             <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
             <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
             <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
           </div>
-        </div>
-
-        <div class="col-lg-2 col-md-6 footer-section">
-          <h5>Quick Links</h5>
-          <ul class="footer-links">
-            <li><a href="#">Pricing</a></li>
-            <li><a href="#">Contact</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-4 footer-section">
-          <h5>Newswire AI</h5>
-          <p class="footer-about">Subscribe for updates, news, and exclusive offers.</p>
-          <div class="footer-newsletter">
-            <input type="email" placeholder="Enter your email">
-            <button class="newsletter-btn"><i class="fas fa-paper-plane"></i></button>
+          
+          <!-- Copyright -->
+          <div class="footer-bottom">
+            <p>© 2025 Newswire AI.</p>
           </div>
+          
         </div>
-      </div>
-
-      <div class="footer-bottom text-center mt-5 pt-3">
-        <ul class="footer-bottom-links d-flex justify-content-center gap-3 mb-2">
-          <li><a href="#">Privacy Policy</a></li>
-          <li><a href="#">Terms of Service</a></li>
-          <li><a href="#">Cookie Policy</a></li>
-        </ul>
-        <p>© 2025 Newswire AI.</p>
       </div>
     </div>
   </footer>
