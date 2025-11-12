@@ -232,20 +232,28 @@ function updateParentInboxBadge(unreadCount) {
         const parentWindow = window.parent && window.parent !== window ? window.parent : null;
         
         if (parentWindow) {
-            const badge = parentWindow.document.querySelector('.inbox-badge');
+            const headerBadge = parentWindow.document.querySelector('.inbox-badge');
+            const sidebarBadge = parentWindow.document.querySelector('.sidebar-badge');
             const dropdownBadge = parentWindow.document.querySelector('.inbox-header .badge');
             
             if (unreadCount > 0) {
-                if (badge) {
-                    badge.textContent = unreadCount;
-                    badge.style.display = 'inline-block';
+                if (headerBadge) {
+                    headerBadge.textContent = unreadCount;
+                    headerBadge.style.display = 'flex';
+                }
+                if (sidebarBadge) {
+                    sidebarBadge.textContent = unreadCount;
+                    sidebarBadge.style.display = 'flex';
                 }
                 if (dropdownBadge) {
                     dropdownBadge.textContent = `${unreadCount} unread`;
                 }
             } else {
-                if (badge) {
-                    badge.style.display = 'none';
+                if (headerBadge) {
+                    headerBadge.style.display = 'none';
+                }
+                if (sidebarBadge) {
+                    sidebarBadge.style.display = 'none';
                 }
                 if (dropdownBadge) {
                     dropdownBadge.textContent = '0 unread';

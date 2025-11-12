@@ -41,8 +41,9 @@ if ($action === 'fetch_newsletters') {
         if ($filter === 'admin') {
             $query .= " AND n.user_ID = ?";
             $params[] = $userID;
-        } elseif ($filter === 'hidden') {
-            $query .= " AND n.visibility = 'hidden'";
+        }
+        if ($filter === 'hidden') {
+            $query .= " AND n.status = 'hidden'";
         }
         
         if ($search) {
@@ -87,31 +88,12 @@ if ($action === 'toggle_newsletter_visibility') {
     $newsletterID = $input['newsletter_id'] ?? 0;
     
     try {
-        $stmt = $pdo->prepare("SELECT visibility FROM tab_newsletters WHERE newsletter_ID = ?");
-        $stmt->execute([$newsletterID]);
-        $newsletter = $stmt->fetch();
-        
-        $newVisibility = ($newsletter['visibility'] === 'visible') ? 'hidden' : 'visible';
-        
-        $stmt = $pdo->prepare("UPDATE tab_newsletters SET visibility = ? WHERE newsletter_ID = ?");
-        $stmt->execute([$newVisibility, $newsletterID]);
-        
-        echo json_encode(['success' => true, 'new_visibility' => $newVisibility]);
-    } catch (PDOException $e) {
-        echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-    }
-    exit;
-}
-
-if ($action === 'toggle_newsletter_status') {
-    $newsletterID = $input['newsletter_id'] ?? 0;
-    
-    try {
         $stmt = $pdo->prepare("SELECT status FROM tab_newsletters WHERE newsletter_ID = ?");
         $stmt->execute([$newsletterID]);
         $newsletter = $stmt->fetch();
         
-        $newStatus = ($newsletter['status'] === 'published') ? 'draft' : 'published';
+        // If published -> hidden, if hidden -> draft
+        $newStatus = ($newsletter['status'] === 'published' || $newsletter['status'] === 'draft') ? 'hidden' : 'draft';
         
         $stmt = $pdo->prepare("UPDATE tab_newsletters SET status = ? WHERE newsletter_ID = ?");
         $stmt->execute([$newStatus, $newsletterID]);

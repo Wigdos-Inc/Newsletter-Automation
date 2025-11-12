@@ -38,6 +38,10 @@ function swapTab(tabID){
 
 document.getElementById('btn_tab_create').addEventListener('click', (e) => {
     swapTab('tab_create');
+    // Refresh newsletter list when switching to newsletters tab
+    if (typeof refreshNewsletterList === 'function') {
+        refreshNewsletterList();
+    }
 });
 document.getElementById('btn_tab_generator').addEventListener('click', (e) => {
     swapTab('tab_generator');

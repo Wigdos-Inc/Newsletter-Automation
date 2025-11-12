@@ -110,25 +110,21 @@
                                 <?php foreach($newsletters as $newsletter): 
                                     $owner = isset($users[$newsletter['user_ID']]) ? $users[$newsletter['user_ID']]['username'] : 'Unknown';
                                 ?>
-                                <tr data-newsletter-id="<?= $newsletter['newsletter_ID'] ?>">
-                                    <td><input type="checkbox" class="newsletter-checkbox" value="<?= $newsletter['newsletter_ID'] ?>"></td>
-                                    <td><?= htmlspecialchars(substr($newsletter['title'], 0, 50)) ?><?= strlen($newsletter['title']) > 50 ? '...' : '' ?></td>
-                                    <td><?= htmlspecialchars($owner) ?></td>
-                                    <td>
-                                        <span class="badge bg-<?= $newsletter['status'] === 'published' ? 'success' : 'secondary' ?>">
+                                <tr data-newsletter-id="<?= $newsletter['newsletter_ID'] ?>" class="newsletter-row" style="cursor: pointer;">
+                                    <td><input type="checkbox" class="newsletter-checkbox" value="<?= $newsletter['newsletter_ID'] ?>" onclick="event.stopPropagation();"></td>
+                                    <td onclick="editNewsletter(<?= $newsletter['newsletter_ID'] ?>)"><?= htmlspecialchars(substr($newsletter['title'], 0, 50)) ?><?= strlen($newsletter['title']) > 50 ? '...' : '' ?></td>
+                                    <td onclick="editNewsletter(<?= $newsletter['newsletter_ID'] ?>)"><?= htmlspecialchars($owner) ?></td>
+                                    <td onclick="editNewsletter(<?= $newsletter['newsletter_ID'] ?>)">
+                                        <span class="badge bg-<?= $newsletter['status'] === 'published' ? 'success' : ($newsletter['status'] === 'hidden' ? 'danger' : 'secondary') ?>">
                                             <?= ucfirst($newsletter['status']) ?>
                                         </span>
                                     </td>
-                                    <td><?= date('M j, Y', strtotime($newsletter['creation_date'])) ?></td>
+                                    <td onclick="editNewsletter(<?= $newsletter['newsletter_ID'] ?>)"><?= date('M j, Y', strtotime($newsletter['creation_date'])) ?></td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary edit-newsletter-btn me-1" data-id="<?= $newsletter['newsletter_ID'] ?>">
-                                            <i class="fas fa-edit"></i> Edit
+                                        <button class="btn btn-sm <?= $newsletter['status'] === 'hidden' ? 'btn-success' : 'btn-secondary' ?> hide-newsletter-btn" data-id="<?= $newsletter['newsletter_ID'] ?>" onclick="event.stopPropagation();">
+                                            <i class="fas fa-<?= $newsletter['status'] === 'hidden' ? 'eye' : 'eye-slash' ?> me-1"></i>
+                                            <?= $newsletter['status'] === 'hidden' ? 'Unhide' : 'Hide' ?>
                                         </button>
-                                        <?php if($newsletter['status'] === 'published'): ?>
-                                            <button class="btn btn-sm btn-warning unpublish-btn" data-id="<?= $newsletter['newsletter_ID'] ?>">Unpublish</button>
-                                        <?php else: ?>
-                                            <button class="btn btn-sm btn-success publish-btn" data-id="<?= $newsletter['newsletter_ID'] ?>">Publish</button>
-                                        <?php endif; ?>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -224,14 +220,17 @@
                                 <button id="admin-ai-edit-btn" class="btn btn-info">
                                     <i class="fas fa-magic me-1"></i>AI Edit
                                 </button>
-                                <button id="admin-publish-btn" class="btn btn-primary" style="display: inline-block;">
+                                <button id="admin-publish-btn" class="btn btn-primary btn-visible">
                                     <i class="fas fa-paper-plane me-1"></i>Publish
                                 </button>
-                                <button id="admin-unpublish-btn" class="btn btn-warning" style="display: none;">
+                                <button id="admin-unpublish-btn" class="btn btn-warning btn-hidden">
                                     <i class="fas fa-undo me-1"></i>Unpublish
                                 </button>
-                                <button id="admin-hide-btn" class="btn btn-secondary">
+                                <button id="admin-hide-btn" class="btn btn-secondary btn-visible">
                                     <i class="fas fa-eye-slash me-1"></i>Hide
+                                </button>
+                                <button id="admin-unhide-btn" class="btn btn-success btn-hidden">
+                                    <i class="fas fa-eye me-1"></i>Unhide
                                 </button>
                                 <button id="admin-delete-btn" class="btn btn-danger">
                                     <i class="fas fa-trash me-1"></i>Delete

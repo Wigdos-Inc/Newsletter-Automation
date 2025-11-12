@@ -13,30 +13,41 @@ function updateInboxBadge() {
   .then(response => response.json())
   .then(data => {
     if (data.success && typeof data.count !== 'undefined') {
-      const badge = document.querySelector('.inbox-badge');
+      const headerBadge = document.querySelector('.inbox-badge');
+      const sidebarBadge = document.querySelector('.sidebar-badge');
       const dropdownBadge = document.querySelector('.inbox-header .badge');
       const inboxIcon = document.querySelector('.inbox-icon');
       
       if (data.count > 0) {
-        // Show badge with count
-        if (badge) {
-          badge.textContent = data.count;
-          badge.style.display = 'inline-block';
+        // Show header badge with count
+        if (headerBadge) {
+          headerBadge.textContent = data.count;
+          headerBadge.style.display = 'flex';
         } else if (inboxIcon) {
-          // Create badge if it doesn't exist
+          // Create header badge if it doesn't exist
           const newBadge = document.createElement('span');
           newBadge.className = 'inbox-badge';
           newBadge.textContent = data.count;
           inboxIcon.appendChild(newBadge);
         }
         
+        // Show sidebar badge with count
+        if (sidebarBadge) {
+          sidebarBadge.textContent = data.count;
+          sidebarBadge.style.display = 'flex';
+        }
+        
         if (dropdownBadge) {
           dropdownBadge.textContent = data.count + ' unread';
         }
       } else {
-        // Hide badge if no unread messages
-        if (badge) {
-          badge.style.display = 'none';
+        // Hide badges if no unread messages
+        if (headerBadge) {
+          headerBadge.style.display = 'none';
+        }
+        
+        if (sidebarBadge) {
+          sidebarBadge.style.display = 'none';
         }
         
         if (dropdownBadge) {
@@ -105,8 +116,8 @@ function updateInboxDropdown() {
   });
 }
 
-// Update inbox badge every 30 seconds
-setInterval(updateInboxBadge, 30000);
+// Update inbox badge every 5 seconds
+setInterval(updateInboxBadge, 5000);
 
 // Update immediately on page load
 setTimeout(updateInboxBadge, 1000);

@@ -85,6 +85,7 @@ if ($action === 'update') {
     $newsletterID = $input['newsletter_ID'] ?? null;
     $title = $input['title'] ?? '';
     $content = $input['content'] ?? '';
+    $status = $input['status'] ?? null;
     $categoryIDs = $input['category_ids'] ?? null;
     $userID = isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : null;
     
@@ -120,8 +121,14 @@ if ($action === 'update') {
             exit;
         }
         
-        $stmt = $pdo->prepare("UPDATE tab_newsletters SET title = ?, content = ? WHERE newsletter_ID = ?");
-        $stmt->execute([$title, $content, $newsletterID]);
+        // Update newsletter
+        if ($status !== null) {
+            $stmt = $pdo->prepare("UPDATE tab_newsletters SET title = ?, content = ?, status = ? WHERE newsletter_ID = ?");
+            $stmt->execute([$title, $content, $status, $newsletterID]);
+        } else {
+            $stmt = $pdo->prepare("UPDATE tab_newsletters SET title = ?, content = ? WHERE newsletter_ID = ?");
+            $stmt->execute([$title, $content, $newsletterID]);
+        }
         
         // Update categories if provided
         if ($categoryIDs !== null) {
