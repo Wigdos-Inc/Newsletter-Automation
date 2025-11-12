@@ -5,14 +5,61 @@ require_once '../scripts/db/config.php';
 // Get UserID from cookie
 $userID = isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : null;
 
-// Fetch categories
+// Handle AJAX check for newest newsletter
+if (isset($_GET['check_newest']) && $_GET['check_newest'] == '1') {
+    header('Content-Type: application/json');
+    
+    try {
+        // Get the most recent published newsletter
+        $stmt = $pdo->query("
+            SELECT newsletter_ID, title, content, creation_date
+            FROM tab_newsletters
+            WHERE status = 'published'
+            ORDER BY creation_date DESC
+            LIMIT 1
+        ");
+        $newestNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($newestNewsletter) {
+            echo json_encode([
+                'has_new' => true,
+                'newsletter' => $newestNewsletter
+            ]);
+        } else {
+            echo json_encode(['has_new' => false]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(['has_new' => false, 'error' => 'Database error']);
+    }
+    exit;
+}
+
+// Fetch the most recent published newsletter for Featured section
+$featuredNewsletter = null;
+try {
+    $stmt = $pdo->query("
+        SELECT newsletter_ID, title, content, creation_date
+        FROM tab_newsletters
+        WHERE status = 'published'
+        ORDER BY creation_date DESC
+        LIMIT 1
+    ");
+    $featuredNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Silent fail
+}
+
+// Fetch all categories (no limit)
 $categories = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM tab_categories ORDER BY name ASC LIMIT 3");
+    $stmt = $pdo->query("SELECT * FROM tab_categories ORDER BY name ASC");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     // Silent fail for now
 }
+
+// Define how many categories to display before dropdown
+$maxDisplayedCategories = 3;
 
 // Fetch newsletters for "Popular" section (by favorite count or date)
 $popularNewsletters = [];
@@ -88,33 +135,33 @@ if ($userID) {
             </div>
         </div>
         
-        <?php if ($userID && $userDigest): ?>
-        <!-- User Digest Section (Only for logged-in users) -->
-        <section class="user-digest-section mb-3">
+        <?php if ($featuredNewsletter): ?>
+        <!-- Featured Newsletter Section -->
+        <section class="user-digest-section mb-3" id="featuredSection">
             <div class="section-header mb-4">
                 <h2 class="section-title">
-                    <i class="fas fa-user-circle me-2"></i>
-                    Your Personalized Digest
+                    <i class="fas fa-star me-2"></i>
+                    Featured Newsletter
                 </h2>
-                <p class="section-subtitle">Latest newsletter from your favorites</p>
+                <p class="section-subtitle">Latest published newsletter</p>
             </div>
             
             <div class="digest-card">
                 <div class="digest-content">
                     <div class="digest-label">
-                        <i class="fas fa-star"></i>
-                        <span>Featured</span>
+                        <i class="fas fa-fire"></i>
+                        <span>Newest</span>
                     </div>
-                    <h3 class="digest-title"><?php echo htmlspecialchars($userDigest['title']); ?></h3>
-                    <p class="digest-description">
-                        <?php echo htmlspecialchars(substr(strip_tags($userDigest['content']) ?? 'Your personalized newsletter content will appear here.', 0, 150)); ?>...
+                    <h3 class="digest-title" id="featuredTitle"><?php echo htmlspecialchars($featuredNewsletter['title']); ?></h3>
+                    <p class="digest-description" id="featuredDescription">
+                        <?php echo htmlspecialchars(substr(strip_tags($featuredNewsletter['content']) ?? 'Latest newsletter content.', 0, 150)); ?>...
                     </p>
                     <div class="digest-meta">
-                        <span class="digest-date">
+                        <span class="digest-date" id="featuredDate">
                             <i class="far fa-calendar-alt me-1"></i>
-                            <?php echo date('M j, Y', strtotime($userDigest['creation_date'])); ?>
+                            <?php echo date('M j, Y', strtotime($featuredNewsletter['creation_date'])); ?>
                         </span>
-                        <button class="btn-read-digest" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $userDigest['newsletter_ID']; ?>)">
+                        <button class="btn-read-digest" id="featuredReadBtn" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $featuredNewsletter['newsletter_ID']; ?>)">
                             Read Newsletter <i class="fas fa-arrow-right ms-1"></i>
                         </button>
                     </div>
@@ -124,33 +171,27 @@ if ($userID) {
                 </div>
             </div>
         </section>
-        <?php elseif ($userID): ?>
-        <!-- Placeholder for logged-in users without favorites -->
+        <?php else: ?>
+        <!-- Placeholder when no newsletters exist -->
         <section class="user-digest-section mb-3">
             <div class="section-header mb-4">
                 <h2 class="section-title">
-                    <i class="fas fa-user-circle me-2"></i>
-                    Your Personalized Digest
+                    <i class="fas fa-star me-2"></i>
+                    Featured Newsletter
                 </h2>
-                <p class="section-subtitle">Start favoriting newsletters to see your digest</p>
+                <p class="section-subtitle">No newsletters published yet</p>
             </div>
             
             <div class="digest-card digest-placeholder">
                 <div class="digest-content">
                     <div class="digest-label">
                         <i class="fas fa-info-circle"></i>
-                        <span>Coming Soon when the functionality of the newsletter is complete</span>
+                        <span>Coming Soon</span>
                     </div>
-                    <h3 class="digest-title">Your Newsletter Digest Will Appear Here</h3>
+                    <h3 class="digest-title">Latest Newsletter Will Appear Here</h3>
                     <p class="digest-description">
-                        Once you start favoriting newsletters, we'll display your most recent personalized content right here. 
-                        This is where you'll get quick access to the latest updates from your favorite sources.
+                        Once newsletters are published, the most recent one will be featured right here.
                     </p>
-                    <div class="digest-meta">
-                        <button class="btn-explore" onclick="parent.postMessage({type: 'navigateTo', page: 'pages/newsletter_view.php'}, '*')">
-                            Explore Newsletters <i class="fas fa-compass ms-1"></i>
-                        </button>
-                    </div>
                 </div>
                 <div class="digest-image">
                     <i class="fas fa-newspaper"></i>
@@ -169,29 +210,66 @@ if ($userID) {
                 <p class="section-subtitle">Fresh content from your favorite topics</p>
             </div>
 
-            <div class="row g-3">
-                <?php if (count($categories) > 0): ?>
-                    <?php foreach ($categories as $category): ?>
+            <?php if (count($categories) > $maxDisplayedCategories): ?>
+            <!-- View More Dropdown at the top -->
+            <div class="category-dropdown-wrapper">
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="viewMoreCategoriesBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-layer-group me-2"></i>
+                        View All Categories (<?php echo count($categories) - $maxDisplayedCategories; ?> more)
+                    </button>
+                    <ul class="dropdown-menu category-dropdown-menu" aria-labelledby="viewMoreCategoriesBtn">
                         <?php
-                        // Fetch newest newsletter for this category
-                        $newestNewsletter = null;
+                        // Show categories from index maxDisplayedCategories onwards in dropdown
+                        for ($i = $maxDisplayedCategories; $i < count($categories); $i++):
+                            $dropdownCategory = $categories[$i];
+                        ?>
+                        <li>
+                            <a class="dropdown-item category-dropdown-item" href="#" onclick="scrollToCategoryCard(<?php echo $i; ?>); return false;">
+                                <span>
+                                    <i class="fas fa-folder me-2"></i>
+                                    <?php echo htmlspecialchars($dropdownCategory['name']); ?>
+                                </span>
+                                <?php if ($userID): ?>
+                                <button class="favorite-btn-icon-small" 
+                                        data-favorite-btn 
+                                        data-favorite-type="category" 
+                                        data-favorite-id="<?php echo $dropdownCategory['category_ID']; ?>"
+                                        title="Follow category"
+                                        onclick="event.stopPropagation();">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                        <?php endfor; ?>
+                    </ul>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <div class="row g-3" id="categoryGrid">
+                <?php if (count($categories) > 0): ?>
+                    <?php foreach ($categories as $index => $category): ?>
+                        <?php
+                        // Fetch ALL newsletters for this category to get count
+                        $categoryNewslettersCount = 0;
                         try {
                             $stmt = $pdo->prepare("
-                                SELECT n.* 
+                                SELECT COUNT(*) as count
                                 FROM tab_newsletters n
                                 INNER JOIN con_newsletter_categories c ON n.newsletter_ID = c.newsletter_ID
                                 WHERE c.category_ID = ?
-                                ORDER BY n.creation_date DESC
-                                LIMIT 1
                             ");
                             $stmt->execute([$category['category_ID']]);
-                            $newestNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $categoryNewslettersCount = $result['count'];
                         } catch (PDOException $e) {
                             // Silent fail
                         }
                         ?>
-                        <div class="col-lg-4 col-md-6">
-                            <div class="category-card">
+                        <div class="col-lg-4 col-md-6 category-item <?php echo ($index >= $maxDisplayedCategories) ? 'category-hidden' : ''; ?>" id="category-card-<?php echo $index; ?>">
+                            <div class="category-card" onclick="openCategoryPopup(<?php echo $category['category_ID']; ?>, '<?php echo htmlspecialchars(addslashes($category['name'])); ?>')">
                                 <div class="category-badge">
                                     <?php echo htmlspecialchars($category['name']); ?>
                                     <?php if ($userID): ?>
@@ -200,34 +278,23 @@ if ($userID) {
                                             data-favorite-type="category" 
                                             data-favorite-id="<?php echo $category['category_ID']; ?>"
                                             title="Follow category"
-                                            style="float: right; margin-top: -2px;">
+                                            style="float: right; margin-top: -2px;"
+                                            onclick="event.stopPropagation();">
                                         <i class="far fa-heart"></i>
                                     </button>
                                     <?php endif; ?>
                                 </div>
                                 <div class="category-content">
-                                    <?php if ($newestNewsletter): ?>
-                                        <h4 class="category-newsletter-title">
-                                            <?php echo htmlspecialchars($newestNewsletter['title']); ?>
-                                        </h4>
-                                        <p class="category-newsletter-desc">
-                                            <?php echo htmlspecialchars(substr(strip_tags($newestNewsletter['content']) ?? 'Newsletter description coming soon', 0, 100)); ?>...
-                                        </p>
-                                        <div class="category-footer">
-                                            <span class="category-date">
-                                                <i class="far fa-clock me-1"></i>
-                                                <?php echo date('M j', strtotime($newestNewsletter['creation_date'])); ?>
-                                            </span>
-                                            <button class="btn-view-category" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $newestNewsletter['newsletter_ID']; ?>)">
-                                                View <i class="fas fa-arrow-right ms-1"></i>
-                                            </button>
+                                    <div class="category-count-display">
+                                        <div class="category-icon-display">
+                                            <i class="fas fa-newspaper"></i>
                                         </div>
-                                    <?php else: ?>
-                                        <div class="category-empty">
-                                            <i class="fas fa-inbox fa-2x mb-2"></i>
-                                            <p>No newsletters yet</p>
+                                        <div class="count-number"><?php echo $categoryNewslettersCount; ?></div>
+                                        <div class="count-label">Newsletter<?php echo $categoryNewslettersCount !== 1 ? 's' : ''; ?></div>
+                                        <div style="margin-top: 15px; color: #3498db; font-size: 0.8rem;">
+                                            <i class="fas fa-mouse-pointer me-1"></i> Click to view all
                                         </div>
-                                    <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -312,16 +379,296 @@ if ($userID) {
 
     <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Store all category newsletters data for popup
+        const categoryNewslettersData = <?php
+            $categoryData = [];
+            foreach ($categories as $category):
+                // Fetch ALL newsletters for this category
+                $categoryNewsletters = [];
+                try {
+                    $stmt = $pdo->prepare("
+                        SELECT n.* 
+                        FROM tab_newsletters n
+                        INNER JOIN con_newsletter_categories c ON n.newsletter_ID = c.newsletter_ID
+                        WHERE c.category_ID = ?
+                        ORDER BY n.creation_date DESC
+                    ");
+                    $stmt->execute([$category['category_ID']]);
+                    $categoryNewsletters = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    // Silent fail
+                }
+                $categoryData[$category['category_ID']] = $categoryNewsletters;
+            endforeach;
+            echo json_encode($categoryData);
+        ?>;
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Create popup in parent window
+        function createPopupInParent() {
+            if (!window.parent || window.parent === window) return null;
+            
+            const parentDoc = window.parent.document;
+            
+            // Check if popup already exists
+            let popup = parentDoc.getElementById('categoryPopupOverlay');
+            if (popup) return popup;
+            
+            // Create popup HTML
+            const popupHTML = `
+                <div class="category-popup-overlay" id="categoryPopupOverlay" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.85);
+                    backdrop-filter: blur(10px);
+                    z-index: 99999;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                ">
+                    <div class="category-popup-content" style="
+                        background: #1a1a1a;
+                        border-radius: 16px;
+                        max-width: 900px;
+                        width: 90%;
+                        max-height: 85vh;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                        animation: slideUp 0.3s ease;
+                    ">
+                        <div class="category-popup-header" style="
+                            padding: 24px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
+                        ">
+                            <h3 id="categoryPopupTitle" style="
+                                font-size: 1.5rem;
+                                font-weight: 700;
+                                color: #ecf0f1;
+                                margin: 0;
+                            ">
+                                <i class="fas fa-layer-group" style="margin-right: 8px;"></i>Category Newsletters
+                            </h3>
+                            <button onclick="window.closeCategoryPopup()" aria-label="Close" style="
+                                background: none;
+                                border: none;
+                                color: #ecf0f1;
+                                font-size: 1.5rem;
+                                cursor: pointer;
+                                padding: 8px;
+                                border-radius: 50%;
+                                transition: all 0.2s ease;
+                                width: 40px;
+                                height: 40px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            " onmouseover="this.style.background='rgba(231, 76, 60, 0.2)'; this.style.color='#e74c3c'; this.style.transform='rotate(90deg)';" onmouseout="this.style.background='none'; this.style.color='#ecf0f1'; this.style.transform='rotate(0deg)';">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="categoryPopupBody" style="
+                            padding: 24px;
+                            overflow-y: auto;
+                            flex: 1;
+                        "></div>
+                    </div>
+                </div>
+            `;
+            
+            // Add animations CSS to parent
+            if (!parentDoc.getElementById('categoryPopupStyles')) {
+                const style = parentDoc.createElement('style');
+                style.id = 'categoryPopupStyles';
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideUp {
+                        from { opacity: 0; transform: translateY(30px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    .category-popup-overlay.active {
+                        display: flex !important;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar-thumb {
+                        background: rgba(52, 152, 219, 0.5);
+                        border-radius: 4px;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar-thumb:hover {
+                        background: rgba(52, 152, 219, 0.7);
+                    }
+                    .popup-newsletter-item {
+                        padding: 20px;
+                        margin-bottom: 16px;
+                        background: rgba(255, 255, 255, 0.03);
+                        border-radius: 12px;
+                        border-left: 4px solid #3498db;
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                    }
+                    .popup-newsletter-item:hover {
+                        background: rgba(255, 255, 255, 0.06);
+                        border-left-color: #2ecc71;
+                        transform: translateX(8px);
+                        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+                    }
+                    .popup-newsletter-item:last-child {
+                        margin-bottom: 0;
+                    }
+                `;
+                parentDoc.head.appendChild(style);
+            }
+            
+            // Insert popup into parent body
+            const div = parentDoc.createElement('div');
+            div.innerHTML = popupHTML;
+            parentDoc.body.appendChild(div.firstElementChild);
+            
+            popup = parentDoc.getElementById('categoryPopupOverlay');
+            
+            // Add click outside to close
+            popup.addEventListener('click', function(e) {
+                if (e.target === popup) {
+                    window.parent.closeCategoryPopup();
+                }
+            });
+            
+            // Add ESC key to close
+            parentDoc.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && popup.classList.contains('active')) {
+                    window.parent.closeCategoryPopup();
+                }
+            });
+            
+            return popup;
+        }
+        
+        // Open category popup in parent window
+        function openCategoryPopup(categoryId, categoryName) {
+            try {
+                const popup = createPopupInParent();
+                if (!popup) return;
+                
+                const parentDoc = window.parent.document;
+                const title = parentDoc.getElementById('categoryPopupTitle');
+                const body = parentDoc.getElementById('categoryPopupBody');
+                
+                title.innerHTML = '<i class="fas fa-layer-group" style="margin-right: 8px;"></i>' + escapeHtml(categoryName);
+                
+                const newsletters = categoryNewslettersData[categoryId] || [];
+                
+                if (newsletters.length === 0) {
+                    body.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; color: #95a5a6;">
+                            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 20px; color: #7f8c8d;"></i>
+                            <h4>No Newsletters Yet</h4>
+                            <p>This category doesn't have any newsletters at the moment.</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    newsletters.forEach(newsletter => {
+                        const content = newsletter.content || 'Newsletter description coming soon';
+                        const strippedContent = content.replace(/<[^>]*>/g, '');
+                        const description = strippedContent.substring(0, 200);
+                        const date = new Date(newsletter.creation_date);
+                        const formattedDate = date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                        
+                        html += `
+                            <div class="popup-newsletter-item" onclick="window.frames[0].openNewsletter(${newsletter.newsletter_ID})">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                    <h4 style="font-size: 1.15rem; font-weight: 600; color: #ecf0f1; margin: 0; flex: 1; line-height: 1.3;">${escapeHtml(newsletter.title)}</h4>
+                                </div>
+                                <p style="font-size: 0.9rem; color: #95a5a6; margin-bottom: 12px; line-height: 1.5;">${escapeHtml(description)}${strippedContent.length > 200 ? '...' : ''}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                                    <span style="font-size: 0.85rem; color: #7f8c8d;">
+                                        <i class="far fa-calendar-alt" style="margin-right: 8px;"></i>${formattedDate}
+                                    </span>
+                                    <span style="color: #3498db; font-size: 0.9rem; font-weight: 500;">
+                                        Click to read <i class="fas fa-arrow-right" style="margin-left: 4px;"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    body.innerHTML = html;
+                }
+                
+                popup.classList.add('active');
+                parentDoc.body.style.overflow = 'hidden';
+            } catch (e) {
+                console.error('Could not open popup in parent window:', e);
+            }
+        }
+        
+        // Close category popup (exposed to parent window)
+        window.parent.closeCategoryPopup = function() {
+            try {
+                const parentDoc = window.parent.document;
+                const popup = parentDoc.getElementById('categoryPopupOverlay');
+                if (popup) {
+                    popup.classList.remove('active');
+                    parentDoc.body.style.overflow = '';
+                }
+            } catch (e) {
+                console.error('Could not close popup:', e);
+            }
+        };
+        
+        // Open newsletter from popup
+        function openNewsletter(newsletterId) {
+            if (parent.window && parent.window.popupSystem) {
+                parent.window.popupSystem.newsPopup(newsletterId);
+                // Close category popup after opening newsletter
+                if (window.parent.closeCategoryPopup) {
+                    window.parent.closeCategoryPopup();
+                }
+            }
+        }
+        
         // Initialize popup system with newsletter data
         if (parent.window && parent.window.popupSystem) {
-            const newsletters = {
-                <?php
+            const newsletters = <?php
                 // Collect all newsletters to initialize popup system
                 $allNewsletters = [];
                 
                 // Add user digest
                 if (isset($userDigest) && $userDigest) {
-                    $allNewsletters[$userDigest['newsletter_ID']] = $userDigest;
+                    $allNewsletters[$userDigest['newsletter_ID']] = [
+                        'id' => $userDigest['newsletter_ID'],
+                        'title' => $userDigest['title'],
+                        'content' => $userDigest['content'],
+                        'creation_date' => $userDigest['creation_date'],
+                        'status' => $userDigest['status'] ?? 'published'
+                    ];
                 }
                 
                 // Add category newsletters
@@ -338,33 +685,30 @@ if ($userID) {
                         $stmt->execute([$category['category_ID']]);
                         $catNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
                         if ($catNewsletter) {
-                            $allNewsletters[$catNewsletter['newsletter_ID']] = $catNewsletter;
+                            $allNewsletters[$catNewsletter['newsletter_ID']] = [
+                                'id' => $catNewsletter['newsletter_ID'],
+                                'title' => $catNewsletter['title'],
+                                'content' => $catNewsletter['content'],
+                                'creation_date' => $catNewsletter['creation_date'],
+                                'status' => $catNewsletter['status'] ?? 'published'
+                            ];
                         }
                     } catch (PDOException $e) {}
                 }
                 
                 // Add popular newsletters
                 foreach ($popularNewsletters as $newsletter) {
-                    $allNewsletters[$newsletter['newsletter_ID']] = $newsletter;
+                    $allNewsletters[$newsletter['newsletter_ID']] = [
+                        'id' => $newsletter['newsletter_ID'],
+                        'title' => $newsletter['title'],
+                        'content' => $newsletter['content'],
+                        'creation_date' => $newsletter['creation_date'],
+                        'status' => $newsletter['status'] ?? 'published'
+                    ];
                 }
                 
-                // Output as JavaScript object
-                if (count($allNewsletters) > 0) {
-                    $first = true;
-                    foreach ($allNewsletters as $id => $newsletter) {
-                        if (!$first) echo ",\n                ";
-                        $first = false;
-                        echo $id . ": {";
-                        echo "id: " . $id . ",";
-                        echo "title: " . json_encode($newsletter['title']) . ",";
-                        echo "content: " . json_encode($newsletter['content']) . ",";
-                        echo "creation_date: " . json_encode($newsletter['creation_date']) . ",";
-                        echo "status: " . json_encode($newsletter['status'] ?? 'published');
-                        echo "}";
-                    }
-                }
-                ?>
-            };
+                echo json_encode($allNewsletters);
+            ?>;
             
             parent.window.popupSystem.initData(newsletters, {}, {});
         }
