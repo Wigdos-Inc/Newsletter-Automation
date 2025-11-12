@@ -442,13 +442,14 @@ if ($userID && isset($users[$userID])) {
   <?php endif; ?>
 
   <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
-  <script src="scripts/main.js"></script>
-  <script src="scripts/navigation.js"></script>
+  <script src="scripts/js/main.js"></script>
+  <script src="scripts/js/navigation.js"></script>
   <?php if (isset($userID) && $userID): ?>
-  <script src="scripts/inboxBadge.js"></script>
+  <script src="scripts/js/inboxBadge.js"></script>
   <?php endif; ?>
   <?php if (isset($_COOKIE['show_tutorial']) && $_COOKIE['show_tutorial']): ?>
-  <script src="scripts/tutorial.js"></script>
+  <script src="scripts/js/tutorial.js"></script>
   <?php endif; ?>
 </body>
 </html>
+

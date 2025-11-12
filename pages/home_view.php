@@ -380,7 +380,7 @@ if ($userID) {
     <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Store all category newsletters data for popup
-        const categoryNewslettersData = <?php
+        window.categoryNewslettersData = <?php
             $categoryData = [];
             foreach ($categories as $category):
                 // Fetch ALL newsletters for this category
@@ -402,257 +402,6 @@ if ($userID) {
             endforeach;
             echo json_encode($categoryData);
         ?>;
-        
-        // Helper function to escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // Create popup in parent window
-        function createPopupInParent() {
-            if (!window.parent || window.parent === window) return null;
-            
-            const parentDoc = window.parent.document;
-            
-            // Check if popup already exists
-            let popup = parentDoc.getElementById('categoryPopupOverlay');
-            if (popup) return popup;
-            
-            // Create popup HTML
-            const popupHTML = `
-                <div class="category-popup-overlay" id="categoryPopupOverlay" style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.85);
-                    backdrop-filter: blur(10px);
-                    z-index: 99999;
-                    display: none;
-                    align-items: center;
-                    justify-content: center;
-                    animation: fadeIn 0.3s ease;
-                ">
-                    <div class="category-popup-content" style="
-                        background: #1a1a1a;
-                        border-radius: 16px;
-                        max-width: 900px;
-                        width: 90%;
-                        max-height: 85vh;
-                        overflow: hidden;
-                        display: flex;
-                        flex-direction: column;
-                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-                        animation: slideUp 0.3s ease;
-                    ">
-                        <div class="category-popup-header" style="
-                            padding: 24px;
-                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
-                        ">
-                            <h3 id="categoryPopupTitle" style="
-                                font-size: 1.5rem;
-                                font-weight: 700;
-                                color: #ecf0f1;
-                                margin: 0;
-                            ">
-                                <i class="fas fa-layer-group" style="margin-right: 8px;"></i>Category Newsletters
-                            </h3>
-                            <button onclick="window.closeCategoryPopup()" aria-label="Close" style="
-                                background: none;
-                                border: none;
-                                color: #ecf0f1;
-                                font-size: 1.5rem;
-                                cursor: pointer;
-                                padding: 8px;
-                                border-radius: 50%;
-                                transition: all 0.2s ease;
-                                width: 40px;
-                                height: 40px;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                            " onmouseover="this.style.background='rgba(231, 76, 60, 0.2)'; this.style.color='#e74c3c'; this.style.transform='rotate(90deg)';" onmouseout="this.style.background='none'; this.style.color='#ecf0f1'; this.style.transform='rotate(0deg)';">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div id="categoryPopupBody" style="
-                            padding: 24px;
-                            overflow-y: auto;
-                            flex: 1;
-                        "></div>
-                    </div>
-                </div>
-            `;
-            
-            // Add animations CSS to parent
-            if (!parentDoc.getElementById('categoryPopupStyles')) {
-                const style = parentDoc.createElement('style');
-                style.id = 'categoryPopupStyles';
-                style.textContent = `
-                    @keyframes fadeIn {
-                        from { opacity: 0; }
-                        to { opacity: 1; }
-                    }
-                    @keyframes slideUp {
-                        from { opacity: 0; transform: translateY(30px); }
-                        to { opacity: 1; transform: translateY(0); }
-                    }
-                    .category-popup-overlay.active {
-                        display: flex !important;
-                    }
-                    #categoryPopupBody::-webkit-scrollbar {
-                        width: 8px;
-                    }
-                    #categoryPopupBody::-webkit-scrollbar-track {
-                        background: rgba(255, 255, 255, 0.05);
-                        border-radius: 4px;
-                    }
-                    #categoryPopupBody::-webkit-scrollbar-thumb {
-                        background: rgba(52, 152, 219, 0.5);
-                        border-radius: 4px;
-                    }
-                    #categoryPopupBody::-webkit-scrollbar-thumb:hover {
-                        background: rgba(52, 152, 219, 0.7);
-                    }
-                    .popup-newsletter-item {
-                        padding: 20px;
-                        margin-bottom: 16px;
-                        background: rgba(255, 255, 255, 0.03);
-                        border-radius: 12px;
-                        border-left: 4px solid #3498db;
-                        transition: all 0.3s ease;
-                        cursor: pointer;
-                    }
-                    .popup-newsletter-item:hover {
-                        background: rgba(255, 255, 255, 0.06);
-                        border-left-color: #2ecc71;
-                        transform: translateX(8px);
-                        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
-                    }
-                    .popup-newsletter-item:last-child {
-                        margin-bottom: 0;
-                    }
-                `;
-                parentDoc.head.appendChild(style);
-            }
-            
-            // Insert popup into parent body
-            const div = parentDoc.createElement('div');
-            div.innerHTML = popupHTML;
-            parentDoc.body.appendChild(div.firstElementChild);
-            
-            popup = parentDoc.getElementById('categoryPopupOverlay');
-            
-            // Add click outside to close
-            popup.addEventListener('click', function(e) {
-                if (e.target === popup) {
-                    window.parent.closeCategoryPopup();
-                }
-            });
-            
-            // Add ESC key to close
-            parentDoc.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && popup.classList.contains('active')) {
-                    window.parent.closeCategoryPopup();
-                }
-            });
-            
-            return popup;
-        }
-        
-        // Open category popup in parent window
-        function openCategoryPopup(categoryId, categoryName) {
-            try {
-                const popup = createPopupInParent();
-                if (!popup) return;
-                
-                const parentDoc = window.parent.document;
-                const title = parentDoc.getElementById('categoryPopupTitle');
-                const body = parentDoc.getElementById('categoryPopupBody');
-                
-                title.innerHTML = '<i class="fas fa-layer-group" style="margin-right: 8px;"></i>' + escapeHtml(categoryName);
-                
-                const newsletters = categoryNewslettersData[categoryId] || [];
-                
-                if (newsletters.length === 0) {
-                    body.innerHTML = `
-                        <div style="text-align: center; padding: 60px 20px; color: #95a5a6;">
-                            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 20px; color: #7f8c8d;"></i>
-                            <h4>No Newsletters Yet</h4>
-                            <p>This category doesn't have any newsletters at the moment.</p>
-                        </div>
-                    `;
-                } else {
-                    let html = '';
-                    newsletters.forEach(newsletter => {
-                        const content = newsletter.content || 'Newsletter description coming soon';
-                        const strippedContent = content.replace(/<[^>]*>/g, '');
-                        const description = strippedContent.substring(0, 200);
-                        const date = new Date(newsletter.creation_date);
-                        const formattedDate = date.toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                        });
-                        
-                        html += `
-                            <div class="popup-newsletter-item" onclick="window.frames[0].openNewsletter(${newsletter.newsletter_ID})">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                                    <h4 style="font-size: 1.15rem; font-weight: 600; color: #ecf0f1; margin: 0; flex: 1; line-height: 1.3;">${escapeHtml(newsletter.title)}</h4>
-                                </div>
-                                <p style="font-size: 0.9rem; color: #95a5a6; margin-bottom: 12px; line-height: 1.5;">${escapeHtml(description)}${strippedContent.length > 200 ? '...' : ''}</p>
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
-                                    <span style="font-size: 0.85rem; color: #7f8c8d;">
-                                        <i class="far fa-calendar-alt" style="margin-right: 8px;"></i>${formattedDate}
-                                    </span>
-                                    <span style="color: #3498db; font-size: 0.9rem; font-weight: 500;">
-                                        Click to read <i class="fas fa-arrow-right" style="margin-left: 4px;"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    body.innerHTML = html;
-                }
-                
-                popup.classList.add('active');
-                parentDoc.body.style.overflow = 'hidden';
-            } catch (e) {
-                console.error('Could not open popup in parent window:', e);
-            }
-        }
-        
-        // Close category popup (exposed to parent window)
-        window.parent.closeCategoryPopup = function() {
-            try {
-                const parentDoc = window.parent.document;
-                const popup = parentDoc.getElementById('categoryPopupOverlay');
-                if (popup) {
-                    popup.classList.remove('active');
-                    parentDoc.body.style.overflow = '';
-                }
-            } catch (e) {
-                console.error('Could not close popup:', e);
-            }
-        };
-        
-        // Open newsletter from popup
-        function openNewsletter(newsletterId) {
-            if (parent.window && parent.window.popupSystem) {
-                parent.window.popupSystem.newsPopup(newsletterId);
-                // Close category popup after opening newsletter
-                if (window.parent.closeCategoryPopup) {
-                    window.parent.closeCategoryPopup();
-                }
-            }
-        }
         
         // Initialize popup system with newsletter data
         if (parent.window && parent.window.popupSystem) {
@@ -712,10 +461,13 @@ if ($userID) {
             
             parent.window.popupSystem.initData(newsletters, {}, {});
         }
+        
+        // Set current featured ID for auto-refresh
+        window.currentFeaturedId = <?php echo $featuredNewsletter ? $featuredNewsletter['newsletter_ID'] : 'null'; ?>;
     </script>
-    <script src="scripts/theme.js"></script>
-    <script src="scripts/homeView.js"></script>
+    <script src="scripts/js/theme.js"></script>
+    <script src="scripts/js/homeView.js"></script>
     <!-- Favorites System -->
-    <script src="scripts/favorites.js"></script>
+    <script src="scripts/js/favorites.js"></script>
 </body>
 </html>
