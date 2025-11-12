@@ -336,8 +336,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadPage(path, clickedLink) {
     if (!iframe) return;
-    iframe.src = path;
+    
+    // Reset iframe height before loading new page
+    iframe.style.height = '600px';
+    
+    // Check if the path has a hash
+    const [basePath, hash] = path.split('#');
+    const currentSrc = iframe.src.split('#')[0].split('/').pop();
+    const newSrc = basePath.split('/').pop();
+    
+    // If navigating to the same page with different hash, force reload with hash
+    if (currentSrc === newSrc && hash) {
+      iframe.src = path; // This will reload even if base is same
+      // Wait for content to settle, then handle the hash
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          iframe.contentWindow.location.hash = hash;
+        }
+      }, 100);
+    } else {
+      iframe.src = path;
+    }
+    
     setActive(clickedLink);
+    
     // close mobile menu if open
     if (mobileMenu && window.getComputedStyle(mobileMenu).display !== 'none') {
       mobileMenu.style.display = 'none';
@@ -359,15 +381,42 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Try to auto-resize iframe to fit content (works when same-origin)
+  // Function to resize iframe to fit content
+  function resizeIframe() {
+    if (!iframe) return;
+    try {
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
+      iframe.style.height = height + 'px';
+      // console.log('Iframe resized to:', height + 'px'); // Disabled logging
+    } catch (err) {
+      // console.log('Cannot resize iframe:', err); // Disabled logging
+    }
+  }
+
+  // Auto-resize iframe to fit content exactly - no internal scrolling
   if (iframe) {
     iframe.addEventListener('load', () => {
+      // Initial resize
+      resizeIframe();
+      
+      // Also check after a short delay to catch dynamic content
+      setTimeout(resizeIframe, 100);
+      setTimeout(resizeIframe, 500);
+      
+      // Monitor for content changes inside iframe
       try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
-        iframe.style.minHeight = height + 'px';
+        const observer = new MutationObserver(() => {
+          resizeIframe();
+        });
+        observer.observe(doc.body, {
+          childList: true,
+          subtree: true,
+          attributes: true
+        });
       } catch (err) {
-        // cross-origin or access denied; ignore
+        console.log('Cannot observe iframe changes:', err);
       }
     });
   }
@@ -377,6 +426,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (event.data && event.data.type === 'navigateTo') {
       const targetLink = navLinks.find(link => link.getAttribute('data-page') === event.data.page);
       loadPage(event.data.page, targetLink);
+    }
+    
+    // Handle iframe resize requests from child pages
+    if (event.data && event.data.type === 'resizeIframe') {
+      if (iframe) {
+        // Use multiple timeouts to catch content changes
+        setTimeout(() => resizeIframe(), 0);
+        setTimeout(() => resizeIframe(), 50);
+        setTimeout(() => resizeIframe(), 100);
+        setTimeout(() => resizeIframe(), 200);
+        setTimeout(() => resizeIframe(), 300);
+        setTimeout(() => resizeIframe(), 500);
+      }
     }
   });
 
