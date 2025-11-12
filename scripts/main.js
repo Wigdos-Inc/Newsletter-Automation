@@ -388,9 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
       const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
       iframe.style.height = height + 'px';
-      console.log('Iframe resized to:', height + 'px');
+      // console.log('Iframe resized to:', height + 'px'); // Disabled logging
     } catch (err) {
-      console.log('Cannot resize iframe:', err);
+      // console.log('Cannot resize iframe:', err); // Disabled logging
     }
   }
 

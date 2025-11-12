@@ -57,6 +57,53 @@
             padding-left: 1rem;
             padding-right: 1rem;
         }
+        
+        /* Newsletter Editor - Keep admin styling but reset heading special styles */
+        #admin-newsletter-editor {
+            display: block;
+            min-height: 450px;
+            max-height: 550px;
+            overflow-y: auto;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            font-family: inherit;
+            line-height: 1.6;
+        }
+        
+        /* Reset only the special admin header styling for h1-h6 inside editor */
+        #admin-newsletter-editor h1,
+        #admin-newsletter-editor h2,
+        #admin-newsletter-editor h3,
+        #admin-newsletter-editor h4,
+        #admin-newsletter-editor h5,
+        #admin-newsletter-editor h6 {
+            background: none !important;
+            background-image: none !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            color: var(--text-primary) !important;
+            font-weight: bold;
+            margin-top: 1em;
+            margin-bottom: 0.5em;
+        }
+        
+        /* Natural heading sizes */
+        #admin-newsletter-editor h1 { font-size: 2em; }
+        #admin-newsletter-editor h2 { font-size: 1.5em; }
+        #admin-newsletter-editor h3 { font-size: 1.17em; }
+        #admin-newsletter-editor h4 { font-size: 1em; }
+        #admin-newsletter-editor h5 { font-size: 0.83em; }
+        #admin-newsletter-editor h6 { font-size: 0.67em; }
+        
+        /* Keep normal paragraph and text styling */
+        #admin-newsletter-editor p {
+            margin: 1em 0;
+        }
     </style>
 </head>
 <body>
@@ -617,19 +664,35 @@
 
             const data = await response.json();
             
-            if (data.output) {
-                currentNewsletterContent = data.output;
+            // Handle multiple possible response formats
+            const newsletterContent = data.output || data.content || data.html || data.body;
+            
+            if (newsletterContent || data.success !== false) {
+                let finalContent = newsletterContent || JSON.stringify(data);
                 currentNewsletterID = null; // Reset for new newsletter
                 
-                // Extract title from content (look for first h1 or h2)
+                // Extract title from response or content (look for first h1 or h2)
+                let title = data.title || '';
                 const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.output;
-                const heading = tempDiv.querySelector('h1, h2');
-                const title = heading ? heading.textContent : 'Untitled Newsletter';
+                tempDiv.innerHTML = finalContent;
+                
+                if (!title) {
+                    const heading = tempDiv.querySelector('h1, h2');
+                    title = heading ? heading.textContent : 'Untitled Newsletter';
+                }
+                
+                // Remove the title heading from content if it exists
+                const firstHeading = tempDiv.querySelector('h1, h2');
+                if (firstHeading && firstHeading.textContent.trim() === title.trim()) {
+                    firstHeading.remove();
+                    finalContent = tempDiv.innerHTML;
+                }
+                
+                currentNewsletterContent = finalContent;
                 
                 // Show edit mode
                 document.getElementById('admin-newsletter-title').value = title;
-                document.getElementById('admin-newsletter-editor').innerHTML = data.output;
+                document.getElementById('admin-newsletter-editor').innerHTML = finalContent;
                 
                 loading.style.display = 'none';
                 editMode.style.display = 'block';
@@ -637,7 +700,7 @@
                 generateBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Generate Newsletter';
                 
             } else {
-                throw new Error('No content generated');
+                throw new Error(data.error || 'No content generated');
             }
         } catch (err) {
             console.error('Generation error:', err);
@@ -645,7 +708,7 @@
             generateMode.style.display = 'block';
             generateBtn.disabled = false;
             generateBtn.innerHTML = '<i class="fas fa-magic me-1"></i>Generate Newsletter';
-            showError('Failed to generate newsletter. Please try again.');
+            showError('Failed to generate newsletter: ' + err.message);
         }
     });
 
@@ -686,15 +749,19 @@
 
             const data = await response.json();
             
-            if (data.output) {
-                document.getElementById('admin-newsletter-editor').innerHTML = data.output;
+            // Handle multiple possible response formats
+            const editedContent = data.output || data.content || data.html || data.body;
+            
+            if (editedContent || data.success !== false) {
+                const finalContent = editedContent || JSON.stringify(data);
+                document.getElementById('admin-newsletter-editor').innerHTML = finalContent;
                 showSuccess('Newsletter edited successfully!');
             } else {
-                throw new Error('No edited content received');
+                throw new Error(data.error || 'No edited content received');
             }
         } catch (err) {
             console.error('AI Edit error:', err);
-            showError('Failed to edit newsletter. Please try again.');
+            showError('Failed to edit newsletter: ' + err.message);
         } finally {
             loading.style.display = 'none';
             editMode.style.display = 'block';
