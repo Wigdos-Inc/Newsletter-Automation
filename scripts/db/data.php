@@ -39,7 +39,7 @@ function iniData(PDO $pdo, string $query, string $idKey, array $extra) {
 // Fetch Data
 $newsletters = iniData(
     $pdo,
-    "SELECT * FROM tab_newsletters", 
+    "SELECT * FROM tab_newsletters ORDER BY creation_date DESC", 
     'newsletter_ID', 
     [
         'contributors' => [],

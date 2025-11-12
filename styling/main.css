@@ -161,12 +161,23 @@ main {
 }
 
 .sidebar-badge {
+    position: absolute;
+    top: 8px;
+    right: 15px;
     background: linear-gradient(135deg, #f39c12, #e74c3c);
     color: #ffffff;
-    padding: 0.2rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.8rem;
     font-weight: 600;
+    border: 2px solid rgba(26, 28, 32, 0.8);
+    min-width: 24px;
+    box-sizing: border-box;
 }
 
 .sidebar-divider {
@@ -517,19 +528,22 @@ body.light-mode .search-input {
 
 .inbox-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #f39c12;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #f39c12, #e74c3c);
     color: #ffffff;
     border-radius: 50%;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    font-weight: bold;
-    border: 2px solid #1a1c20;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 2px solid rgba(26, 28, 32, 0.8);
+    min-width: 24px;
+    box-sizing: border-box;
 }
 
 .inbox-dropdown {

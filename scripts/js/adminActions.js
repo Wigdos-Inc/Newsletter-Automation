@@ -26,16 +26,104 @@ function storeCurrentTab() {
         sessionStorage.setItem('activeAdminTab', currentTab);
     }
 }
+
+// Edit newsletter function for row clicks
+function editNewsletter(newsletterID) {
+    try {
+        // Fetch newsletter data
+        fetch('../scripts/php/newsletters.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'fetch_single',
+                newsletter_ID: newsletterID
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.newsletter) {
+                // Switch to generator tab
+                swapTab('tab_generator');
+                
+                // Load newsletter data into editor
+                currentNewsletterID = newsletterID;
+                currentNewsletterStatus = data.newsletter.status; // Set the status from fetched data
+                document.getElementById('admin-newsletter-title').value = data.newsletter.title;
+                document.getElementById('admin-newsletter-editor').innerHTML = data.newsletter.content;
+                
+                // Show edit mode
+                document.getElementById('generate-mode').style.display = 'none';
+                document.getElementById('admin-edit-mode').style.display = 'block';
+                
+                // Load and select categories
+                loadCategories().then(() => {
+                    if (data.categories && data.categories.length > 0) {
+                        const select = document.getElementById('admin-category-select');
+                        Array.from(select.options).forEach(option => {
+                            if (data.categories.includes(parseInt(option.value))) {
+                                option.selected = true;
+                            }
+                        });
+                    }
+                });
+                
+                updateButtonVisibility(); // Update button display based on status
+            } else {
+                alert('Error: ' + (data.error || 'Failed to load newsletter'));
+            }
+        })
+        .catch(err => {
+            console.error('Edit error:', err);
+            alert('Failed to load newsletter for editing');
+        });
+    } catch (err) {
+        console.error('Edit error:', err);
+        alert('Failed to load newsletter for editing');
+    }
+}
 function updateButtonVisibility() {
     const publishBtn = document.getElementById('admin-publish-btn');
     const unpublishBtn = document.getElementById('admin-unpublish-btn');
+    const hideBtn = document.getElementById('admin-hide-btn');
+    const unhideBtn = document.getElementById('admin-unhide-btn');
+    
+    if (!publishBtn || !unpublishBtn || !hideBtn || !unhideBtn) {
+        console.error('Button elements not found');
+        return;
+    }
+    
+    // Reset all buttons to visible
+    publishBtn.classList.remove('btn-hidden');
+    publishBtn.classList.add('btn-visible');
+    unpublishBtn.classList.remove('btn-hidden');
+    unpublishBtn.classList.add('btn-visible');
+    hideBtn.classList.remove('btn-hidden');
+    hideBtn.classList.add('btn-visible');
+    unhideBtn.classList.remove('btn-hidden');
+    unhideBtn.classList.add('btn-visible');
     
     if (currentNewsletterStatus === 'published') {
-        publishBtn.style.display = 'none';
-        unpublishBtn.style.display = 'inline-block';
+        publishBtn.classList.add('btn-hidden');
+        publishBtn.classList.remove('btn-visible');
+        // unpublishBtn stays visible
+        // hideBtn stays visible
+        unhideBtn.classList.add('btn-hidden');
+        unhideBtn.classList.remove('btn-visible');
+    } else if (currentNewsletterStatus === 'hidden') {
+        // publishBtn stays visible
+        unpublishBtn.classList.add('btn-hidden');
+        unpublishBtn.classList.remove('btn-visible');
+        hideBtn.classList.add('btn-hidden');
+        hideBtn.classList.remove('btn-visible');
+        // unhideBtn stays visible
     } else {
-        publishBtn.style.display = 'inline-block';
-        unpublishBtn.style.display = 'none';
+        // draft status - default
+        // publishBtn stays visible
+        unpublishBtn.classList.add('btn-hidden');
+        unpublishBtn.classList.remove('btn-visible');
+        // hideBtn stays visible
+        unhideBtn.classList.add('btn-hidden');
+        unhideBtn.classList.remove('btn-visible');
     }
 }
 
@@ -124,6 +212,11 @@ async function saveNewsletter(status) {
             editMode.style.display = 'block';
             showSuccess(status === 'published' ? 'Newsletter published successfully!' : 'Newsletter saved successfully!');
             
+            // Refresh newsletter list if published
+            if (status === 'published') {
+                refreshNewsletterList();
+            }
+            
         } else {
             throw new Error(data.error || 'Failed to save');
         }
@@ -162,15 +255,113 @@ function showSuccess(message) {
 }
 
 // ========================================
+// Newsletter List Refresh Function
+// ========================================
+
+async function refreshNewsletterList() {
+    try {
+        const response = await fetch('../scripts/php/admin_actions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'fetch_newsletters',
+                filter: 'all'
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            const tableBody = document.getElementById('newsletters-table-body');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            data.newsletters.forEach(newsletter => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-newsletter-id', newsletter.newsletter_ID);
+                row.className = 'newsletter-row';
+                row.style.cursor = 'pointer';
+                
+                const statusBadgeClass = newsletter.status === 'published' ? 'success' : 
+                                       (newsletter.status === 'hidden' ? 'danger' : 'secondary');
+                const statusText = newsletter.status.charAt(0).toUpperCase() + newsletter.status.slice(1);
+                const hideBtnClass = newsletter.status === 'hidden' ? 'btn-success' : 'btn-secondary';
+                const hideBtnIcon = newsletter.status === 'hidden' ? 'eye' : 'eye-slash';
+                const hideBtnText = newsletter.status === 'hidden' ? 'Unhide' : 'Hide';
+                
+                row.innerHTML = `
+                    <td><input type="checkbox" class="newsletter-checkbox" value="${newsletter.newsletter_ID}" onclick="event.stopPropagation();"></td>
+                    <td onclick="editNewsletter(${newsletter.newsletter_ID})">${newsletter.title.length > 50 ? newsletter.title.substring(0, 50) + '...' : newsletter.title}</td>
+                    <td onclick="editNewsletter(${newsletter.newsletter_ID})">${newsletter.owner_username || 'Unknown'}</td>
+                    <td onclick="editNewsletter(${newsletter.newsletter_ID})">
+                        <span class="badge bg-${statusBadgeClass}">${statusText}</span>
+                    </td>
+                    <td onclick="editNewsletter(${newsletter.newsletter_ID})">${new Date(newsletter.creation_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                    <td>
+                        <button class="btn btn-sm ${hideBtnClass} hide-newsletter-btn" data-id="${newsletter.newsletter_ID}" onclick="event.stopPropagation();">
+                            <i class="fas fa-${hideBtnIcon} me-1"></i>${hideBtnText}
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Re-attach event listeners for the new hide buttons
+            attachHideButtonListeners();
+        }
+    } catch (err) {
+        console.error('Refresh newsletter list error:', err);
+    }
+}
+
+// ========================================
+// Attach Hide Button Event Listeners
+// ========================================
+
+function attachHideButtonListeners() {
+    // Hide newsletter buttons
+    document.querySelectorAll('.hide-newsletter-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const newsletterID = this.dataset.id;
+            
+            try {
+                const response = await fetch('../scripts/php/admin_actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'toggle_newsletter_visibility',
+                        newsletter_id: newsletterID
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Refresh the newsletter list to show updated status
+                    refreshNewsletterList();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (err) {
+                console.error('Hide error:', err);
+                alert('Failed to toggle newsletter visibility');
+            }
+        });
+    });
+}
+
+// ========================================
 // Initialize Admin Panel
 // ========================================
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Load categories on page load
-    loadCategories();
 
-    // Initialize bulk toggle button as hidden
-    document.getElementById('toggle-selected-categories').style.display = 'none';
+        // Load categories on page load
+    loadCategories();
+    
+    // Attach hide button listeners for initial buttons
+    attachHideButtonListeners();
 
     // Add Generator tab button listener
     document.getElementById('btn_tab_generator')?.addEventListener('click', () => {
@@ -260,201 +451,269 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Save Draft Button
-    document.getElementById('admin-save-btn')?.addEventListener('click', async function() {
-        await saveNewsletter('draft');
-    });
-
-    // Publish Button
-    document.getElementById('admin-publish-btn')?.addEventListener('click', async function() {
-        await saveNewsletter('published');
-    });
-
-    // Unpublish Button
-    document.getElementById('admin-unpublish-btn')?.addEventListener('click', async function() {
-        if (!currentNewsletterID) {
-            showError('Please save the newsletter first before unpublishing');
-            return;
+    // Add event listeners using event delegation
+    document.getElementById('admin-edit-mode')?.addEventListener('click', async function(e) {
+        const target = e.target;
+        
+        // Save Draft Button
+        if (target.id === 'admin-save-btn') {
+            e.preventDefault();
+            await saveNewsletter('draft');
         }
         
-        if (!confirm('Are you sure you want to unpublish this newsletter? It will be changed to draft status.')) return;
+        // Publish Button
+        else if (target.id === 'admin-publish-btn') {
+            e.preventDefault();
+            await saveNewsletter('published');
+        }
         
-        const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Unpublishing...';
-        
-        try {
-            const response = await fetch('../scripts/php/newsletters.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'unpublish',
-                    newsletter_ID: currentNewsletterID
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                currentNewsletterStatus = 'draft';
-                updateButtonVisibility();
-                showSuccess('Newsletter unpublished and changed to draft!');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-undo me-1"></i>Unpublish';
-            } else {
-                showError(data.error || 'Failed to unpublish newsletter');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-undo me-1"></i>Unpublish';
+        // Unpublish Button
+        else if (target.id === 'admin-unpublish-btn') {
+            e.preventDefault();
+            if (!currentNewsletterID) {
+                showError('Please save the newsletter first before unpublishing');
+                return;
             }
-        } catch (err) {
-            console.error('Unpublish error:', err);
-            showError('Failed to unpublish newsletter: ' + err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-undo me-1"></i>Unpublish';
-        }
-    });
-
-    // Hide Button
-    document.getElementById('admin-hide-btn')?.addEventListener('click', async function() {
-        if (!currentNewsletterID) {
-            showError('Please save the newsletter first before hiding');
-            return;
-        }
-        
-        if (!confirm('Are you sure you want to hide this newsletter?')) return;
-        
-        const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Hiding...';
-        
-        try {
-            const response = await fetch('../scripts/php/newsletters.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'update',
-                    newsletter_ID: currentNewsletterID,
-                    status: 'hidden',
-                    title: document.getElementById('admin-newsletter-title').value.trim(),
-                    content: document.getElementById('admin-newsletter-editor').innerHTML
-                })
-            });
             
-            const data = await response.json();
+            if (!confirm('Are you sure you want to unpublish this newsletter? It will be changed to draft status.')) return;
             
-            if (data.success) {
-                currentNewsletterStatus = 'hidden';
-                showSuccess('Newsletter hidden successfully!');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
-            } else {
-                showError(data.error || 'Failed to hide newsletter');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
-            }
-        } catch (err) {
-            console.error('Hide error:', err);
-            showError('Failed to hide newsletter: ' + err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
-        }
-    });
-
-    // Delete Button
-    document.getElementById('admin-delete-btn')?.addEventListener('click', async function() {
-        if (!currentNewsletterID) {
-            showError('Please save the newsletter first before deleting');
-            return;
-        }
-        
-        if (!confirm('Are you sure you want to delete this newsletter? This cannot be undone.')) return;
-        
-        const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
-        
-        try {
-            const response = await fetch('../scripts/php/newsletters.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'delete',
-                    newsletter_ID: currentNewsletterID
-                })
-            });
+            const btn = target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Unpublishing...';
             
-            const data = await response.json();
-            
-            if (data.success) {
-                showSuccess('Newsletter deleted successfully!');
-                // Reset to generate mode
-                setTimeout(() => {
-                    document.getElementById('generate-mode').style.display = 'block';
-                    document.getElementById('admin-edit-mode').style.display = 'none';
-                    document.getElementById('admin-newsletter-query').value = '';
-                    document.getElementById('admin-newsletter-title').value = '';
-                    document.getElementById('admin-newsletter-editor').innerHTML = '';
-                    currentNewsletterID = null;
-                    currentNewsletterContent = null;
+            try {
+                const response = await fetch('../scripts/php/newsletters.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'unpublish',
+                        newsletter_ID: currentNewsletterID
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
                     currentNewsletterStatus = 'draft';
-                }, 1500);
-            } else {
-                showError(data.error || 'Failed to delete newsletter');
+                    updateButtonVisibility();
+                    showSuccess('Newsletter unpublished and changed to draft!');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-undo me-1"></i>Unpublish';
+                    // Refresh newsletter list
+                    refreshNewsletterList();
+                } else {
+                    showError(data.error || 'Failed to unpublish newsletter');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-undo me-1"></i>Unpublish';
+                }
+            } catch (err) {
+                console.error('Unpublish error:', err);
+                showError('Failed to unpublish newsletter: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-undo me-1"></i>Unpublish';
+            }
+        }
+        
+        // Unhide Button
+        else if (target.id === 'admin-unhide-btn') {
+            e.preventDefault();
+            if (!currentNewsletterID) {
+                showError('Please save the newsletter first before unhiding');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to unhide this newsletter? It will be changed to draft status.')) return;
+            
+            const btn = target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Unhiding...';
+            
+            try {
+                const response = await fetch('../scripts/php/newsletters.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        newsletter_ID: currentNewsletterID,
+                        status: 'draft',
+                        title: document.getElementById('admin-newsletter-title').value.trim(),
+                        content: document.getElementById('admin-newsletter-editor').innerHTML
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentNewsletterStatus = 'draft';
+                    updateButtonVisibility();
+                    showSuccess('Newsletter unhidden and changed to draft!');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-eye me-1"></i>Unhide';
+                    // Refresh newsletter list
+                    refreshNewsletterList();
+                } else {
+                    showError(data.error || 'Failed to unhide newsletter');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-eye me-1"></i>Unhide';
+                }
+            } catch (err) {
+                console.error('Unhide error:', err);
+                showError('Failed to unhide newsletter: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-eye me-1"></i>Unhide';
+            }
+        }
+        
+        // Hide Button
+        else if (target.id === 'admin-hide-btn') {
+            e.preventDefault();
+            if (!currentNewsletterID) {
+                showError('Please save the newsletter first before hiding');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to hide this newsletter?')) return;
+            
+            const btn = target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Hiding...';
+            
+            try {
+                const response = await fetch('../scripts/php/newsletters.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update',
+                        newsletter_ID: currentNewsletterID,
+                        status: 'hidden',
+                        title: document.getElementById('admin-newsletter-title').value.trim(),
+                        content: document.getElementById('admin-newsletter-editor').innerHTML
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentNewsletterStatus = 'hidden';
+                    updateButtonVisibility();
+                    showSuccess('Newsletter hidden successfully!');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
+                    // Refresh newsletter list
+                    refreshNewsletterList();
+                } else {
+                    showError(data.error || 'Failed to hide newsletter');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
+                }
+            } catch (err) {
+                console.error('Hide error:', err);
+                showError('Failed to hide newsletter: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide';
+            }
+        }
+        
+        // Delete Button
+        else if (target.id === 'admin-delete-btn') {
+            e.preventDefault();
+            if (!currentNewsletterID) {
+                showError('Please save the newsletter first before deleting');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this newsletter? This cannot be undone.')) return;
+            
+            const btn = target;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+            
+            try {
+                const response = await fetch('../scripts/php/newsletters.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete',
+                        newsletter_ID: currentNewsletterID
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showSuccess('Newsletter deleted successfully!');
+                    // Reset to generate mode
+                    setTimeout(() => {
+                        document.getElementById('generate-mode').style.display = 'block';
+                        document.getElementById('admin-edit-mode').style.display = 'none';
+                        document.getElementById('admin-newsletter-query').value = '';
+                        document.getElementById('admin-newsletter-title').value = '';
+                        document.getElementById('admin-newsletter-editor').innerHTML = '';
+                        currentNewsletterID = null;
+                        currentNewsletterContent = null;
+                        currentNewsletterStatus = 'draft';
+                        // Refresh newsletter list
+                        refreshNewsletterList();
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Failed to delete newsletter');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                showError('Failed to delete newsletter');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
             }
-        } catch (err) {
-            console.error('Delete error:', err);
-            showError('Failed to delete newsletter');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-trash me-1"></i>Delete';
         }
-    });
-
-    // AI Edit Button
-    document.getElementById('admin-ai-edit-btn')?.addEventListener('click', async function() {
-        const instructions = prompt('How would you like to edit the newsletter?\n\nExamples:\n- Make it more professional\n- Add more details about AI\n- Shorten it to 500 words\n- Make it more casual');
         
-        if (!instructions) return;
-
-        const content = document.getElementById('admin-newsletter-editor').innerHTML;
-        const loading = document.getElementById('admin-loading');
-        const editMode = document.getElementById('admin-edit-mode');
-
-        editMode.style.display = 'none';
-        loading.style.display = 'block';
-        loading.querySelector('p').textContent = 'AI is editing your newsletter...';
-
-        try {
-            const response = await fetch('../scripts/php/newsletters.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'ai_edit',
-                    content: content,
-                    instructions: instructions
-                })
-            });
-
-            const data = await response.json();
+        // AI Edit Button
+        else if (target.id === 'admin-ai-edit-btn') {
+            e.preventDefault();
+            const instructions = prompt('How would you like to edit the newsletter?\n\nExamples:\n- Make it more professional\n- Add more details about AI\n- Shorten it to 500 words\n- Make it more casual');
             
-            // Handle multiple possible response formats
-            const editedContent = data.output || data.content || data.html || data.body;
-            
-            if (editedContent || data.success !== false) {
-                const finalContent = editedContent || JSON.stringify(data);
-                document.getElementById('admin-newsletter-editor').innerHTML = finalContent;
-                showSuccess('Newsletter edited successfully!');
-            } else {
-                throw new Error(data.error || 'No edited content received');
+            if (!instructions) return;
+
+            const content = document.getElementById('admin-newsletter-editor').innerHTML;
+            const loading = document.getElementById('admin-loading');
+            const editMode = document.getElementById('admin-edit-mode');
+
+            editMode.style.display = 'none';
+            loading.style.display = 'block';
+            loading.querySelector('p').textContent = 'AI is editing your newsletter...';
+
+            try {
+                const response = await fetch('../scripts/php/newsletters.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'ai_edit',
+                        content: content,
+                        instructions: instructions
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Handle multiple possible response formats
+                const editedContent = data.output || data.content || data.html || data.body;
+                
+                if (editedContent || data.success !== false) {
+                    const finalContent = editedContent || JSON.stringify(data);
+                    document.getElementById('admin-newsletter-editor').innerHTML = finalContent;
+                    showSuccess('Newsletter edited successfully!');
+                } else {
+                    throw new Error(data.error || 'No edited content received');
+                }
+            } catch (err) {
+                console.error('AI Edit error:', err);
+                showError('Failed to edit newsletter: ' + err.message);
+            } finally {
+                loading.style.display = 'none';
+                editMode.style.display = 'block';
+                loading.querySelector('p').textContent = 'Generating newsletter... (may take 1-2 minutes)';
             }
-        } catch (err) {
-            console.error('AI Edit error:', err);
-            showError('Failed to edit newsletter: ' + err.message);
-        } finally {
-            loading.style.display = 'none';
-            editMode.style.display = 'block';
-            loading.querySelector('p').textContent = 'Generating newsletter... (may take 1-2 minutes)';
         }
     });
 
@@ -623,6 +882,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (data.success) {
                 window.location.reload();
+                // Note: refreshNewsletterList() will be called when the page reloads and tab switches
             } else {
                 alert('Error: ' + data.error);
             }
@@ -630,87 +890,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Delete error:', err);
             alert('Failed to delete newsletters');
         }
-    });
-
-    // Publish/Unpublish buttons
-    document.querySelectorAll('.publish-btn, .unpublish-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const newsletterID = this.dataset.id;
-            const action = this.classList.contains('publish-btn') ? 'publish' : 'unpublish';
-            
-            try {
-                const response = await fetch('../scripts/php/admin_actions.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'toggle_newsletter_status',
-                        newsletter_id: newsletterID
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (err) {
-                console.error('Status change error:', err);
-                alert('Failed to change newsletter status');
-            }
-        });
-    });
-
-    // Edit newsletter buttons
-    document.querySelectorAll('.edit-newsletter-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const newsletterID = this.dataset.id;
-            
-            try {
-                // Fetch newsletter data
-                const response = await fetch('../scripts/php/newsletters.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'fetch_single',
-                        newsletter_ID: newsletterID
-                    })
-                });
-
-                const data = await response.json();
-                
-                if (data.success && data.newsletter) {
-                    // Switch to generator tab
-                    swapTab('tab_generator');
-                    
-                    // Load newsletter data into editor
-                    currentNewsletterID = newsletterID;
-                    document.getElementById('admin-newsletter-title').value = data.newsletter.title;
-                    document.getElementById('admin-newsletter-editor').innerHTML = data.newsletter.content;
-                    
-                    // Show edit mode
-                    document.getElementById('generate-mode').style.display = 'none';
-                    document.getElementById('admin-edit-mode').style.display = 'block';
-                    
-                    // Load and select categories
-                    await loadCategories();
-                    if (data.categories && data.categories.length > 0) {
-                        const select = document.getElementById('admin-category-select');
-                        Array.from(select.options).forEach(option => {
-                            if (data.categories.includes(parseInt(option.value))) {
-                                option.selected = true;
-                            }
-                        });
-                    }
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to load newsletter'));
-                }
-            } catch (err) {
-                console.error('Edit error:', err);
-                alert('Failed to load newsletter for editing');
-            }
-        });
     });
 
     // Toggle selected categories visibility

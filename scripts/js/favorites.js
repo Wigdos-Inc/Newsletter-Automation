@@ -5,7 +5,7 @@
 
 class FavoritesManager {
     constructor() {
-        this.apiEndpoint = 'scripts/php/favorites.php';
+        this.apiEndpoint = '../scripts/php/favorites.php';
     }
 
     /**
@@ -216,6 +216,9 @@ class FavoritesManager {
                 if (toggleResult.success) {
                     this.updateButtonUI(button, toggleResult.favorited);
                     
+                    // Update favorite counts on the page
+                    this.updateFavoriteCounts(type, itemId, toggleResult.favorited);
+                    
                     // Show toast notification
                     this.showToast(toggleResult.message, 'success');
                     
@@ -261,15 +264,45 @@ class FavoritesManager {
     }
 
     /**
-     * Update inbox badge and dropdown in real-time
+     * Update favorite counts displayed on the page
+     * @param {string} type - 'newsletter', 'category', or 'creator'
+     * @param {number} itemId - The ID of the item
+     * @param {boolean} isFavorited - Whether the item is now favorited
      */
+    updateFavoriteCounts(type, itemId, isFavorited) {
+        if (type === 'newsletter') {
+            // Find all elements displaying favorite count for this newsletter
+            const countElements = document.querySelectorAll(`[data-newsletter-fav-count="${itemId}"]`);
+            
+            countElements.forEach(element => {
+                const currentCount = parseInt(element.textContent.trim()) || 0;
+                const newCount = isFavorited ? currentCount + 1 : Math.max(0, currentCount - 1);
+                
+                // Update the text content (the number after the heart icon)
+                const textNode = Array.from(element.childNodes).find(node => 
+                    node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+                );
+                
+                if (textNode) {
+                    textNode.textContent = ` ${newCount}`;
+                } else {
+                    // Fallback: replace all text content
+                    const icon = element.querySelector('i');
+                    if (icon) {
+                        const iconHTML = icon.outerHTML;
+                        element.innerHTML = `${iconHTML} ${newCount}`;
+                    }
+                }
+            });
+        }
+    }
     async updateInboxBadge() {
         try {
             // Check if we're in the parent window (not iframe)
             const targetWindow = window.parent && window.parent !== window ? window.parent : window;
             
             // Fetch unread inbox count
-            const response = await fetch('scripts/php/inbox_api.php', {
+            const response = await fetch('../scripts/php/inbox_api.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -281,31 +314,42 @@ class FavoritesManager {
             const data = await response.json();
             
             if (data.success && typeof data.count !== 'undefined') {
-                // Update badge in parent window
-                const badge = targetWindow.document.querySelector('.inbox-badge');
+                // Update badges in parent window
+                const headerBadge = targetWindow.document.querySelector('.inbox-badge');
+                const sidebarBadge = targetWindow.document.querySelector('.sidebar-badge');
                 const inboxIcon = targetWindow.document.querySelector('.inbox-icon');
                 const dropdownBadge = targetWindow.document.querySelector('.inbox-header .badge');
                 
                 if (data.count > 0) {
-                    // Show badge with count
-                    if (badge) {
-                        badge.textContent = data.count;
-                        badge.style.display = 'inline-block';
+                    // Show header badge with count
+                    if (headerBadge) {
+                        headerBadge.textContent = data.count;
+                        headerBadge.style.display = 'flex';
                     } else if (inboxIcon) {
-                        // Create badge if it doesn't exist
+                        // Create header badge if it doesn't exist
                         const newBadge = targetWindow.document.createElement('span');
                         newBadge.className = 'inbox-badge';
                         newBadge.textContent = data.count;
                         inboxIcon.appendChild(newBadge);
                     }
                     
+                    // Show sidebar badge with count
+                    if (sidebarBadge) {
+                        sidebarBadge.textContent = data.count;
+                        sidebarBadge.style.display = 'flex';
+                    }
+                    
                     if (dropdownBadge) {
                         dropdownBadge.textContent = `${data.count} unread`;
                     }
                 } else {
-                    // Hide badge if no unread messages
-                    if (badge) {
-                        badge.style.display = 'none';
+                    // Hide badges if no unread messages
+                    if (headerBadge) {
+                        headerBadge.style.display = 'none';
+                    }
+                    
+                    if (sidebarBadge) {
+                        sidebarBadge.style.display = 'none';
                     }
                     
                     if (dropdownBadge) {
@@ -327,7 +371,7 @@ class FavoritesManager {
      */
     async refreshInboxDropdown(targetWindow = window) {
         try {
-            const response = await fetch('scripts/php/inbox_api.php', {
+            const response = await fetch('../scripts/php/inbox_api.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

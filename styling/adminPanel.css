@@ -1,5 +1,27 @@
 /* Admin Panel Specific Styles */
 
+/* Remove glow/box-shadow from all buttons in admin panel */
+.admin-wrapper .btn,
+.admin-wrapper button {
+    box-shadow: none !important;
+    transition: none !important;
+}
+
+.admin-wrapper .btn:hover,
+.admin-wrapper button:hover {
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* Button visibility classes */
+.btn-hidden {
+    display: none !important;
+}
+
+.btn-visible {
+    display: inline-block !important;
+}
+
 /* Override for iframe embedding - remove margins and ensure proper layout */
 html, body {
     margin: 0 !important;
