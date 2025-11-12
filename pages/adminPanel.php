@@ -811,7 +811,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     action: 'create',
-                    name: categoryName
+                    category_name: categoryName
                 })
             });
 
