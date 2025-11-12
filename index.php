@@ -871,6 +871,21 @@ if ($userID && isset($users[$userID])) {
         syncThemeToIframe(currentTheme);
       });
     }
+    
+    // Listen for messages from iframe to remove overflow
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'removeIframeOverflow') {
+        const iframe = document.getElementById('pageContent');
+        if (iframe) {
+          iframe.style.overflow = 'visible';
+          // Also ensure parent containers don't have overflow restrictions
+          const mainContent = document.querySelector('.main-content');
+          if (mainContent) {
+            mainContent.style.overflow = 'visible';
+          }
+        }
+      }
+    });
 
     // Search functionality
     function performSearch(query) {

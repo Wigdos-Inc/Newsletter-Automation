@@ -5,14 +5,61 @@ require_once '../scripts/db/config.php';
 // Get UserID from cookie
 $userID = isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : null;
 
-// Fetch categories
+// Handle AJAX check for newest newsletter
+if (isset($_GET['check_newest']) && $_GET['check_newest'] == '1') {
+    header('Content-Type: application/json');
+    
+    try {
+        // Get the most recent published newsletter
+        $stmt = $pdo->query("
+            SELECT newsletter_ID, title, content, creation_date
+            FROM tab_newsletters
+            WHERE status = 'published'
+            ORDER BY creation_date DESC
+            LIMIT 1
+        ");
+        $newestNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($newestNewsletter) {
+            echo json_encode([
+                'has_new' => true,
+                'newsletter' => $newestNewsletter
+            ]);
+        } else {
+            echo json_encode(['has_new' => false]);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(['has_new' => false, 'error' => 'Database error']);
+    }
+    exit;
+}
+
+// Fetch the most recent published newsletter for Featured section
+$featuredNewsletter = null;
+try {
+    $stmt = $pdo->query("
+        SELECT newsletter_ID, title, content, creation_date
+        FROM tab_newsletters
+        WHERE status = 'published'
+        ORDER BY creation_date DESC
+        LIMIT 1
+    ");
+    $featuredNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    // Silent fail
+}
+
+// Fetch all categories (no limit)
 $categories = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM tab_categories ORDER BY name ASC LIMIT 3");
+    $stmt = $pdo->query("SELECT * FROM tab_categories ORDER BY name ASC");
     $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     // Silent fail for now
 }
+
+// Define how many categories to display before dropdown
+$maxDisplayedCategories = 3;
 
 // Fetch newsletters for "Popular" section (by favorite count or date)
 $popularNewsletters = [];
@@ -63,6 +110,30 @@ if ($userID) {
     <link rel="stylesheet" href="styling/home.css">
     <link rel="stylesheet" href="styling/favorites.css">
     <style>
+        /* Remove overflow restrictions */
+        html, body {
+            overflow: visible !important;
+            overflow-x: visible !important;
+            overflow-y: visible !important;
+        }
+        
+        .container {
+            overflow: visible !important;
+        }
+        
+        /* Ensure dropdown menu can escape bounds */
+        .newest-category-section {
+            overflow: visible !important;
+        }
+        
+        .dropdown {
+            position: static !important;
+        }
+        
+        .dropdown-menu {
+            position: absolute !important;
+        }
+        
         /* Refresh button styling */
         #refreshHomeBtn {
             transition: all 0.3s ease;
@@ -105,6 +176,192 @@ if ($userID) {
         body.light-mode .page-header-section {
             background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(46, 204, 113, 0.05) 100%);
         }
+        
+        /* Category View More Styling */
+        .category-hidden {
+            display: none;
+        }
+        
+        #viewMoreCategoriesBtn {
+            transition: all 0.3s ease;
+            padding: 8px 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            max-width: 280px;
+        }
+        
+        #viewMoreCategoriesBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Dropdown menu styling - consistent with site style */
+        .category-dropdown-menu {
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 280px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .category-dropdown-item {
+            padding: 10px 16px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            border-radius: 8px;
+            color: #e0e0e0;
+            text-decoration: none;
+        }
+        
+        .category-dropdown-item:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            transform: translateX(4px);
+        }
+        
+        .category-dropdown-item span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .favorite-btn-icon-small {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            padding: 4px 8px;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            border-radius: 50%;
+        }
+        
+        .favorite-btn-icon-small:hover {
+            color: #c0392b;
+            background-color: rgba(231, 76, 60, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .favorite-btn-icon-small.active i {
+            color: #e74c3c;
+            font-weight: 900;
+        }
+        
+        /* Light mode dropdown */
+        body.light-mode .category-dropdown-menu {
+            background-color: #ffffff;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            backdrop-filter: none;
+        }
+        
+        body.light-mode .category-dropdown-item {
+            color: #2c3e50;
+        }
+        
+        body.light-mode .category-dropdown-item:hover {
+            background-color: rgba(52, 152, 219, 0.08);
+            color: #2980b9;
+        }
+        
+        /* Highlight flash animation */
+        @keyframes highlightFlash {
+            0%, 100% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(52, 152, 219, 0.6);
+                transform: scale(1.02);
+            }
+        }
+        
+        .highlight-flash .category-card {
+            animation: highlightFlash 1s ease-in-out;
+        }
+        
+        .category-dropdown-wrapper {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        /* Category card clickable styling */
+        .category-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 180px;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+        
+        .category-count-display {
+            text-align: center;
+            padding: 20px 15px;
+        }
+        
+        .count-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+        
+        .count-label {
+            font-size: 0.95rem;
+            color: #95a5a6;
+            font-weight: 500;
+        }
+        
+        .category-icon-display {
+            font-size: 1.8rem;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+        
+        body.light-mode .count-label {
+            color: #7f8c8d;
+        }
+        
+        body.light-mode .category-icon-display {
+            color: #2980b9;
+        }
+        
+        /* Notification animations */
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
     </style>
     <title>Home - Newswire AI</title>
 </head>
@@ -132,33 +389,33 @@ if ($userID) {
             </div>
         </div>
         
-        <?php if ($userID && $userDigest): ?>
-        <!-- User Digest Section (Only for logged-in users) -->
-        <section class="user-digest-section mb-3">
+        <?php if ($featuredNewsletter): ?>
+        <!-- Featured Newsletter Section -->
+        <section class="user-digest-section mb-3" id="featuredSection">
             <div class="section-header mb-4">
                 <h2 class="section-title">
-                    <i class="fas fa-user-circle me-2"></i>
-                    Your Personalized Digest
+                    <i class="fas fa-star me-2"></i>
+                    Featured Newsletter
                 </h2>
-                <p class="section-subtitle">Latest newsletter from your favorites</p>
+                <p class="section-subtitle">Latest published newsletter</p>
             </div>
             
             <div class="digest-card">
                 <div class="digest-content">
                     <div class="digest-label">
-                        <i class="fas fa-star"></i>
-                        <span>Featured</span>
+                        <i class="fas fa-fire"></i>
+                        <span>Newest</span>
                     </div>
-                    <h3 class="digest-title"><?php echo htmlspecialchars($userDigest['title']); ?></h3>
-                    <p class="digest-description">
-                        <?php echo htmlspecialchars(substr(strip_tags($userDigest['content']) ?? 'Your personalized newsletter content will appear here.', 0, 150)); ?>...
+                    <h3 class="digest-title" id="featuredTitle"><?php echo htmlspecialchars($featuredNewsletter['title']); ?></h3>
+                    <p class="digest-description" id="featuredDescription">
+                        <?php echo htmlspecialchars(substr(strip_tags($featuredNewsletter['content']) ?? 'Latest newsletter content.', 0, 150)); ?>...
                     </p>
                     <div class="digest-meta">
-                        <span class="digest-date">
+                        <span class="digest-date" id="featuredDate">
                             <i class="far fa-calendar-alt me-1"></i>
-                            <?php echo date('M j, Y', strtotime($userDigest['creation_date'])); ?>
+                            <?php echo date('M j, Y', strtotime($featuredNewsletter['creation_date'])); ?>
                         </span>
-                        <button class="btn-read-digest" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $userDigest['newsletter_ID']; ?>)">
+                        <button class="btn-read-digest" id="featuredReadBtn" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $featuredNewsletter['newsletter_ID']; ?>)">
                             Read Newsletter <i class="fas fa-arrow-right ms-1"></i>
                         </button>
                     </div>
@@ -168,33 +425,27 @@ if ($userID) {
                 </div>
             </div>
         </section>
-        <?php elseif ($userID): ?>
-        <!-- Placeholder for logged-in users without favorites -->
+        <?php else: ?>
+        <!-- Placeholder when no newsletters exist -->
         <section class="user-digest-section mb-3">
             <div class="section-header mb-4">
                 <h2 class="section-title">
-                    <i class="fas fa-user-circle me-2"></i>
-                    Your Personalized Digest
+                    <i class="fas fa-star me-2"></i>
+                    Featured Newsletter
                 </h2>
-                <p class="section-subtitle">Start favoriting newsletters to see your digest</p>
+                <p class="section-subtitle">No newsletters published yet</p>
             </div>
             
             <div class="digest-card digest-placeholder">
                 <div class="digest-content">
                     <div class="digest-label">
                         <i class="fas fa-info-circle"></i>
-                        <span>Coming Soon when the functionality of the newsletter is complete</span>
+                        <span>Coming Soon</span>
                     </div>
-                    <h3 class="digest-title">Your Newsletter Digest Will Appear Here</h3>
+                    <h3 class="digest-title">Latest Newsletter Will Appear Here</h3>
                     <p class="digest-description">
-                        Once you start favoriting newsletters, we'll display your most recent personalized content right here. 
-                        This is where you'll get quick access to the latest updates from your favorite sources.
+                        Once newsletters are published, the most recent one will be featured right here.
                     </p>
-                    <div class="digest-meta">
-                        <button class="btn-explore" onclick="parent.postMessage({type: 'navigateTo', page: 'pages/newsletter_view.php'}, '*')">
-                            Explore Newsletters <i class="fas fa-compass ms-1"></i>
-                        </button>
-                    </div>
                 </div>
                 <div class="digest-image">
                     <i class="fas fa-newspaper"></i>
@@ -213,29 +464,66 @@ if ($userID) {
                 <p class="section-subtitle">Fresh content from your favorite topics</p>
             </div>
 
-            <div class="row g-3">
-                <?php if (count($categories) > 0): ?>
-                    <?php foreach ($categories as $category): ?>
+            <?php if (count($categories) > $maxDisplayedCategories): ?>
+            <!-- View More Dropdown at the top -->
+            <div class="category-dropdown-wrapper">
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="viewMoreCategoriesBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-layer-group me-2"></i>
+                        View All Categories (<?php echo count($categories) - $maxDisplayedCategories; ?> more)
+                    </button>
+                    <ul class="dropdown-menu category-dropdown-menu" aria-labelledby="viewMoreCategoriesBtn">
                         <?php
-                        // Fetch newest newsletter for this category
-                        $newestNewsletter = null;
+                        // Show categories from index maxDisplayedCategories onwards in dropdown
+                        for ($i = $maxDisplayedCategories; $i < count($categories); $i++):
+                            $dropdownCategory = $categories[$i];
+                        ?>
+                        <li>
+                            <a class="dropdown-item category-dropdown-item" href="#" onclick="scrollToCategoryCard(<?php echo $i; ?>); return false;">
+                                <span>
+                                    <i class="fas fa-folder me-2"></i>
+                                    <?php echo htmlspecialchars($dropdownCategory['name']); ?>
+                                </span>
+                                <?php if ($userID): ?>
+                                <button class="favorite-btn-icon-small" 
+                                        data-favorite-btn 
+                                        data-favorite-type="category" 
+                                        data-favorite-id="<?php echo $dropdownCategory['category_ID']; ?>"
+                                        title="Follow category"
+                                        onclick="event.stopPropagation();">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                        <?php endfor; ?>
+                    </ul>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <div class="row g-3" id="categoryGrid">
+                <?php if (count($categories) > 0): ?>
+                    <?php foreach ($categories as $index => $category): ?>
+                        <?php
+                        // Fetch ALL newsletters for this category to get count
+                        $categoryNewslettersCount = 0;
                         try {
                             $stmt = $pdo->prepare("
-                                SELECT n.* 
+                                SELECT COUNT(*) as count
                                 FROM tab_newsletters n
                                 INNER JOIN con_newsletter_categories c ON n.newsletter_ID = c.newsletter_ID
                                 WHERE c.category_ID = ?
-                                ORDER BY n.creation_date DESC
-                                LIMIT 1
                             ");
                             $stmt->execute([$category['category_ID']]);
-                            $newestNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                            $categoryNewslettersCount = $result['count'];
                         } catch (PDOException $e) {
                             // Silent fail
                         }
                         ?>
-                        <div class="col-lg-4 col-md-6">
-                            <div class="category-card">
+                        <div class="col-lg-4 col-md-6 category-item <?php echo ($index >= $maxDisplayedCategories) ? 'category-hidden' : ''; ?>" id="category-card-<?php echo $index; ?>">
+                            <div class="category-card" onclick="openCategoryPopup(<?php echo $category['category_ID']; ?>, '<?php echo htmlspecialchars(addslashes($category['name'])); ?>')">
                                 <div class="category-badge">
                                     <?php echo htmlspecialchars($category['name']); ?>
                                     <?php if ($userID): ?>
@@ -244,34 +532,23 @@ if ($userID) {
                                             data-favorite-type="category" 
                                             data-favorite-id="<?php echo $category['category_ID']; ?>"
                                             title="Follow category"
-                                            style="float: right; margin-top: -2px;">
+                                            style="float: right; margin-top: -2px;"
+                                            onclick="event.stopPropagation();">
                                         <i class="far fa-heart"></i>
                                     </button>
                                     <?php endif; ?>
                                 </div>
                                 <div class="category-content">
-                                    <?php if ($newestNewsletter): ?>
-                                        <h4 class="category-newsletter-title">
-                                            <?php echo htmlspecialchars($newestNewsletter['title']); ?>
-                                        </h4>
-                                        <p class="category-newsletter-desc">
-                                            <?php echo htmlspecialchars(substr(strip_tags($newestNewsletter['content']) ?? 'Newsletter description coming soon', 0, 100)); ?>...
-                                        </p>
-                                        <div class="category-footer">
-                                            <span class="category-date">
-                                                <i class="far fa-clock me-1"></i>
-                                                <?php echo date('M j', strtotime($newestNewsletter['creation_date'])); ?>
-                                            </span>
-                                            <button class="btn-view-category" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $newestNewsletter['newsletter_ID']; ?>)">
-                                                View <i class="fas fa-arrow-right ms-1"></i>
-                                            </button>
+                                    <div class="category-count-display">
+                                        <div class="category-icon-display">
+                                            <i class="fas fa-newspaper"></i>
                                         </div>
-                                    <?php else: ?>
-                                        <div class="category-empty">
-                                            <i class="fas fa-inbox fa-2x mb-2"></i>
-                                            <p>No newsletters yet</p>
+                                        <div class="count-number"><?php echo $categoryNewslettersCount; ?></div>
+                                        <div class="count-label">Newsletter<?php echo $categoryNewslettersCount !== 1 ? 's' : ''; ?></div>
+                                        <div style="margin-top: 15px; color: #3498db; font-size: 0.8rem;">
+                                            <i class="fas fa-mouse-pointer me-1"></i> Click to view all
                                         </div>
-                                    <?php endif; ?>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -356,16 +633,296 @@ if ($userID) {
 
     <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Store all category newsletters data for popup
+        const categoryNewslettersData = <?php
+            $categoryData = [];
+            foreach ($categories as $category):
+                // Fetch ALL newsletters for this category
+                $categoryNewsletters = [];
+                try {
+                    $stmt = $pdo->prepare("
+                        SELECT n.* 
+                        FROM tab_newsletters n
+                        INNER JOIN con_newsletter_categories c ON n.newsletter_ID = c.newsletter_ID
+                        WHERE c.category_ID = ?
+                        ORDER BY n.creation_date DESC
+                    ");
+                    $stmt->execute([$category['category_ID']]);
+                    $categoryNewsletters = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                } catch (PDOException $e) {
+                    // Silent fail
+                }
+                $categoryData[$category['category_ID']] = $categoryNewsletters;
+            endforeach;
+            echo json_encode($categoryData);
+        ?>;
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Create popup in parent window
+        function createPopupInParent() {
+            if (!window.parent || window.parent === window) return null;
+            
+            const parentDoc = window.parent.document;
+            
+            // Check if popup already exists
+            let popup = parentDoc.getElementById('categoryPopupOverlay');
+            if (popup) return popup;
+            
+            // Create popup HTML
+            const popupHTML = `
+                <div class="category-popup-overlay" id="categoryPopupOverlay" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.85);
+                    backdrop-filter: blur(10px);
+                    z-index: 99999;
+                    display: none;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.3s ease;
+                ">
+                    <div class="category-popup-content" style="
+                        background: #1a1a1a;
+                        border-radius: 16px;
+                        max-width: 900px;
+                        width: 90%;
+                        max-height: 85vh;
+                        overflow: hidden;
+                        display: flex;
+                        flex-direction: column;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                        animation: slideUp 0.3s ease;
+                    ">
+                        <div class="category-popup-header" style="
+                            padding: 24px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            background: linear-gradient(135deg, rgba(52, 152, 219, 0.15), rgba(46, 204, 113, 0.15));
+                        ">
+                            <h3 id="categoryPopupTitle" style="
+                                font-size: 1.5rem;
+                                font-weight: 700;
+                                color: #ecf0f1;
+                                margin: 0;
+                            ">
+                                <i class="fas fa-layer-group" style="margin-right: 8px;"></i>Category Newsletters
+                            </h3>
+                            <button onclick="window.closeCategoryPopup()" aria-label="Close" style="
+                                background: none;
+                                border: none;
+                                color: #ecf0f1;
+                                font-size: 1.5rem;
+                                cursor: pointer;
+                                padding: 8px;
+                                border-radius: 50%;
+                                transition: all 0.2s ease;
+                                width: 40px;
+                                height: 40px;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                            " onmouseover="this.style.background='rgba(231, 76, 60, 0.2)'; this.style.color='#e74c3c'; this.style.transform='rotate(90deg)';" onmouseout="this.style.background='none'; this.style.color='#ecf0f1'; this.style.transform='rotate(0deg)';">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="categoryPopupBody" style="
+                            padding: 24px;
+                            overflow-y: auto;
+                            flex: 1;
+                        "></div>
+                    </div>
+                </div>
+            `;
+            
+            // Add animations CSS to parent
+            if (!parentDoc.getElementById('categoryPopupStyles')) {
+                const style = parentDoc.createElement('style');
+                style.id = 'categoryPopupStyles';
+                style.textContent = `
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideUp {
+                        from { opacity: 0; transform: translateY(30px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    .category-popup-overlay.active {
+                        display: flex !important;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.05);
+                        border-radius: 4px;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar-thumb {
+                        background: rgba(52, 152, 219, 0.5);
+                        border-radius: 4px;
+                    }
+                    #categoryPopupBody::-webkit-scrollbar-thumb:hover {
+                        background: rgba(52, 152, 219, 0.7);
+                    }
+                    .popup-newsletter-item {
+                        padding: 20px;
+                        margin-bottom: 16px;
+                        background: rgba(255, 255, 255, 0.03);
+                        border-radius: 12px;
+                        border-left: 4px solid #3498db;
+                        transition: all 0.3s ease;
+                        cursor: pointer;
+                    }
+                    .popup-newsletter-item:hover {
+                        background: rgba(255, 255, 255, 0.06);
+                        border-left-color: #2ecc71;
+                        transform: translateX(8px);
+                        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+                    }
+                    .popup-newsletter-item:last-child {
+                        margin-bottom: 0;
+                    }
+                `;
+                parentDoc.head.appendChild(style);
+            }
+            
+            // Insert popup into parent body
+            const div = parentDoc.createElement('div');
+            div.innerHTML = popupHTML;
+            parentDoc.body.appendChild(div.firstElementChild);
+            
+            popup = parentDoc.getElementById('categoryPopupOverlay');
+            
+            // Add click outside to close
+            popup.addEventListener('click', function(e) {
+                if (e.target === popup) {
+                    window.parent.closeCategoryPopup();
+                }
+            });
+            
+            // Add ESC key to close
+            parentDoc.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && popup.classList.contains('active')) {
+                    window.parent.closeCategoryPopup();
+                }
+            });
+            
+            return popup;
+        }
+        
+        // Open category popup in parent window
+        function openCategoryPopup(categoryId, categoryName) {
+            try {
+                const popup = createPopupInParent();
+                if (!popup) return;
+                
+                const parentDoc = window.parent.document;
+                const title = parentDoc.getElementById('categoryPopupTitle');
+                const body = parentDoc.getElementById('categoryPopupBody');
+                
+                title.innerHTML = '<i class="fas fa-layer-group" style="margin-right: 8px;"></i>' + escapeHtml(categoryName);
+                
+                const newsletters = categoryNewslettersData[categoryId] || [];
+                
+                if (newsletters.length === 0) {
+                    body.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; color: #95a5a6;">
+                            <i class="fas fa-inbox" style="font-size: 4rem; margin-bottom: 20px; color: #7f8c8d;"></i>
+                            <h4>No Newsletters Yet</h4>
+                            <p>This category doesn't have any newsletters at the moment.</p>
+                        </div>
+                    `;
+                } else {
+                    let html = '';
+                    newsletters.forEach(newsletter => {
+                        const content = newsletter.content || 'Newsletter description coming soon';
+                        const strippedContent = content.replace(/<[^>]*>/g, '');
+                        const description = strippedContent.substring(0, 200);
+                        const date = new Date(newsletter.creation_date);
+                        const formattedDate = date.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                        
+                        html += `
+                            <div class="popup-newsletter-item" onclick="window.frames[0].openNewsletter(${newsletter.newsletter_ID})">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                                    <h4 style="font-size: 1.15rem; font-weight: 600; color: #ecf0f1; margin: 0; flex: 1; line-height: 1.3;">${escapeHtml(newsletter.title)}</h4>
+                                </div>
+                                <p style="font-size: 0.9rem; color: #95a5a6; margin-bottom: 12px; line-height: 1.5;">${escapeHtml(description)}${strippedContent.length > 200 ? '...' : ''}</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                                    <span style="font-size: 0.85rem; color: #7f8c8d;">
+                                        <i class="far fa-calendar-alt" style="margin-right: 8px;"></i>${formattedDate}
+                                    </span>
+                                    <span style="color: #3498db; font-size: 0.9rem; font-weight: 500;">
+                                        Click to read <i class="fas fa-arrow-right" style="margin-left: 4px;"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    body.innerHTML = html;
+                }
+                
+                popup.classList.add('active');
+                parentDoc.body.style.overflow = 'hidden';
+            } catch (e) {
+                console.error('Could not open popup in parent window:', e);
+            }
+        }
+        
+        // Close category popup (exposed to parent window)
+        window.parent.closeCategoryPopup = function() {
+            try {
+                const parentDoc = window.parent.document;
+                const popup = parentDoc.getElementById('categoryPopupOverlay');
+                if (popup) {
+                    popup.classList.remove('active');
+                    parentDoc.body.style.overflow = '';
+                }
+            } catch (e) {
+                console.error('Could not close popup:', e);
+            }
+        };
+        
+        // Open newsletter from popup
+        function openNewsletter(newsletterId) {
+            if (parent.window && parent.window.popupSystem) {
+                parent.window.popupSystem.newsPopup(newsletterId);
+                // Close category popup after opening newsletter
+                if (window.parent.closeCategoryPopup) {
+                    window.parent.closeCategoryPopup();
+                }
+            }
+        }
+        
         // Initialize popup system with newsletter data
         if (parent.window && parent.window.popupSystem) {
-            const newsletters = {
-                <?php
+            const newsletters = <?php
                 // Collect all newsletters to initialize popup system
                 $allNewsletters = [];
                 
                 // Add user digest
                 if (isset($userDigest) && $userDigest) {
-                    $allNewsletters[$userDigest['newsletter_ID']] = $userDigest;
+                    $allNewsletters[$userDigest['newsletter_ID']] = [
+                        'id' => $userDigest['newsletter_ID'],
+                        'title' => $userDigest['title'],
+                        'content' => $userDigest['content'],
+                        'creation_date' => $userDigest['creation_date'],
+                        'status' => $userDigest['status'] ?? 'published'
+                    ];
                 }
                 
                 // Add category newsletters
@@ -382,36 +939,236 @@ if ($userID) {
                         $stmt->execute([$category['category_ID']]);
                         $catNewsletter = $stmt->fetch(PDO::FETCH_ASSOC);
                         if ($catNewsletter) {
-                            $allNewsletters[$catNewsletter['newsletter_ID']] = $catNewsletter;
+                            $allNewsletters[$catNewsletter['newsletter_ID']] = [
+                                'id' => $catNewsletter['newsletter_ID'],
+                                'title' => $catNewsletter['title'],
+                                'content' => $catNewsletter['content'],
+                                'creation_date' => $catNewsletter['creation_date'],
+                                'status' => $catNewsletter['status'] ?? 'published'
+                            ];
                         }
                     } catch (PDOException $e) {}
                 }
                 
                 // Add popular newsletters
                 foreach ($popularNewsletters as $newsletter) {
-                    $allNewsletters[$newsletter['newsletter_ID']] = $newsletter;
+                    $allNewsletters[$newsletter['newsletter_ID']] = [
+                        'id' => $newsletter['newsletter_ID'],
+                        'title' => $newsletter['title'],
+                        'content' => $newsletter['content'],
+                        'creation_date' => $newsletter['creation_date'],
+                        'status' => $newsletter['status'] ?? 'published'
+                    ];
                 }
                 
-                // Output as JavaScript object
-                if (count($allNewsletters) > 0) {
-                    $first = true;
-                    foreach ($allNewsletters as $id => $newsletter) {
-                        if (!$first) echo ",\n                ";
-                        $first = false;
-                        echo $id . ": {";
-                        echo "id: " . $id . ",";
-                        echo "title: " . json_encode($newsletter['title']) . ",";
-                        echo "content: " . json_encode($newsletter['content']) . ",";
-                        echo "creation_date: " . json_encode($newsletter['creation_date']) . ",";
-                        echo "status: " . json_encode($newsletter['status'] ?? 'published');
-                        echo "}";
-                    }
-                }
-                ?>
-            };
+                echo json_encode($allNewsletters);
+            ?>;
             
             parent.window.popupSystem.initData(newsletters, {}, {});
         }
+        
+        // ========================================
+        // AUTO-REFRESH FEATURED NEWSLETTER SYSTEM
+        // ========================================
+        
+        // Track current featured newsletter ID and auto-refresh interval
+        let autoRefreshInterval = null;
+        let currentFeaturedId = <?php echo $featuredNewsletter ? $featuredNewsletter['newsletter_ID'] : 'null'; ?>;
+        
+        /**
+         * Check for newest newsletter via AJAX
+         */
+        function checkForNewestNewsletter() {
+            console.log('Checking for newest newsletter... Current ID:', currentFeaturedId);
+            
+            fetch('pages/home_view.php?check_newest=1')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('AJAX response:', data);
+                    
+                    if (data.has_new && data.newsletter) {
+                        const newId = parseInt(data.newsletter.newsletter_ID);
+                        console.log('Comparing - New ID:', newId, 'Current ID:', currentFeaturedId, 'Type check:', typeof newId, typeof currentFeaturedId);
+                        
+                        // Only update if we have a new newsletter ID
+                        // Convert both to numbers for proper comparison
+                        if (currentFeaturedId === null || newId != currentFeaturedId) {
+                            console.log('✓ New newsletter detected! Updating...');
+                            updateFeaturedNewsletter(data.newsletter);
+                            currentFeaturedId = newId;
+                            showNewContentNotification();
+                        } else {
+                            console.log('✗ Newsletter is already the newest one');
+                        }
+                    } else {
+                        console.log('No newsletter data in response');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking for newest newsletter:', error);
+                });
+        }
+        
+        /**
+         * Update the featured newsletter section with new content
+         */
+        function updateFeaturedNewsletter(newsletter) {
+            const sectionEl = document.getElementById('featuredSection');
+            const titleEl = document.getElementById('featuredTitle');
+            const descEl = document.getElementById('featuredDescription');
+            const dateEl = document.getElementById('featuredDate');
+            const btnEl = document.getElementById('featuredReadBtn');
+            
+            if (!sectionEl || !titleEl || !descEl || !dateEl || !btnEl) {
+                console.error('Featured section elements not found');
+                return;
+            }
+            
+            // Add highlight animation
+            sectionEl.style.animation = 'highlightFlash 1s ease-in-out';
+            setTimeout(() => {
+                sectionEl.style.animation = '';
+            }, 1000);
+            
+            // Update content
+            titleEl.textContent = newsletter.title;
+            
+            // Strip HTML tags and truncate description
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = newsletter.content || 'Latest newsletter content.';
+            const strippedContent = tempDiv.textContent || tempDiv.innerText || '';
+            descEl.textContent = strippedContent.substring(0, 150) + '...';
+            
+            // Format and update date
+            const date = new Date(newsletter.creation_date);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            dateEl.innerHTML = '<i class="far fa-calendar-alt me-1"></i>' + formattedDate;
+            
+            // Update read button onclick
+            btnEl.setAttribute('onclick', `if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(${newsletter.newsletter_ID})`);
+            
+            console.log('Featured newsletter updated to:', newsletter.title);
+        }
+        
+        /**
+         * Show notification when new content is available
+         */
+        function showNewContentNotification() {
+            // Check if notification already exists
+            if (document.getElementById('newContentNotification')) {
+                return;
+            }
+            
+            const notification = document.createElement('div');
+            notification.id = 'newContentNotification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #2ecc71, #27ae60);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(46, 204, 113, 0.4);
+                z-index: 10000;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                animation: slideInRight 0.5s ease;
+                max-width: 350px;
+            `;
+            
+            notification.innerHTML = `
+                <i class="fas fa-check-circle" style="font-size: 1.3rem;"></i>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">New Newsletter Available!</div>
+                    <div style="font-size: 0.85rem; opacity: 0.95;">The featured section has been updated.</div>
+                </div>
+                <button onclick="this.parentElement.remove()" style="
+                    background: rgba(255, 255, 255, 0.2);
+                    border: none;
+                    color: white;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 0.9rem;
+                    transition: all 0.2s ease;
+                " onmouseover="this.style.background='rgba(255, 255, 255, 0.3)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.2)'">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-dismiss after 8 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.5s ease';
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 500);
+            }, 8000);
+        }
+        
+        /**
+         * Start auto-refresh polling
+         */
+        function startAutoRefresh() {
+            // Check immediately on load
+            checkForNewestNewsletter();
+            
+            // Then check every 30 seconds
+            autoRefreshInterval = setInterval(checkForNewestNewsletter, 30000);
+            
+            console.log('Auto-refresh started - checking every 30 seconds');
+        }
+        
+        /**
+         * Stop auto-refresh polling
+         */
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                console.log('Auto-refresh stopped');
+            }
+        }
+        
+        // Start auto-refresh when page loads
+        startAutoRefresh();
+        
+        // Pause auto-refresh when page is hidden, resume when visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+            }
+        });
+        
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function() {
+            stopAutoRefresh();
+        });
+        
+        // ========================================
+        // END AUTO-REFRESH SYSTEM
+        // ========================================
         
         // Set initial page load time
         const pageLoadTime = new Date();
@@ -438,6 +1195,28 @@ if ($userID) {
         // Update timestamp every 30 seconds
         setInterval(updateTimestamp, 30000);
         
+        // Scroll to a specific category card when selected from dropdown
+        function scrollToCategoryCard(index) {
+            const categoryCard = document.getElementById('category-card-' + index);
+            if (categoryCard) {
+                // Show the hidden category
+                categoryCard.style.display = 'block';
+                categoryCard.classList.remove('category-hidden');
+                
+                // Smooth scroll to the category
+                categoryCard.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+                
+                // Add highlight effect
+                categoryCard.classList.add('highlight-flash');
+                setTimeout(() => {
+                    categoryCard.classList.remove('highlight-flash');
+                }, 2000);
+            }
+        }
+        
         // Refresh button with animation
         const refreshBtn = document.getElementById('refreshHomeBtn');
         if (refreshBtn) {
@@ -449,10 +1228,14 @@ if ($userID) {
                 icon.classList.add('fa-spin');
                 this.disabled = true;
                 
-                // Reload after short delay to show animation
+                // Check for new newsletter instead of reloading
+                checkForNewestNewsletter();
+                
+                // Re-enable button after check
                 setTimeout(() => {
-                    location.reload();
-                }, 300);
+                    icon.classList.remove('fa-spin');
+                    this.disabled = false;
+                }, 1000);
             });
         }
         
@@ -472,6 +1255,26 @@ if ($userID) {
         const savedTheme = localStorage.getItem('theme') || 'dark';
         if (savedTheme === 'light') {
             document.body.classList.add('light-mode');
+        }
+        
+        // Request parent window to remove overflow restrictions on iframe
+        if (window.parent !== window) {
+            // Send message to parent to adjust iframe styles
+            window.parent.postMessage({
+                type: 'removeIframeOverflow'
+            }, '*');
+            
+            // Also try direct manipulation if accessible
+            try {
+                const iframe = window.parent.document.querySelector('iframe');
+                if (iframe) {
+                    iframe.style.overflow = 'visible';
+                    iframe.parentElement.style.overflow = 'visible';
+                }
+            } catch (e) {
+                // Cross-origin restriction, message should handle it
+                console.log('Using postMessage for overflow control');
+            }
         }
     </script>
     
