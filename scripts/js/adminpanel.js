@@ -48,3 +48,12 @@ document.getElementById('btn_tab_viewLetters').addEventListener('click', (e) => 
 document.getElementById('btn_tab_viewCategories').addEventListener('click', (e) => {
     swapTab('tab_viewCategories');
 });
+
+// Restore active tab on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const activeTab = sessionStorage.getItem('activeAdminTab');
+    if (activeTab) {
+        swapTab(activeTab);
+        sessionStorage.removeItem('activeAdminTab'); // Clear it after use
+    }
+});

@@ -292,7 +292,7 @@
         <div id="tab_viewCategories" class="list-unstyled admin-tab-content" style="display: none;">
             <div class="admin-tab-header">
                 <h2>Categories</h2>
-                <p style="color: var(--text-secondary)">Here you can view and delete Categories.</p>
+                <p style="color: var(--text-secondary)">Here you can view and manage Categories.</p>
             </div>
             <div class="admin-content-container">
                 <div class="admin-search-section">
@@ -304,8 +304,8 @@
                         <button class="btn btn-success" id="create-category-tab-btn">
                             <i class="fas fa-plus me-1"></i>Create New Category
                         </button>
-                        <button class="btn btn-danger" id="delete-selected-categories">
-                            <i class="fas fa-trash me-1"></i>Delete selected
+                        <button class="btn btn-danger" id="toggle-selected-categories">
+                            <i class="fas fa-eye-slash me-1"></i>Hide selected
                         </button>
                     </div>
                 </div>
@@ -315,6 +315,7 @@
                                 <tr>
                                     <th><input type="checkbox" id="select-all-categories"></th>
                                     <th>Name</th>
+                                    <th>Status</th>
                                     <th>Newsletters</th>
                                     <th>Contributors</th>
                                     <th>Actions</th>
@@ -322,13 +323,21 @@
                             </thead>
                             <tbody id="categories-table-body">
                                 <?php foreach($categories as $category): ?>
-                                <tr data-category-id="<?= $category['category_ID'] ?>">
+                                <tr data-category-id="<?= $category['category_ID'] ?>" data-status="<?= $category['status'] ?>">
                                     <td><input type="checkbox" class="category-checkbox" value="<?= $category['category_ID'] ?>"></td>
                                     <td><?= htmlspecialchars($category['name']) ?></td>
+                                    <td>
+                                        <span class="badge bg-<?= $category['status'] === 'shown' ? 'success' : 'secondary' ?>">
+                                            <?= ucfirst($category['status']) ?>
+                                        </span>
+                                    </td>
                                     <td><?= count($category['newsletters']) ?></td>
                                     <td><?= count($category['contributors']) ?></td>
                                     <td>
-                                        <button class="btn btn-sm btn-danger delete-category-btn" data-id="<?= $category['category_ID'] ?>">Delete</button>
+                                        <button class="btn btn-sm <?= $category['status'] === 'shown' ? 'btn-warning' : 'btn-success' ?> toggle-category-btn" data-id="<?= $category['category_ID'] ?>">
+                                            <i class="fas fa-<?= $category['status'] === 'shown' ? 'eye-slash' : 'eye' ?> me-1"></i>
+                                            <?= $category['status'] === 'shown' ? 'Hide' : 'Show' ?>
+                                        </button>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>
@@ -360,20 +369,20 @@
         </div>
     </div>
 
-    <!-- Delete Categories Confirmation Modal -->
-    <div class="modal fade" id="delCategoryConfirm" tabindex="-1">
+    <!-- Toggle Categories Confirmation Modal -->
+    <div class="modal fade" id="toggleCategoryConfirm" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content" style="background-color: var(--bg-secondary)">
                 <div class="modal-header">
-                    <h5 class="modal-title" style="color: var(--text-primary)">Confirm Deletion</h5>
+                    <h5 class="modal-title" style="color: var(--text-primary)" id="toggle-category-modal-title">Confirm Action</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body" style="color: var(--text-secondary)">
-                    Are you sure you want to delete the selected categories?
+                <div class="modal-body" style="color: var(--text-secondary)" id="toggle-category-modal-body">
+                    Are you sure you want to perform this action on the selected categories?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="confirm-delete-categories">Delete</button>
+                    <button type="button" class="btn btn-primary" id="confirm-toggle-categories">Confirm</button>
                 </div>
             </div>
         </div>

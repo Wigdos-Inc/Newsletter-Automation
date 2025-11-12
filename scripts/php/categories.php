@@ -61,7 +61,7 @@ if ($action === 'create') {
             exit;
         }
         
-        $stmt = $pdo->prepare("INSERT INTO tab_categories (name, user_ID) VALUES (?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO tab_categories (name, user_ID, status) VALUES (?, ?, 'shown')");
         $stmt->execute([$categoryName, $userID]);
         $categoryID = $pdo->lastInsertId();
         

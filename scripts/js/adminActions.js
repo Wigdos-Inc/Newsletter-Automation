@@ -9,7 +9,23 @@ let currentNewsletterStatus = 'draft'; // Track newsletter status
 // Helper Functions
 // ========================================
 
-// Update button visibility based on status
+// Get current active tab
+function getCurrentTab() {
+    const activeLink = document.querySelector('.admin-nav-link.active');
+    if (activeLink) {
+        const tabID = activeLink.id.replace('btn_', '');
+        return tabID;
+    }
+    return null;
+}
+
+// Store current tab before reload
+function storeCurrentTab() {
+    const currentTab = getCurrentTab();
+    if (currentTab) {
+        sessionStorage.setItem('activeAdminTab', currentTab);
+    }
+}
 function updateButtonVisibility() {
     const publishBtn = document.getElementById('admin-publish-btn');
     const unpublishBtn = document.getElementById('admin-unpublish-btn');
@@ -152,6 +168,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load categories on page load
     loadCategories();
+
+    // Initialize bulk toggle button as hidden
+    document.getElementById('toggle-selected-categories').style.display = 'none';
 
     // Add Generator tab button listener
     document.getElementById('btn_tab_generator')?.addEventListener('click', () => {
@@ -498,9 +517,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // ADMIN PANEL ACTIONS
     // ========================================
 
-    // Select all checkboxes
-    document.getElementById('select-all-newsletters')?.addEventListener('change', function() {
-        document.querySelectorAll('.newsletter-checkbox').forEach(cb => cb.checked = this.checked);
+    // Update bulk toggle button based on selected categories
+    function updateBulkToggleButton() {
+        const checkedBoxes = document.querySelectorAll('.category-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            document.getElementById('toggle-selected-categories').style.display = 'none';
+            return;
+        }
+        
+        document.getElementById('toggle-selected-categories').style.display = 'inline-block';
+        
+        let shownCount = 0;
+        let hiddenCount = 0;
+        
+        checkedBoxes.forEach(cb => {
+            const row = cb.closest('tr');
+            const status = row.dataset.status;
+            if (status === 'shown') shownCount++;
+            else if (status === 'hidden') hiddenCount++;
+        });
+        
+        const button = document.getElementById('toggle-selected-categories');
+        const icon = button.querySelector('i');
+        
+        if (hiddenCount > shownCount) {
+            button.innerHTML = '<i class="fas fa-eye me-1"></i>Unhide selected';
+            button.className = 'btn btn-success';
+        } else {
+            button.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide selected';
+            button.className = 'btn btn-danger';
+        }
+    }
+
+    // Add event listeners for checkboxes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('category-checkbox')) {
+            updateBulkToggleButton();
+        }
+    });
+
+    // Select all checkbox
+    document.getElementById('select-all-categories')?.addEventListener('change', function() {
+        document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = this.checked);
+        updateBulkToggleButton();
     });
 
     document.getElementById('select-all-categories')?.addEventListener('change', function() {
@@ -654,49 +713,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Delete selected categories
-    document.getElementById('delete-selected-categories')?.addEventListener('click', function() {
+    // Toggle selected categories visibility
+    document.getElementById('toggle-selected-categories')?.addEventListener('click', function() {
         const selected = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
         if (selected.length === 0) {
             alert('Please select at least one category');
             return;
         }
-        const modal = new bootstrap.Modal(document.getElementById('delCategoryConfirm'));
+        
+        // Determine action based on button text
+        const isUnhide = this.textContent.includes('Unhide');
+        const targetStatus = isUnhide ? 'shown' : 'hidden';
+        const actionText = isUnhide ? 'unhide' : 'hide';
+        
+        // Update modal
+        document.getElementById('toggle-category-modal-title').textContent = `Confirm ${actionText.charAt(0).toUpperCase() + actionText.slice(1)}`;
+        document.getElementById('toggle-category-modal-body').textContent = `Are you sure you want to ${actionText} the selected categories?`;
+        document.getElementById('confirm-toggle-categories').textContent = actionText.charAt(0).toUpperCase() + actionText.slice(1);
+        document.getElementById('confirm-toggle-categories').className = `btn btn-${isUnhide ? 'success' : 'danger'}`;
+        
+        // Store the target status for the confirm handler
+        document.getElementById('confirm-toggle-categories').dataset.targetStatus = targetStatus;
+        
+        const modal = new bootstrap.Modal(document.getElementById('toggleCategoryConfirm'));
         modal.show();
     });
 
-    // Confirm delete categories
-    document.getElementById('confirm-delete-categories')?.addEventListener('click', async function() {
+    // Confirm toggle categories
+    document.getElementById('confirm-toggle-categories')?.addEventListener('click', async function() {
         const selected = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+        const targetStatus = this.dataset.targetStatus;
         
         try {
             const response = await fetch('../scripts/php/admin_actions.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    action: 'delete_categories',
-                    category_ids: selected
+                    action: 'update_categories_status',
+                    category_ids: selected,
+                    status: targetStatus
                 })
             });
 
             const data = await response.json();
             
             if (data.success) {
+                storeCurrentTab();
                 window.location.reload();
             } else {
                 alert('Error: ' + data.error);
             }
         } catch (err) {
-            console.error('Delete error:', err);
-            alert('Failed to delete categories');
+            console.error('Toggle error:', err);
+            alert('Failed to update categories');
         }
     });
 
-    // Delete single category
-    document.querySelectorAll('.delete-category-btn').forEach(btn => {
+    // Toggle single category visibility
+    document.querySelectorAll('.toggle-category-btn').forEach(btn => {
         btn.addEventListener('click', async function() {
-            if (!confirm('Are you sure you want to delete this category?')) return;
-            
             const categoryID = this.dataset.id;
             
             try {
@@ -704,21 +779,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        action: 'delete_categories',
-                        category_ids: [categoryID]
+                        action: 'toggle_category_visibility',
+                        category_id: categoryID
                     })
                 });
 
                 const data = await response.json();
                 
                 if (data.success) {
+                    storeCurrentTab();
                     window.location.reload();
                 } else {
                     alert('Error: ' + data.error);
                 }
             } catch (err) {
-                console.error('Delete error:', err);
-                alert('Failed to delete category');
+                console.error('Toggle error:', err);
+                alert('Failed to toggle category visibility');
             }
         });
     });

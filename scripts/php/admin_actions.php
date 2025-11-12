@@ -227,20 +227,27 @@ if ($action === 'fetch_categories') {
     exit;
 }
 
-if ($action === 'delete_categories') {
+if ($action === 'update_categories_status') {
     $categoryIDs = $input['category_ids'] ?? [];
+    $status = $input['status'] ?? 'hidden';
     
     if (empty($categoryIDs)) {
         echo json_encode(['success' => false, 'error' => 'No categories selected']);
         exit();
     }
     
+    if (!in_array($status, ['shown', 'hidden'])) {
+        echo json_encode(['success' => false, 'error' => 'Invalid status']);
+        exit();
+    }
+    
     try {
         $placeholders = implode(',', array_fill(0, count($categoryIDs), '?'));
-        $stmt = $pdo->prepare("DELETE FROM tab_categories WHERE category_ID IN ($placeholders)");
-        $stmt->execute($categoryIDs);
+        $stmt = $pdo->prepare("UPDATE tab_categories SET status = ? WHERE category_ID IN ($placeholders)");
+        $stmt->execute(array_merge([$status], $categoryIDs));
         
-        echo json_encode(['success' => true, 'message' => 'Categories deleted successfully']);
+        $actionText = $status === 'hidden' ? 'hidden' : 'shown';
+        echo json_encode(['success' => true, 'message' => 'Categories ' . $actionText . ' successfully']);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
@@ -255,7 +262,7 @@ if ($action === 'toggle_category_visibility') {
         $stmt->execute([$categoryID]);
         $category = $stmt->fetch();
         
-        $newStatus = ($category['status'] === 'active') ? 'hidden' : 'active';
+        $newStatus = ($category['status'] === 'shown') ? 'hidden' : 'shown';
         
         $stmt = $pdo->prepare("UPDATE tab_categories SET status = ? WHERE category_ID = ?");
         $stmt->execute([$newStatus, $categoryID]);
