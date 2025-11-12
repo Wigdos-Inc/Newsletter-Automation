@@ -62,50 +62,6 @@ if ($userID) {
     <link rel="stylesheet" href="styling/main.css">
     <link rel="stylesheet" href="styling/home.css">
     <link rel="stylesheet" href="styling/favorites.css">
-    <style>
-        /* Refresh button styling */
-        #refreshHomeBtn {
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        #refreshHomeBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-        
-        #refreshHomeBtn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        #refreshHomeBtn i {
-            transition: transform 0.3s ease;
-        }
-        
-        #refreshHomeBtn:hover i {
-            transform: rotate(90deg);
-        }
-        
-        /* Page header styling */
-        .page-header-section {
-            background: linear-gradient(135deg, rgba(52, 152, 219, 0.1) 0%, rgba(46, 204, 113, 0.1) 100%);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .page-header-section h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        
-        /* Light mode overrides */
-        body.light-mode .page-header-section {
-            background: linear-gradient(135deg, rgba(52, 152, 219, 0.05) 0%, rgba(46, 204, 113, 0.05) 100%);
-        }
-    </style>
     <title>Home - Newswire AI</title>
 </head>
 <body>
@@ -412,69 +368,9 @@ if ($userID) {
             
             parent.window.popupSystem.initData(newsletters, {}, {});
         }
-        
-        // Set initial page load time
-        const pageLoadTime = new Date();
-        
-        // Update the "last updated" timestamp
-        function updateTimestamp() {
-            const now = new Date();
-            const diffSeconds = Math.floor((now - pageLoadTime) / 1000);
-            const updateTimeSpan = document.getElementById('updateTime');
-            
-            if (updateTimeSpan) {
-                if (diffSeconds < 60) {
-                    updateTimeSpan.textContent = 'just now';
-                } else if (diffSeconds < 3600) {
-                    const minutes = Math.floor(diffSeconds / 60);
-                    updateTimeSpan.textContent = `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-                } else {
-                    const hours = Math.floor(diffSeconds / 3600);
-                    updateTimeSpan.textContent = `${hours} hour${hours > 1 ? 's' : ''} ago`;
-                }
-            }
-        }
-        
-        // Update timestamp every 30 seconds
-        setInterval(updateTimestamp, 30000);
-        
-        // Refresh button with animation
-        const refreshBtn = document.getElementById('refreshHomeBtn');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                const icon = this.querySelector('i');
-                
-                // Add spinning animation
-                icon.classList.add('fa-spin');
-                this.disabled = true;
-                
-                // Reload after short delay to show animation
-                setTimeout(() => {
-                    location.reload();
-                }, 300);
-            });
-        }
-        
-        // Listen for theme changes from parent window
-        window.addEventListener('message', function(event) {
-            if (event.data && event.data.type === 'themeChange') {
-                const theme = event.data.theme;
-                if (theme === 'light') {
-                    document.body.classList.add('light-mode');
-                } else {
-                    document.body.classList.remove('light-mode');
-                }
-            }
-        });
-
-        // Apply saved theme on load
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        if (savedTheme === 'light') {
-            document.body.classList.add('light-mode');
-        }
     </script>
-    
+    <script src="scripts/theme.js"></script>
+    <script src="scripts/homeView.js"></script>
     <!-- Favorites System -->
     <script src="scripts/favorites.js"></script>
 </body>
