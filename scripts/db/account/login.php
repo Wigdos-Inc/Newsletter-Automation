@@ -66,14 +66,23 @@ try {
     $expiry = time() + (30 * 24 * 60 * 60); // 30 days
     setcookie('userID', $result['user_ID'], $expiry, '/', '', false, true);
     setcookie('user_data', json_encode($result), $expiry, '/', '', false, true);
+    setcookie('logged_in', '1', $expiry, '/', '', false, false); // Not HttpOnly for JS access
     
-    // Redirect to the page user was on before login, or profile if none
+    // Determine redirect URL
+    $redirect = isset($_POST['redirect']) ? $_POST['redirect'] : '';
+    if ($redirect === 'inbox') {
+        $redirectUrl = '../../../index.php?load=pages/inbox_view.php';
+    } else {
+        $pageBeforeLogin = isset($_COOKIE['pageBeforeLogin']) ? $_COOKIE['pageBeforeLogin'] : 'pages/profile_view.php';
+        $redirectUrl = '../../../index.php?load=' . urlencode($pageBeforeLogin);
+    }
+    
+    // Redirect to the appropriate page
     echo "<script>
-        var pageBeforeLogin = localStorage.getItem('pageBeforeLogin') || 'pages/profile_view.php';
         if(window.self !== window.top){
-            window.top.location.href = '../../../index.php?load=' + encodeURIComponent(pageBeforeLogin);
+            window.top.location.href = '$redirectUrl';
         } else {
-            window.location.href = '../../../index.php?load=' + encodeURIComponent(pageBeforeLogin);
+            window.location.href = '$redirectUrl';
         }
     </script>";
     exit();

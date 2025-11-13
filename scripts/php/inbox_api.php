@@ -135,6 +135,23 @@ if ($action === 'archive') {
     exit;
 }
 
+// Handle unarchive
+if ($action === 'unarchive') {
+    try {
+        $messageID = isset($input['message_id']) ? intval($input['message_id']) : 0;
+        
+        if ($messageID) {
+            $success = unarchiveMessage($pdo, $messageID, $userID);
+            echo json_encode(['success' => $success]);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Message ID required']);
+        }
+    } catch (PDOException $e) {
+        echo json_encode(['success' => false, 'error' => 'Database error: ' . $e->getMessage()]);
+    }
+    exit;
+}
+
 // Handle delete
 if ($action === 'delete') {
     try {

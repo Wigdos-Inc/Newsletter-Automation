@@ -40,10 +40,10 @@ if ($userID && isset($users[$userID])) {
           </button>
 
           <!-- Logo -->
-          <div class="logo-section">
+          <a href="#" data-page="pages/home_view.php" class="logo-section">
             <img src="media/images/icons/favicon.svg" alt="Logo" class="header-logo">
             <span class="logo-text d-none d-md-inline ms-2">Newswire AI</span>
-          </div>
+          </a>
         </div>
         
         <!-- Desktop Search Bar (centered) -->
@@ -79,11 +79,11 @@ if ($userID && isset($users[$userID])) {
                   if (count($inboxItems) > 0):
                     foreach ($inboxItems as $item):
                   ?>
-                    <a href="#" class="inbox-item" data-message-id="<?php echo $item['message_ID']; ?>">
+                    <a href="#" class="inbox-item" data-page="pages/inbox_view.php" data-message-id="<?php echo $item['message_ID']; ?>">
                       <div class="inbox-item-content">
                         <strong><?php echo htmlspecialchars($item['subject'] ?? 'Notification'); ?></strong>
                         <p class="mb-0"><?php echo htmlspecialchars(substr($item['snippet'] ?? '', 0, 50)); ?>...</p>
-                        <small class="text-muted"><?php echo date('M j, Y', strtotime($item['date'])); ?></small>
+                        <small class="inbox-date"><?php echo date('M j, Y', strtotime($item['date'])); ?></small>
                       </div>
                     </a>
                   <?php 
@@ -102,7 +102,7 @@ if ($userID && isset($users[$userID])) {
                   </div>
                 <?php endif; ?>
               </div>
-              <a href="#" class="inbox-footer" data-page="pages/inbox_view.php">
+              <a href="#" class="inbox-footer" data-page="<?php echo isset($userID) && $userID ? 'pages/inbox_view.php' : 'pages/login_view.php?redirect=inbox'; ?>">
                 View All Messages
               </a>
             </div>

@@ -200,7 +200,7 @@ if ($userID) {
                 <p class="section-subtitle">Latest published newsletter</p>
             </div>
             
-            <div class="digest-card">
+            <div class="digest-card" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $featuredNewsletter['newsletter_ID']; ?>)">
                 <div class="digest-content">
                     <div class="digest-label">
                         <i class="fas fa-fire"></i>
@@ -215,9 +215,6 @@ if ($userID) {
                             <i class="far fa-calendar-alt me-1"></i>
                             <?php echo date('M j, Y', strtotime($featuredNewsletter['creation_date'])); ?>
                         </span>
-                        <button class="btn-read-digest" id="featuredReadBtn" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $featuredNewsletter['newsletter_ID']; ?>)">
-                            Read Newsletter <i class="fas fa-arrow-right ms-1"></i>
-                        </button>
                     </div>
                 </div>
                 <div class="digest-image">
@@ -341,9 +338,6 @@ if ($userID) {
                                         </div>
                                         <div class="count-number"><?php echo $categoryNewslettersCount; ?></div>
                                         <div class="count-label">Newsletter<?php echo $categoryNewslettersCount !== 1 ? 's' : ''; ?></div>
-                                        <div style="margin-top: 15px; color: #3498db; font-size: 0.8rem;">
-                                            <i class="fas fa-mouse-pointer me-1"></i> Click to view all
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -375,14 +369,15 @@ if ($userID) {
                 <?php if (count($popularNewsletters) > 0): ?>
                     <?php foreach ($popularNewsletters as $newsletter): ?>
                         <div class="col-lg-4 col-md-6">
-                            <div class="popular-card">
+                            <div class="popular-card" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $newsletter['newsletter_ID']; ?>)">
                                 <?php if ($userID): ?>
                                 <button class="favorite-btn-icon" 
                                         data-favorite-btn 
                                         data-favorite-type="newsletter" 
                                         data-favorite-id="<?php echo $newsletter['newsletter_ID']; ?>"
                                         title="Add to favorites"
-                                        style="position: absolute; top: 15px; right: 15px; z-index: 10;">
+                                        style="position: absolute; top: 15px; right: 15px; z-index: 10;"
+                                        onclick="event.stopPropagation();">
                                     <i class="far fa-heart"></i>
                                 </button>
                                 <?php endif; ?>
@@ -406,9 +401,6 @@ if ($userID) {
                                             <?php echo date('M j', strtotime($newsletter['creation_date'])); ?>
                                         </span>
                                     </div>
-                                    <button class="btn-read-popular" onclick="if(parent.window.popupSystem) parent.window.popupSystem.newsPopup(<?php echo $newsletter['newsletter_ID']; ?>)">
-                                        Read Now <i class="fas fa-arrow-right ms-1"></i>
-                                    </button>
                                 </div>
                             </div>
                         </div>

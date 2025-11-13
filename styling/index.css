@@ -1,5 +1,42 @@
 /* Page-specific styles for index.html */
 
+.logo-section {
+    display: flex;
+    align-items: center;
+    text-decoration: none !important;
+    user-select: none;
+    -webkit-user-drag: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.logo-section * {
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+}
+
+.logo-section img {
+    pointer-events: auto;
+}
+
+/* Inbox dropdown styles */
+.inbox-date {
+    color: var(--text-secondary) !important;
+}
+
+/* Sidebar badge centering */
+.sidebar-link {
+    position: relative;
+}
+
+.sidebar-badge {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .service-card {
     transition: all 0.3s ease;
     border: none;
