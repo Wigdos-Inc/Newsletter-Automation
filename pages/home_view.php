@@ -191,7 +191,7 @@ if ($userID) {
         
         <?php if ($featuredNewsletter): ?>
         <!-- Featured Newsletter Section -->
-        <section class="user-digest-section mb-3" id="featuredSection">
+        <section class="user-digest-section mb-5" id="featuredSection">
             <div class="section-header mb-4">
                 <h2 class="section-title">
                     <i class="fas fa-star me-2"></i>
@@ -227,7 +227,7 @@ if ($userID) {
         </section>
         <?php else: ?>
         <!-- Placeholder when no newsletters exist -->
-        <section class="user-digest-section mb-3">
+        <section class="user-digest-section mb-5">
             <div class="section-header mb-4">
                 <h2 class="section-title">
                     <i class="fas fa-star me-2"></i>
@@ -255,7 +255,7 @@ if ($userID) {
         <?php endif; ?>
 
         <!-- Newest per Category Section -->
-        <section class="newest-category-section mb-3">
+        <section class="newest-category-section mb-5">
             <div class="section-header mb-3">
                 <h2 class="section-title">
                     <i class="fas fa-layer-group me-2"></i>
@@ -501,6 +501,7 @@ if ($userID) {
         ?>;
         
         window.currentFeaturedId = <?php echo $featuredNewsletter ? $featuredNewsletter['newsletter_ID'] : 'null'; ?>;
+        window.currentUserID = <?php echo $userID ? $userID : 'null'; ?>;
     </script>
     <script src="./../scripts/js/theme.js"></script>
     <script src="./../scripts/js/homeView.js"></script>

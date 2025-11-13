@@ -166,7 +166,8 @@
             window.parent.popupSystem.initData(
                 <?= json_encode($newsletters) ?>,
                 <?= json_encode($categories) ?>,
-                <?= json_encode($users) ?>
+                <?= json_encode($users) ?>,
+                <?= isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : 'null' ?>
             );
         }
 

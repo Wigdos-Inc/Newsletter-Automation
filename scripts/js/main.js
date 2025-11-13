@@ -6,12 +6,14 @@ window.popupSystem = {
   newsletters: {},
   categories: {},
   users: {},
+  userID: null,
 
   // Initialize data (called from pages)
-  initData: function(newsletters, categories, users) {
+  initData: function(newsletters, categories, users, userID = null) {
     this.newsletters = newsletters || {};
     this.categories = categories || {};
     this.users = users || {};
+    this.userID = userID;
   },
 
   // Strip HTML tags for preview text
@@ -33,14 +35,28 @@ window.popupSystem = {
     const newsletter = this.newsletters[id];
     if (!newsletter) return;
 
+    const favoriteBtn = this.userID ? `
+      <button class="favorite-btn-icon" 
+              data-favorite-btn 
+              data-favorite-type="newsletter" 
+              data-favorite-id="${id}"
+              title="Add to favorites"
+              style="margin-right: 10px;">
+        <i class="far fa-heart"></i>
+      </button>
+    ` : '';
+
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
         <div class="global-modal-wrapper" onclick="event.stopPropagation()">
           <div class="global-modal-header">
             <h2 class="global-modal-title">${this.escapeHtml(newsletter.title)}</h2>
-            <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+              ${favoriteBtn}
+              <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="global-modal-body">
             <div class="global-modal-meta">
@@ -118,14 +134,28 @@ window.popupSystem = {
         `).join('')
       : '<p class="text-muted">No favorited newsletters</p>';
 
+    const favoriteBtn = this.userID ? `
+      <button class="favorite-btn-icon" 
+              data-favorite-btn 
+              data-favorite-type="category" 
+              data-favorite-id="${id}"
+              title="Follow category"
+              style="margin-right: 10px;">
+        <i class="far fa-heart"></i>
+      </button>
+    ` : '';
+
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
         <div class="global-modal-wrapper" onclick="event.stopPropagation()">
           <div class="global-modal-header">
             <h2 class="global-modal-title">${this.escapeHtml(category.name)}</h2>
-            <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+              ${favoriteBtn}
+              <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="global-modal-body">
             <div class="global-modal-meta">
@@ -213,6 +243,17 @@ window.popupSystem = {
         `).join('')
       : '<p class="text-muted">No contributions yet</p>';
 
+    const favoriteBtn = this.userID ? `
+      <button class="favorite-btn-icon" 
+              data-favorite-btn 
+              data-favorite-type="creator" 
+              data-favorite-id="${id}"
+              title="Follow creator"
+              style="margin-right: 10px;">
+        <i class="far fa-heart"></i>
+      </button>
+    ` : '';
+
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
         <div class="global-modal-wrapper" onclick="event.stopPropagation()">
@@ -226,9 +267,12 @@ window.popupSystem = {
                 <span class="creator-role ${user.role.toLowerCase()}">${this.escapeHtml(user.role)}</span>
               </div>
             </div>
-            <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+              ${favoriteBtn}
+              <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="global-modal-body">
             <div class="global-modal-meta">
@@ -277,6 +321,11 @@ window.popupSystem = {
     modalContainer.id = 'globalModalContainer';
     modalContainer.innerHTML = html;
     document.body.appendChild(modalContainer);
+
+    // Initialize favorite buttons if user is logged in
+    if (this.userID && window.favoritesManager) {
+      window.favoritesManager.initializeButtons();
+    }
 
     // Prevent body scroll
     document.body.style.overflow = 'hidden';

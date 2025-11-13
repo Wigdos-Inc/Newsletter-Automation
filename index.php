@@ -437,6 +437,13 @@ if ($userID && isset($users[$userID])) {
   <?php endif; ?>
 
   <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
+  <?php if (isset($userID) && $userID): ?>
+  <script src="scripts/js/favorites.js"></script>
+  <script>
+    // Initialize favorites manager globally
+    window.favoritesManager = new FavoritesManager();
+  </script>
+  <?php endif; ?>
   <script src="scripts/js/main.js"></script>
   <script src="scripts/js/navigation.js"></script>
   <?php if (isset($userID) && $userID): ?>
