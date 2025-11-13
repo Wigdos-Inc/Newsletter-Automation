@@ -161,7 +161,7 @@ async function saveNewsletter(status) {
     const title = document.getElementById('admin-newsletter-title').value.trim();
     const content = document.getElementById('admin-newsletter-editor').innerHTML;
     const categorySelect = document.getElementById('admin-category-select');
-    const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
+    const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => parseInt(opt.value));
 
     if (!title) {
         showError('Please enter a title');
@@ -184,7 +184,8 @@ async function saveNewsletter(status) {
                 newsletter_ID: currentNewsletterID,
                 title: title,
                 content: content,
-                status: status
+                status: status,
+                category_ids: selectedCategories
             })
         });
 
@@ -193,19 +194,6 @@ async function saveNewsletter(status) {
         if (data.success) {
             currentNewsletterID = data.newsletter_ID;
             currentNewsletterStatus = status; // Update status
-            
-            // Save categories if any selected
-            if (selectedCategories.length > 0) {
-                await fetch('../scripts/php/categories.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'save_newsletter_categories',
-                        newsletter_ID: currentNewsletterID,
-                        category_ids: selectedCategories
-                    })
-                });
-            }
             
             updateButtonVisibility(); // Update button display
             loading.style.display = 'none';

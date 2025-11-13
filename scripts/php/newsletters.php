@@ -135,6 +135,14 @@ if ($action === 'update') {
             $stmt->execute([$title, $content, $newsletterID]);
         }
         
+        // Add user as contributor to newsletter if not already
+        $stmt = $pdo->prepare("SELECT * FROM con_user_newsletters WHERE user_ID = ? AND newsletter_ID = ?");
+        $stmt->execute([$userID, $newsletterID]);
+        if ($stmt->rowCount() == 0) {
+            $stmt = $pdo->prepare("INSERT INTO con_user_newsletters (user_ID, newsletter_ID) VALUES (?, ?)");
+            $stmt->execute([$userID, $newsletterID]);
+        }
+        
         // Update categories if provided
         if ($categoryIDs !== null) {
             // Delete existing connections
@@ -146,6 +154,20 @@ if ($action === 'update') {
                 $stmt = $pdo->prepare("INSERT INTO con_newsletter_categories (newsletter_ID, category_ID) VALUES (?, ?)");
                 foreach ($categoryIDs as $categoryID) {
                     $stmt->execute([$newsletterID, $categoryID]);
+                    
+                    // Add user as contributor to category if not already (when newsletter is published)
+                    $checkStatus = $pdo->prepare("SELECT status FROM tab_newsletters WHERE newsletter_ID = ?");
+                    $checkStatus->execute([$newsletterID]);
+                    $currentStatus = $checkStatus->fetchColumn();
+                    
+                    if ($currentStatus === 'published') {
+                        $stmt2 = $pdo->prepare("SELECT * FROM con_user_categories WHERE user_ID = ? AND category_ID = ?");
+                        $stmt2->execute([$userID, $categoryID]);
+                        if ($stmt2->rowCount() == 0) {
+                            $stmt2 = $pdo->prepare("INSERT INTO con_user_categories (user_ID, category_ID) VALUES (?, ?)");
+                            $stmt2->execute([$userID, $categoryID]);
+                        }
+                    }
                 }
             }
         }
@@ -251,6 +273,14 @@ if ($action === 'publish') {
             $stmt->execute([$newsletterID]);
         }
         
+        // Add user as contributor to newsletter if not already
+        $stmt = $pdo->prepare("SELECT * FROM con_user_newsletters WHERE user_ID = ? AND newsletter_ID = ?");
+        $stmt->execute([$userID, $newsletterID]);
+        if ($stmt->rowCount() == 0) {
+            $stmt = $pdo->prepare("INSERT INTO con_user_newsletters (user_ID, newsletter_ID) VALUES (?, ?)");
+            $stmt->execute([$userID, $newsletterID]);
+        }
+        
         // Update categories if provided
         if ($categoryIDs !== null) {
             // Delete existing connections
@@ -262,6 +292,14 @@ if ($action === 'publish') {
                 $stmt = $pdo->prepare("INSERT INTO con_newsletter_categories (newsletter_ID, category_ID) VALUES (?, ?)");
                 foreach ($categoryIDs as $categoryID) {
                     $stmt->execute([$newsletterID, $categoryID]);
+                    
+                    // Add user as contributor to category since newsletter is being published
+                    $stmt2 = $pdo->prepare("SELECT * FROM con_user_categories WHERE user_ID = ? AND category_ID = ?");
+                    $stmt2->execute([$userID, $categoryID]);
+                    if ($stmt2->rowCount() == 0) {
+                        $stmt2 = $pdo->prepare("INSERT INTO con_user_categories (user_ID, category_ID) VALUES (?, ?)");
+                        $stmt2->execute([$userID, $categoryID]);
+                    }
                 }
             }
         }
@@ -308,11 +346,33 @@ if ($action === 'save') {
         $stmt->execute([$title, $content, $userID, $status]);
         $newsletterID = $pdo->lastInsertId();
         
+        // Add creator as contributor to their own newsletter
+        try {
+            $stmt = $pdo->prepare("INSERT INTO con_user_newsletters (user_ID, newsletter_ID) VALUES (?, ?)");
+            $stmt->execute([$userID, $newsletterID]);
+        } catch (PDOException $e) {
+            throw $e; // Re-throw to rollback transaction
+        }
+        
         // Insert category connections
         if (!empty($categoryIDs)) {
             $stmt = $pdo->prepare("INSERT INTO con_newsletter_categories (newsletter_ID, category_ID) VALUES (?, ?)");
             foreach ($categoryIDs as $categoryID) {
                 $stmt->execute([$newsletterID, $categoryID]);
+                
+                // Add user as contributor to category if newsletter is published
+                if ($status === 'published') {
+                    try {
+                        $stmt2 = $pdo->prepare("SELECT * FROM con_user_categories WHERE user_ID = ? AND category_ID = ?");
+                        $stmt2->execute([$userID, $categoryID]);
+                        if ($stmt2->rowCount() == 0) {
+                            $stmt2 = $pdo->prepare("INSERT INTO con_user_categories (user_ID, category_ID) VALUES (?, ?)");
+                            $stmt2->execute([$userID, $categoryID]);
+                        }
+                    } catch (PDOException $e) {
+                        throw $e; // Re-throw to rollback transaction
+                    }
+                }
             }
         }
         
