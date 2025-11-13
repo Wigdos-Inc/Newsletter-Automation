@@ -9,6 +9,7 @@ if (!isset($_COOKIE['userID'])) {
 // Clear all cookies by setting them to expire in the past
 setcookie('userID', '', time() - 3600, '/', '', false, true);
 setcookie('user_data', '', time() - 3600, '/', '', false, true);
+setcookie('logged_in', '', time() - 3600, '/', '', false, false);
 setcookie('show_tutorial', '', time() - 3600, '/', '', false, true);
 
 session_unset();

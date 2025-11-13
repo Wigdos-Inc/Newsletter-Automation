@@ -91,7 +91,7 @@ function sendFavoriteNotification($pdo, $userID, $type, $itemID, $action) {
                 $category = $stmt->fetch(PDO::FETCH_ASSOC);
                 
                 if ($category) {
-                    $subject = "Category Followed";
+                    $subject = "Category Added to Favorites";
                     $snippet = "You're now following the \"" . htmlspecialchars($category['name']) . "\" category. " .
                                "You'll be notified when new newsletters are added to this category.";
                 }

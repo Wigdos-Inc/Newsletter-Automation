@@ -161,7 +161,7 @@ async function saveNewsletter(status) {
     const title = document.getElementById('admin-newsletter-title').value.trim();
     const content = document.getElementById('admin-newsletter-editor').innerHTML;
     const categorySelect = document.getElementById('admin-category-select');
-    const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => opt.value);
+    const selectedCategories = Array.from(categorySelect.selectedOptions).map(opt => parseInt(opt.value));
 
     if (!title) {
         showError('Please enter a title');
@@ -184,7 +184,8 @@ async function saveNewsletter(status) {
                 newsletter_ID: currentNewsletterID,
                 title: title,
                 content: content,
-                status: status
+                status: status,
+                category_ids: selectedCategories
             })
         });
 
@@ -193,19 +194,6 @@ async function saveNewsletter(status) {
         if (data.success) {
             currentNewsletterID = data.newsletter_ID;
             currentNewsletterStatus = status; // Update status
-            
-            // Save categories if any selected
-            if (selectedCategories.length > 0) {
-                await fetch('../scripts/php/categories.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'save_newsletter_categories',
-                        newsletter_ID: currentNewsletterID,
-                        category_ids: selectedCategories
-                    })
-                });
-            }
             
             updateButtonVisibility(); // Update button display
             loading.style.display = 'none';
@@ -617,8 +605,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Delete Button
         else if (target.id === 'admin-delete-btn') {
             e.preventDefault();
+            
+            // If newsletter hasn't been saved yet (no ID), just clear the form and return to generator
             if (!currentNewsletterID) {
-                showError('Please save the newsletter first before deleting');
+                if (!confirm('Are you sure you want to discard this newsletter draft?')) return;
+                
+                // Reset to generate mode without server call
+                document.getElementById('generate-mode').style.display = 'block';
+                document.getElementById('admin-edit-mode').style.display = 'none';
+                document.getElementById('admin-newsletter-query').value = '';
+                document.getElementById('admin-newsletter-title').value = '';
+                document.getElementById('admin-newsletter-editor').innerHTML = '';
+                currentNewsletterID = null;
+                currentNewsletterContent = null;
+                currentNewsletterStatus = 'draft';
+                showSuccess('Newsletter draft discarded');
                 return;
             }
             

@@ -1,5 +1,12 @@
 // Navigation and UI Controls for Main Application
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
 // Inbox Dropdown Toggle
 const inboxIcon = document.getElementById('inboxIcon');
 const inboxDropdown = document.getElementById('inboxDropdown');

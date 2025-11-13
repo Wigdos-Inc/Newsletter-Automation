@@ -67,7 +67,8 @@ $users = iniData(
         'f_users'       => [],
         'c_newsletters' => [],
         'c_categories'  => [],
-        'favorited_by'  => []
+        'favorited_by'  => [],
+        'creations'     => []
     ]
 );
 
@@ -134,6 +135,9 @@ for ($i=0; $i < count($loopStruc['tables']); $i++) {
         for ($i2=0; $i2 < 2; $i2++) $tgts[$i2][$ids[$i2]][$props[$i2]][] = $ids[1-$i2];
     }
 }
+
+// Add Creations to Users
+foreach ($newsletters as $id => $n) $users[$n['user_ID']]['creations'][] = $id;
 
 // Put Data in Session
 foreach (['newsletters' => &$newsletters, 'categories' => &$categories, 'users' => &$users] as $target => $data) $_SESSION[$target] = $data;

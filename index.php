@@ -40,10 +40,10 @@ if ($userID && isset($users[$userID])) {
           </button>
 
           <!-- Logo -->
-          <div class="logo-section">
+          <a href="#" data-page="pages/home_view.php" class="logo-section">
             <img src="media/images/icons/favicon.svg" alt="Logo" class="header-logo">
             <span class="logo-text d-none d-md-inline ms-2">Newswire AI</span>
-          </div>
+          </a>
         </div>
         
         <!-- Desktop Search Bar (centered) -->
@@ -79,11 +79,11 @@ if ($userID && isset($users[$userID])) {
                   if (count($inboxItems) > 0):
                     foreach ($inboxItems as $item):
                   ?>
-                    <a href="#" class="inbox-item" data-message-id="<?php echo $item['message_ID']; ?>">
+                    <a href="#" class="inbox-item" data-page="pages/inbox_view.php" data-message-id="<?php echo $item['message_ID']; ?>">
                       <div class="inbox-item-content">
                         <strong><?php echo htmlspecialchars($item['subject'] ?? 'Notification'); ?></strong>
                         <p class="mb-0"><?php echo htmlspecialchars(substr($item['snippet'] ?? '', 0, 50)); ?>...</p>
-                        <small class="text-muted"><?php echo date('M j, Y', strtotime($item['date'])); ?></small>
+                        <small class="inbox-date"><?php echo date('M j, Y', strtotime($item['date'])); ?></small>
                       </div>
                     </a>
                   <?php 
@@ -102,7 +102,7 @@ if ($userID && isset($users[$userID])) {
                   </div>
                 <?php endif; ?>
               </div>
-              <a href="#" class="inbox-footer" data-page="pages/inbox_view.php">
+              <a href="#" class="inbox-footer" data-page="<?php echo isset($userID) && $userID ? 'pages/inbox_view.php' : 'pages/login_view.php?redirect=inbox'; ?>">
                 View All Messages
               </a>
             </div>
@@ -116,6 +116,7 @@ if ($userID && isset($users[$userID])) {
             </div>
             <div class="profile-dropdown" id="profileDropdown">
               <a href="#" data-page="pages/profile_view.php"><i class="fas fa-user me-2"></i> Profile</a>
+              <a href="#" data-page="pages/profile_view.php#settings"><i class="fas fa-cog me-2"></i> Settings</a>
               <?php if ($isAdminOrOwner): ?>
                 <a href="#" data-page="pages/adminPanel.php"><i class="fas fa-user-shield me-2"></i> Admin Panel</a>
               <?php endif; ?>
@@ -171,6 +172,7 @@ if ($userID && isset($users[$userID])) {
         <i class="fas fa-home"></i>
         <span>Home</span>
       </a>
+      <!-- 
       <a href="#" class="sidebar-link" data-page="pages/category_view.php">
         <i class="fas fa-th-large"></i>
         <span>Categories</span>
@@ -179,6 +181,7 @@ if ($userID && isset($users[$userID])) {
         <i class="fas fa-newspaper"></i>
         <span>Newsletters</span>
       </a>
+              -->
       <a href="#" class="sidebar-link" data-page="pages/search_view.php">
         <i class="fas fa-search"></i>
         <span>Search</span>
@@ -193,7 +196,7 @@ if ($userID && isset($users[$userID])) {
           <span class="sidebar-badge"><?php echo $inboxAmount; ?></span>
         <?php endif; ?>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#profile">
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#about">
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
@@ -435,6 +438,17 @@ if ($userID && isset($users[$userID])) {
   <?php endif; ?>
 
   <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Set global userID for popup system
+    window.globalUserID = <?php echo (isset($userID) && $userID) ? $userID : 'null'; ?>;
+  </script>
+  <?php if (isset($userID) && $userID): ?>
+  <script src="scripts/js/favorites.js"></script>
+  <script>
+    // Initialize favorites manager globally
+    window.favoritesManager = new FavoritesManager();
+  </script>
+  <?php endif; ?>
   <script src="scripts/js/main.js"></script>
   <script src="scripts/js/navigation.js"></script>
   <?php if (isset($userID) && $userID): ?>

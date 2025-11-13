@@ -1,16 +1,18 @@
 const profile_tabs = document.getElementById('profile_tabs');
 
 function swapTab(tabID){
+    // Update URL hash
+    window.location.hash = tabID.replace('tab_', '');
+    
     // Hide all tabs and show the selected one
-    for(let i = 0; i < (profile_tabs.childNodes.length - 1) / 2; i++){
-        let offset = i * 2;
-        const curNode = profile_tabs.childNodes[offset + 1];
-        if(curNode.id == tabID){
-            curNode.style.display = 'block';
+    const tabs = document.querySelectorAll('#profile_tabs > div');
+    tabs.forEach(tab => {
+        if(tab.id === tabID){
+            tab.style.display = 'block';
         } else {
-            curNode.style.display = 'none';
+            tab.style.display = 'none';
         }
-    }
+    });
     
     // Update active state on navigation links
     document.querySelectorAll('.admin-nav-link').forEach(link => {
@@ -23,51 +25,53 @@ function swapTab(tabID){
         activeButton.classList.add('active');
     }
     
-    // Force layout recalculation
-    profile_tabs.style.display = 'none';
-    profile_tabs.offsetHeight; // Trigger reflow
-    profile_tabs.style.display = 'flex';
-    
-    // Notify parent to resize iframe after DOM settles
-    setTimeout(() => {
-        if (window.parent) {
-            window.parent.postMessage({ type: 'resizeIframe' }, '*');
-        }
-    }, 10);
+    // Only resize if content height actually changed significantly
+    // Removed forced reflow and resize notification to prevent shrinking
 }
 
-document.getElementById('btn_tab_about').addEventListener('click', (e) => {
-    swapTab('tab_about');
-});
-document.getElementById('btn_tab_settings').addEventListener('click', (e) => {
-    swapTab('tab_settings');
-});
-document.getElementById('btn_tab_favorites')?.addEventListener('click', (e) => {
-    swapTab('tab_favorites');
-});
-
-document.getElementById('delaccBtn').addEventListener('click', (e) => {
-    window.location.href = './profile_view.php?delac=1';
-});
-
-let params = new URLSearchParams(document.location.search);
-let delac = params.get("delac");
-
-if(delac){
-    swapTab('tab_settings');
-    document.getElementById('delconfirm').style.display = 'block';
-}
-
-// Check for hash on page load to show the correct tab
-window.addEventListener('load', () => {
-    const hash = window.location.hash;
-    if (hash === '#settings') {
+// Handle hash changes
+function handleHashChange() {
+    const hash = window.location.hash.substring(1); // Remove #
+    if (hash === 'settings') {
         swapTab('tab_settings');
-    } else if (hash === '#profile') {
+    } else if (hash === 'profile') {
         swapTab('tab_about');
-    } else if (hash === '#favorites') {
+    } else if (hash === 'favorites') {
         swapTab('tab_favorites');
     } else {
         swapTab('tab_about'); // Default to about tab
     }
+}
+
+// Check for hash on page load to show the correct tab
+document.addEventListener('DOMContentLoaded', () => {
+    let params = new URLSearchParams(document.location.search);
+    let delac = params.get("delac");
+
+    handleHashChange();
+    
+    if (delac) {
+        document.getElementById('delconfirm').style.display = 'block';
+    }
+
+    // Add event listeners after DOM is loaded
+    document.getElementById('btn_tab_about').addEventListener('click', (e) => {
+        e.preventDefault();
+        swapTab('tab_about');
+    });
+    document.getElementById('btn_tab_settings').addEventListener('click', (e) => {
+        e.preventDefault();
+        swapTab('tab_settings');
+    });
+    document.getElementById('btn_tab_favorites')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        swapTab('tab_favorites');
+    });
+
+    document.getElementById('delaccBtn').addEventListener('click', (e) => {
+        window.location.href = './profile_view.php?delac=1';
+    });
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
 });

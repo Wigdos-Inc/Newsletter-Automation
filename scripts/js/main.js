@@ -6,12 +6,20 @@ window.popupSystem = {
   newsletters: {},
   categories: {},
   users: {},
+  userID: window.globalUserID || null,
 
   // Initialize data (called from pages)
-  initData: function(newsletters, categories, users) {
+  initData: function(newsletters, categories, users, userID = null) {
     this.newsletters = newsletters || {};
     this.categories = categories || {};
     this.users = users || {};
+    // Only update userID if not already set from global or if explicitly passed
+    if (userID !== null) {
+      this.userID = userID;
+    } else if (!this.userID) {
+      this.userID = window.globalUserID || null;
+    }
+    console.log('Popup system initialized with userID:', this.userID);
   },
 
   // Strip HTML tags for preview text
@@ -33,14 +41,30 @@ window.popupSystem = {
     const newsletter = this.newsletters[id];
     if (!newsletter) return;
 
+    console.log('Opening newsletter popup. UserID:', this.userID);
+    const favoriteBtn = this.userID ? `
+      <button class="favorite-btn-icon" 
+              data-favorite-btn 
+              data-favorite-type="newsletter" 
+              data-favorite-id="${id}"
+              title="Add to favorites"
+              style="margin-right: 10px;">
+        <i class="far fa-heart"></i>
+      </button>
+    ` : '';
+    console.log('Favorite button HTML:', favoriteBtn ? 'Generated' : 'Not generated (no userID)');
+
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
         <div class="global-modal-wrapper" onclick="event.stopPropagation()">
           <div class="global-modal-header">
             <h2 class="global-modal-title">${this.escapeHtml(newsletter.title)}</h2>
-            <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+              ${favoriteBtn}
+              <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="global-modal-body">
             <div class="global-modal-meta">
@@ -118,14 +142,28 @@ window.popupSystem = {
         `).join('')
       : '<p class="text-muted">No favorited newsletters</p>';
 
+    const favoriteBtn = this.userID ? `
+      <button class="favorite-btn-icon" 
+              data-favorite-btn 
+              data-favorite-type="category" 
+              data-favorite-id="${id}"
+              title="Follow category"
+              style="margin-right: 10px;">
+        <i class="far fa-heart"></i>
+      </button>
+    ` : '';
+
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
         <div class="global-modal-wrapper" onclick="event.stopPropagation()">
           <div class="global-modal-header">
             <h2 class="global-modal-title">${this.escapeHtml(category.name)}</h2>
-            <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+              ${favoriteBtn}
+              <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="global-modal-body">
             <div class="global-modal-meta">
@@ -213,6 +251,17 @@ window.popupSystem = {
         `).join('')
       : '<p class="text-muted">No contributions yet</p>';
 
+    const favoriteBtn = this.userID ? `
+      <button class="favorite-btn-icon" 
+              data-favorite-btn 
+              data-favorite-type="creator" 
+              data-favorite-id="${id}"
+              title="Follow creator"
+              style="margin-right: 10px;">
+        <i class="far fa-heart"></i>
+      </button>
+    ` : '';
+
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
         <div class="global-modal-wrapper" onclick="event.stopPropagation()">
@@ -226,9 +275,12 @@ window.popupSystem = {
                 <span class="creator-role ${user.role.toLowerCase()}">${this.escapeHtml(user.role)}</span>
               </div>
             </div>
-            <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+              ${favoriteBtn}
+              <button class="global-modal-close" onclick="window.popupSystem.closePopup()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
           <div class="global-modal-body">
             <div class="global-modal-meta">
@@ -277,6 +329,11 @@ window.popupSystem = {
     modalContainer.id = 'globalModalContainer';
     modalContainer.innerHTML = html;
     document.body.appendChild(modalContainer);
+
+    // Initialize favorite buttons if user is logged in
+    if (this.userID && window.favoritesManager) {
+      window.favoritesManager.initializeButtons();
+    }
 
     // Prevent body scroll
     document.body.style.overflow = 'hidden';
@@ -329,6 +386,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuToggle = document.getElementById('menuToggle');
   const mobileMenu = document.getElementById('mobileMenu');
 
+  // Check for load parameter in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const loadPageParam = urlParams.get('load');
+  if (loadPageParam) {
+    loadPage(loadPageParam);
+  }
+
+  // Persist current page in URL
+  if (iframe) {
+    iframe.addEventListener('load', () => {
+      const currentSrc = iframe.src;
+      if (currentSrc && currentSrc !== 'pages/home_view.php') {
+        const url = new URL(window.location);
+        url.searchParams.set('load', currentSrc);
+        window.history.replaceState(null, null, url);
+      }
+    });
+  }
+
   function setActive(link) {
     navLinks.forEach(l => l.classList.remove('active'));
     if (link) link.classList.add('active');
@@ -339,6 +415,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Reset iframe height before loading new page
     iframe.style.height = '600px';
+    
+    // Store current page before loading login
+    if (path.includes('login_view.php')) {
+      const currentSrc = iframe.src;
+      localStorage.setItem('pageBeforeLogin', currentSrc);
+      // Also set a cookie for server-side access
+      document.cookie = 'pageBeforeLogin=' + encodeURIComponent(currentSrc) + '; path=/; max-age=300'; // 5 minutes
+    }
     
     // Check if the path has a hash
     const [basePath, hash] = path.split('#');
@@ -386,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!iframe) return;
     try {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
-      const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
+      const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, 600); // Minimum 600px
       iframe.style.height = height + 'px';
       // console.log('Iframe resized to:', height + 'px'); // Disabled logging
     } catch (err) {

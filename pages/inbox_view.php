@@ -9,12 +9,7 @@ require_once '../scripts/db/data.php';
 
 // Check if user is logged in
 if (!isset($userID) || !$userID) {
-    echo '<div class="alert alert-warning text-center mt-5">';
-    echo '<i class="fas fa-user-lock fa-3x mb-3"></i>';
-    echo '<h4>Please Login</h4>';
-    echo '<p>You need to be logged in to view your inbox.</p>';
-    echo '<a href="login_view.php" class="btn btn-primary">Login</a>';
-    echo '</div>';
+    header('location: login_view.php');
     exit;
 }
 
@@ -45,138 +40,394 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
     <link rel="stylesheet" href="../bootstrap-5.3.6-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../styling/main.css">
+    <link rel="stylesheet" href="../styling/profile.css">
+    <link rel="stylesheet" href="../styling/adminPanel.css">
     <link rel="stylesheet" href="../styling/inbox.css">
     <link rel="stylesheet" href="../styling/animations.css">
     <title>Inbox - Newswire AI</title>
 </head>
 <body>
-    <div class="inbox-container">
-        <!-- Header -->
-        <div class="inbox-header">
-            <h2>
-                <i class="fas fa-inbox"></i>
-                Inbox
-            </h2>
-            <div class="inbox-actions">
-                <button class="action-btn" id="refreshBtn" onclick="location.reload()" title="Refresh inbox">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-                <button class="action-btn" id="selectAllBtn" onclick="toggleSelectAll()">
-                    <i class="fas fa-check-square"></i> Select All
-                </button>
-                <button class="action-btn" id="bulkMarkReadBtn" onclick="bulkMarkRead()" disabled>
-                    <i class="fas fa-envelope-open"></i> Mark Read
-                </button>
-                <button class="action-btn" id="bulkArchiveBtn" onclick="bulkArchive()" disabled>
-                    <i class="fas fa-archive"></i> Archive
-                </button>
-                <button class="action-btn" id="bulkDeleteBtn" onclick="bulkDelete()" disabled>
-                    <i class="fas fa-trash"></i> Delete
-                </button>
+<div class="admin-wrapper">
+    <div class="d-flex flex-column flex-md-row gap-3">
+        <div class="admin-sidebar">
+            <nav class="admin-nav">
+                <a id="btn_tab_all" class="admin-nav-link active">
+                    <i class="fas fa-inbox me-2"></i>
+                    <span>All</span>
+                </a>
+                <a id="btn_tab_unread" class="admin-nav-link">
+                    <i class="fas fa-envelope me-2"></i>
+                    <span>Unread</span>
+                    <?php if ($unreadCount > 0): ?>
+                        <span class="sidebar-badge"><?php echo $unreadCount; ?></span>
+                    <?php endif; ?>
+                </a>
+                <a id="btn_tab_read" class="admin-nav-link">
+                    <i class="fas fa-envelope-open me-2"></i>
+                    <span>Read</span>
+                </a>
+                <a id="btn_tab_archived" class="admin-nav-link">
+                    <i class="fas fa-archive me-2"></i>
+                    <span>Archived</span>
+                </a>
+            </nav>
+        </div>
+        <div id="profile_tabs" class="admin-content-wrapper">
+            <div id="tab_all" class="list-unstyled admin-tab-content" style="display: block;">
+                <div class="admin-tab-header">
+                    <h2>All Messages</h2>
+                    <p style="color: var(--text-secondary)">View all your inbox messages</p>
+                </div>
+                <div class="admin-content-container">
+                    <?php $filter = 'all'; include 'inbox_content.php'; ?>
+                </div>
+            </div>
+
+            <div id="tab_unread" class="list-unstyled admin-tab-content" style="display: none;">
+                <div class="admin-tab-header">
+                    <h2>Unread Messages</h2>
+                    <p style="color: var(--text-secondary)">Messages you haven't read yet</p>
+                </div>
+                <div class="admin-content-container">
+                    <?php $filter = 'unread'; include 'inbox_content.php'; ?>
+                </div>
+            </div>
+
+            <div id="tab_read" class="list-unstyled admin-tab-content" style="display: none;">
+                <div class="admin-tab-header">
+                    <h2>Read Messages</h2>
+                    <p style="color: var(--text-secondary)">Messages you've already read</p>
+                </div>
+                <div class="admin-content-container">
+                    <?php $filter = 'read'; include 'inbox_content.php'; ?>
+                </div>
+            </div>
+
+            <div id="tab_archived" class="list-unstyled admin-tab-content" style="display: none;">
+                <div class="admin-tab-header">
+                    <h2>Archived Messages</h2>
+                    <p style="color: var(--text-secondary)">Messages you've archived</p>
+                </div>
+                <div class="admin-content-container">
+                    <?php $filter = 'archived'; include 'inbox_content.php'; ?>
+                </div>
             </div>
         </div>
-
-        <!-- Filters -->
-        <div class="inbox-filters">
-            <a href="?filter=all" class="filter-btn <?php echo $filter === 'all' ? 'active' : ''; ?>">
-                <i class="fas fa-inbox"></i>
-                All
-                <span class="filter-badge"><?php echo $allCount; ?></span>
-            </a>
-            <a href="?filter=unread" class="filter-btn <?php echo $filter === 'unread' ? 'active' : ''; ?>">
-                <i class="fas fa-envelope"></i>
-                Unread
-                <span class="filter-badge"><?php echo $unreadCount; ?></span>
-            </a>
-            <a href="?filter=read" class="filter-btn <?php echo $filter === 'read' ? 'active' : ''; ?>">
-                <i class="fas fa-envelope-open"></i>
-                Read
-                <span class="filter-badge"><?php echo $readCount; ?></span>
-            </a>
-            <a href="?filter=archived" class="filter-btn <?php echo $filter === 'archived' ? 'active' : ''; ?>">
-                <i class="fas fa-archive"></i>
-                Archived
-                <span class="filter-badge"><?php echo $archivedCount; ?></span>
-            </a>
-        </div>
-
-        <!-- Messages -->
-        <div class="messages-list">
-            <?php if (empty($messages)): ?>
-                <div class="empty-inbox">
-                    <i class="fas fa-inbox"></i>
-                    <h3>No Messages</h3>
-                    <p>Your <?php echo $filter === 'all' ? 'inbox' : $filter; ?> is empty.</p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($messages as $message): ?>
-                    <div class="message-card <?php echo htmlspecialchars($message['status']); ?>" data-message-id="<?php echo $message['message_ID']; ?>">
-                        <input type="checkbox" class="message-checkbox" onchange="updateBulkActions()">
-                        
-                        <div class="message-content">
-                            <div class="message-header">
-                                <h3 class="message-subject">
-                                    <?php echo htmlspecialchars($message['subject']); ?>
-                                </h3>
-                                <span class="message-status <?php echo htmlspecialchars($message['status']); ?>">
-                                    <?php echo htmlspecialchars($message['status']); ?>
-                                </span>
-                            </div>
-
-                            <div class="message-snippet">
-                                <?php echo nl2br(htmlspecialchars($message['snippet'])); ?>
-                            </div>
-
-                            <div class="message-meta">
-                                <div class="meta-item">
-                                    <i class="fas fa-calendar"></i>
-                                    <?php echo date('F j, Y \a\t g:i A', strtotime($message['date'])); ?>
-                                </div>
-                                
-                                <?php if ($message['newsletter_title']): ?>
-                                    <div class="meta-item">
-                                        <i class="fas fa-newspaper"></i>
-                                        <?php echo htmlspecialchars($message['newsletter_title']); ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <?php if ($message['creator_username']): ?>
-                                    <div class="meta-item">
-                                        <i class="fas fa-user"></i>
-                                        <?php echo htmlspecialchars($message['creator_username']); ?>
-                                    </div>
-                                <?php endif; ?>
-
-                                <div class="message-actions">
-                                    <?php if ($message['status'] === 'unread'): ?>
-                                        <button class="msg-action-btn" onclick="markAsRead(<?php echo $message['message_ID']; ?>)">
-                                            <i class="fas fa-envelope-open"></i> Mark Read
-                                        </button>
-                                    <?php else: ?>
-                                        <button class="msg-action-btn" onclick="markAsUnread(<?php echo $message['message_ID']; ?>)">
-                                            <i class="fas fa-envelope"></i> Mark Unread
-                                        </button>
-                                    <?php endif; ?>
-
-                                    <?php if ($message['status'] !== 'archived'): ?>
-                                        <button class="msg-action-btn" onclick="archiveMessage(<?php echo $message['message_ID']; ?>)">
-                                            <i class="fas fa-archive"></i> Archive
-                                        </button>
-                                    <?php endif; ?>
-
-                                    <button class="msg-action-btn danger" onclick="deleteMessage(<?php echo $message['message_ID']; ?>)">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
     </div>
+</div>
 
-    <script src="../scripts/js/theme.js"></script>
-    <script src="../scripts/js/inboxActions.js"></script>
+<script src="../bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
+<script src="../scripts/js/theme.js"></script>
+<script>
+    // Override the tab switching for inbox
+    function swapTab(tabID){
+        // Update URL hash
+        window.location.hash = tabID.replace('tab_', '');
+        
+        // Hide all tabs and show the selected one
+        const tabs = document.querySelectorAll('#profile_tabs > div');
+        tabs.forEach(tab => {
+            if(tab.id === tabID){
+                tab.style.display = 'block';
+            } else {
+                tab.style.display = 'none';
+            }
+        });
+        
+        // Update active state on navigation links
+        document.querySelectorAll('.admin-nav-link').forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Find and activate the corresponding button
+        const activeButton = document.getElementById('btn_' + tabID);
+        if(activeButton){
+            activeButton.classList.add('active');
+        }
+
+        // Update bulk action buttons after tab switch
+        setTimeout(() => {
+            updateBulkActions();
+        }, 10);
+    }
+
+    // Handle hash changes
+    function handleHashChange() {
+        const hash = window.location.hash.substring(1); // Remove #
+        if (hash === 'unread') {
+            swapTab('tab_unread');
+        } else if (hash === 'read') {
+            swapTab('tab_read');
+        } else if (hash === 'archived') {
+            swapTab('tab_archived');
+        } else {
+            swapTab('tab_all');
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        handleHashChange();
+        
+        // Initialize button states after tab content is loaded
+        setTimeout(() => {
+            updateBulkActions();
+        }, 50);
+        
+        // Add event listeners
+        document.getElementById('btn_tab_all').addEventListener('click', (e) => {
+            e.preventDefault();
+            swapTab('tab_all');
+        });
+        document.getElementById('btn_tab_unread').addEventListener('click', (e) => {
+            e.preventDefault();
+            swapTab('tab_unread');
+        });
+        document.getElementById('btn_tab_read').addEventListener('click', (e) => {
+            e.preventDefault();
+            swapTab('tab_read');
+        });
+        document.getElementById('btn_tab_archived').addEventListener('click', (e) => {
+            e.preventDefault();
+            swapTab('tab_archived');
+        });
+
+        // Listen for hash changes
+        window.addEventListener('hashchange', handleHashChange);
+    });
+
+    // Inbox functions
+    function selectAllMessages() {
+        const checkboxes = document.querySelectorAll('.message-checkbox');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateBulkActions();
+    }
+
+    function unselectAllMessages() {
+        const checkboxes = document.querySelectorAll('.message-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+        updateBulkActions();
+    }
+
+    function selectMessageCard(cardElement) {
+        const checkbox = cardElement.querySelector('.message-checkbox');
+        checkbox.checked = !checkbox.checked;
+        updateBulkActions();
+    }
+
+    function readNewsletter(newsletterId) {
+        if (newsletterId && newsletterId !== 'null') {
+            // Use the existing popup system
+            if (window.parent && window.parent.popupSystem) {
+                window.parent.popupSystem.newsPopup(newsletterId);
+            } else {
+                alert('Newsletter popup system not available');
+            }
+        } else {
+            alert('Newsletter not available');
+        }
+    }
+
+    function updateBulkActions() {
+        const allCheckboxes = document.querySelectorAll('.message-checkbox');
+        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const hasSelection = checkedBoxes.length > 0;
+        const allSelected = allCheckboxes.length > 0 && checkedBoxes.length === allCheckboxes.length;
+        
+        // Update Select All/Unselect All button
+        const selectBtn = document.getElementById('selectAllBtn');
+        if (selectBtn) {
+            if (allSelected) {
+                selectBtn.innerHTML = '<i class="fas fa-times me-1"></i>Unselect All';
+                selectBtn.onclick = unselectAllMessages;
+            } else {
+                selectBtn.innerHTML = '<i class="fas fa-check-square me-1"></i>Select All';
+                selectBtn.onclick = selectAllMessages;
+            }
+        }
+        
+        if (!hasSelection) {
+            // No selection - disable action buttons
+            const readBtn = document.getElementById('bulkReadBtn');
+            const archiveBtn = document.getElementById('bulkArchiveBtn');
+            const deleteBtn = document.getElementById('bulkDeleteBtn');
+            if (readBtn) readBtn.disabled = true;
+            if (archiveBtn) archiveBtn.disabled = true;
+            if (deleteBtn) deleteBtn.disabled = true;
+            return;
+        }
+
+        // Analyze selected messages
+        let readCount = 0;
+        let unreadCount = 0;
+        let archivedCount = 0;
+        let notArchivedCount = 0;
+
+        checkedBoxes.forEach(cb => {
+            const card = cb.closest('.message-card');
+            const status = card.classList.contains('read') ? 'read' : 
+                          card.classList.contains('archived') ? 'archived' : 'unread';
+            
+            if (status === 'read') readCount++;
+            else if (status === 'unread') unreadCount++;
+            else if (status === 'archived') archivedCount++;
+            
+            if (status !== 'archived') notArchivedCount++;
+        });
+
+        // Update Read/Unread button
+        const readBtn = document.getElementById('bulkReadBtn');
+        if (readBtn) {
+            if (unreadCount > readCount) {
+                // Most are unread - show "Mark as Read"
+                readBtn.innerHTML = '<i class="fas fa-envelope-open me-1"></i>Mark Read';
+                readBtn.onclick = bulkMarkRead;
+            } else {
+                // Most are read - show "Mark as Unread"
+                readBtn.innerHTML = '<i class="fas fa-envelope me-1"></i>Mark Unread';
+                readBtn.onclick = bulkMarkUnread;
+            }
+            readBtn.disabled = false;
+        }
+
+        // Update Archive/Unarchive button
+        const archiveBtn = document.getElementById('bulkArchiveBtn');
+        if (archiveBtn) {
+            if (notArchivedCount > archivedCount) {
+                // Most are not archived - show "Archive"
+                archiveBtn.innerHTML = '<i class="fas fa-archive me-1"></i>Archive';
+                archiveBtn.onclick = bulkArchive;
+            } else {
+                // Most are archived - show "Unarchive"
+                archiveBtn.innerHTML = '<i class="fas fa-undo me-1"></i>Unarchive';
+                archiveBtn.onclick = bulkUnarchive;
+            }
+            archiveBtn.disabled = false;
+        }
+
+        // Delete button always enabled when selection exists
+        const deleteBtn = document.getElementById('bulkDeleteBtn');
+        if (deleteBtn) deleteBtn.disabled = false;
+    }
+
+    function bulkMarkRead() {
+        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        checkedBoxes.forEach(cb => {
+            markAsRead(cb.closest('.message-card').dataset.messageId);
+        });
+    }
+
+    function bulkMarkUnread() {
+        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        checkedBoxes.forEach(cb => {
+            markAsUnread(cb.closest('.message-card').dataset.messageId);
+        });
+    }
+
+    function bulkArchive() {
+        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        checkedBoxes.forEach(cb => {
+            archiveMessage(cb.closest('.message-card').dataset.messageId);
+        });
+    }
+
+    function bulkUnarchive() {
+        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        checkedBoxes.forEach(cb => {
+            unarchiveMessage(cb.closest('.message-card').dataset.messageId);
+        });
+    }
+
+    function bulkDelete() {
+        if (confirm('Are you sure you want to delete the selected messages?')) {
+            const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+            checkedBoxes.forEach(cb => {
+                deleteMessage(cb.closest('.message-card').dataset.messageId);
+            });
+        }
+    }
+
+    function markAsRead(messageId) {
+        fetch('../scripts/php/inbox_api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'mark_read', message_id: messageId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function markAsUnread(messageId) {
+        fetch('../scripts/php/inbox_api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'mark_unread', message_id: messageId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function archiveMessage(messageId) {
+        fetch('../scripts/php/inbox_api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'archive', message_id: messageId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function unarchiveMessage(messageId) {
+        fetch('../scripts/php/inbox_api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'unarchive', message_id: messageId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+
+    function deleteMessage(messageId) {
+        if (confirm('Are you sure you want to delete this message?')) {
+            fetch('../scripts/php/inbox_api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete', message_id: messageId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            });
+        }
+    }
+
+    // Initialize data in parent window's popup system
+    if (window.parent && window.parent.popupSystem) {
+        window.parent.popupSystem.initData(
+            <?= json_encode($newsletters) ?>,
+            <?= json_encode($categories) ?>,
+            <?= json_encode($users) ?>,
+            <?= isset($_COOKIE['userID']) ? intval($_COOKIE['userID']) : 'null' ?>
+        );
+    }
+</script>
 </body>
 </html>
