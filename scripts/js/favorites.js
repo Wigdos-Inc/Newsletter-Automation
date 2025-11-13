@@ -5,7 +5,11 @@
 
 class FavoritesManager {
     constructor() {
-        this.apiEndpoint = '../scripts/php/favorites.php';
+        // Determine the correct path based on current location
+        // If we're in an iframe (pages/), use '../scripts/php/favorites.php'
+        // If we're in main document (index.php), use 'scripts/php/favorites.php'
+        const isInIframe = window.self !== window.top;
+        this.apiEndpoint = isInIframe ? '../scripts/php/favorites.php' : 'scripts/php/favorites.php';
     }
 
     /**
@@ -300,9 +304,11 @@ class FavoritesManager {
         try {
             // Check if we're in the parent window (not iframe)
             const targetWindow = window.parent && window.parent !== window ? window.parent : window;
+            const isInIframe = window.self !== window.top;
+            const inboxApiPath = isInIframe ? '../scripts/php/inbox_api.php' : 'scripts/php/inbox_api.php';
             
             // Fetch unread inbox count
-            const response = await fetch('../scripts/php/inbox_api.php', {
+            const response = await fetch(inboxApiPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
@@ -371,7 +377,9 @@ class FavoritesManager {
      */
     async refreshInboxDropdown(targetWindow = window) {
         try {
-            const response = await fetch('../scripts/php/inbox_api.php', {
+            const isInIframe = window.self !== window.top;
+            const inboxApiPath = isInIframe ? '../scripts/php/inbox_api.php' : 'scripts/php/inbox_api.php';
+            const response = await fetch(inboxApiPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',

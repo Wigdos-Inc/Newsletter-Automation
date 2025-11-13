@@ -6,14 +6,20 @@ window.popupSystem = {
   newsletters: {},
   categories: {},
   users: {},
-  userID: null,
+  userID: window.globalUserID || null,
 
   // Initialize data (called from pages)
   initData: function(newsletters, categories, users, userID = null) {
     this.newsletters = newsletters || {};
     this.categories = categories || {};
     this.users = users || {};
-    this.userID = userID;
+    // Only update userID if not already set from global or if explicitly passed
+    if (userID !== null) {
+      this.userID = userID;
+    } else if (!this.userID) {
+      this.userID = window.globalUserID || null;
+    }
+    console.log('Popup system initialized with userID:', this.userID);
   },
 
   // Strip HTML tags for preview text
@@ -35,6 +41,7 @@ window.popupSystem = {
     const newsletter = this.newsletters[id];
     if (!newsletter) return;
 
+    console.log('Opening newsletter popup. UserID:', this.userID);
     const favoriteBtn = this.userID ? `
       <button class="favorite-btn-icon" 
               data-favorite-btn 
@@ -45,6 +52,7 @@ window.popupSystem = {
         <i class="far fa-heart"></i>
       </button>
     ` : '';
+    console.log('Favorite button HTML:', favoriteBtn ? 'Generated' : 'Not generated (no userID)');
 
     const modalHTML = `
       <div class="global-modal-overlay" onclick="window.popupSystem.closePopup()">
