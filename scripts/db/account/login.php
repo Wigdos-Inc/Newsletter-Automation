@@ -66,7 +66,16 @@ try {
     $expiry = time() + (30 * 24 * 60 * 60); // 30 days
     setcookie('userID', $result['user_ID'], $expiry, '/', '', false, true);
     setcookie('user_data', json_encode($result), $expiry, '/', '', false, true);
-    header("location: ../../../pages/profile_view.php");
+    
+    // Redirect to the page user was on before login, or profile if none
+    echo "<script>
+        var pageBeforeLogin = localStorage.getItem('pageBeforeLogin') || 'pages/profile_view.php';
+        if(window.self !== window.top){
+            window.top.location.href = '../../../index.php?load=' + encodeURIComponent(pageBeforeLogin);
+        } else {
+            window.location.href = '../../../index.php?load=' + encodeURIComponent(pageBeforeLogin);
+        }
+    </script>";
     exit();
     
 } catch (PDOException $e){

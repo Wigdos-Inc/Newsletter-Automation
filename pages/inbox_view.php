@@ -9,12 +9,7 @@ require_once '../scripts/db/data.php';
 
 // Check if user is logged in
 if (!isset($userID) || !$userID) {
-    echo '<div class="alert alert-warning text-center mt-5">';
-    echo '<i class="fas fa-user-lock fa-3x mb-3"></i>';
-    echo '<h4>Please Login</h4>';
-    echo '<p>You need to be logged in to view your inbox.</p>';
-    echo '<a href="login_view.php" class="btn btn-primary">Login</a>';
-    echo '</div>';
+    header('location: login_view.php');
     exit;
 }
 

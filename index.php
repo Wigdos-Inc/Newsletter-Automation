@@ -115,6 +115,7 @@ if ($userID && isset($users[$userID])) {
             </div>
             <div class="profile-dropdown" id="profileDropdown">
               <a href="#" data-page="pages/profile_view.php"><i class="fas fa-user me-2"></i> Profile</a>
+              <a href="#" data-page="pages/profile_view.php#settings"><i class="fas fa-cog me-2"></i> Settings</a>
               <?php if ($isAdminOrOwner): ?>
                 <a href="#" data-page="pages/adminPanel.php"><i class="fas fa-user-shield me-2"></i> Admin Panel</a>
               <?php endif; ?>
@@ -170,6 +171,7 @@ if ($userID && isset($users[$userID])) {
         <i class="fas fa-home"></i>
         <span>Home</span>
       </a>
+      <!-- 
       <a href="#" class="sidebar-link" data-page="pages/category_view.php">
         <i class="fas fa-th-large"></i>
         <span>Categories</span>
@@ -178,6 +180,7 @@ if ($userID && isset($users[$userID])) {
         <i class="fas fa-newspaper"></i>
         <span>Newsletters</span>
       </a>
+              -->
       <a href="#" class="sidebar-link" data-page="pages/search_view.php">
         <i class="fas fa-search"></i>
         <span>Search</span>
@@ -192,7 +195,7 @@ if ($userID && isset($users[$userID])) {
           <span class="sidebar-badge"><?php echo $inboxAmount; ?></span>
         <?php endif; ?>
       </a>
-      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#profile">
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#about">
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
