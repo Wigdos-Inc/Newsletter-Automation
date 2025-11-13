@@ -261,7 +261,7 @@ if ($action === 'get_all') {
         } 
         else if ($type === 'category') {
             $stmt = $pdo->prepare("
-                SELECT c.category_ID, c.name, c.description
+                SELECT c.category_ID, c.name
                 FROM con_favorites_categories f
                 INNER JOIN tab_categories c ON f.category_ID = c.category_ID
                 WHERE f.user_ID = ?

@@ -34,8 +34,12 @@ function handleHashChange() {
     const hash = window.location.hash.substring(1); // Remove #
     if (hash === 'settings') {
         swapTab('tab_settings');
-    } else {
+    } else if (hash === 'profile') {
         swapTab('tab_about');
+    } else if (hash === 'favorites') {
+        swapTab('tab_favorites');
+    } else {
+        swapTab('tab_about'); // Default to about tab
     }
 }
 
@@ -58,6 +62,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn_tab_settings').addEventListener('click', (e) => {
         e.preventDefault();
         swapTab('tab_settings');
+    });
+    document.getElementById('btn_tab_favorites')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        swapTab('tab_favorites');
     });
 
     document.getElementById('delaccBtn').addEventListener('click', (e) => {
