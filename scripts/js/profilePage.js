@@ -42,6 +42,9 @@ document.getElementById('btn_tab_about').addEventListener('click', (e) => {
 document.getElementById('btn_tab_settings').addEventListener('click', (e) => {
     swapTab('tab_settings');
 });
+document.getElementById('btn_tab_favorites')?.addEventListener('click', (e) => {
+    swapTab('tab_favorites');
+});
 
 document.getElementById('delaccBtn').addEventListener('click', (e) => {
     window.location.href = './profile_view.php?delac=1';
@@ -62,6 +65,8 @@ window.addEventListener('load', () => {
         swapTab('tab_settings');
     } else if (hash === '#profile') {
         swapTab('tab_about');
+    } else if (hash === '#favorites') {
+        swapTab('tab_favorites');
     } else {
         swapTab('tab_about'); // Default to about tab
     }

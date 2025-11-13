@@ -111,7 +111,8 @@ if ($userID && isset($users[$userID])) {
           <!-- Profile Dropdown -->
           <div class="position-relative">
             <div class="profile-icon" id="profileIcon">
-              <i class="fas fa-user"></i>
+              <img id="headerProfileAvatar" src="https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: none;">
+              <i class="fas fa-user" id="headerProfileIcon"></i>
             </div>
             <div class="profile-dropdown" id="profileDropdown">
               <a href="#" data-page="pages/profile_view.php"><i class="fas fa-user me-2"></i> Profile</a>
@@ -442,6 +443,33 @@ if ($userID && isset($users[$userID])) {
   <?php if (isset($_COOKIE['show_tutorial']) && $_COOKIE['show_tutorial']): ?>
   <script src="scripts/js/tutorial.js"></script>
   <?php endif; ?>
+  <script>
+    // Load profile avatar from localStorage for header
+    (function() {
+      const savedAvatar = localStorage.getItem('userAvatar');
+      const headerAvatar = document.getElementById('headerProfileAvatar');
+      const headerIcon = document.getElementById('headerProfileIcon');
+      
+      function updateHeaderAvatar(avatarData) {
+        if (avatarData && headerAvatar && headerIcon) {
+          headerAvatar.src = avatarData;
+          headerAvatar.style.display = 'block';
+          headerIcon.style.display = 'none';
+        }
+      }
+      
+      if (savedAvatar) {
+        updateHeaderAvatar(savedAvatar);
+      }
+      
+      // Listen for avatar updates from iframe
+      window.addEventListener('message', function(event) {
+        if (event.data.type === 'avatarUpdated') {
+          updateHeaderAvatar(event.data.avatar);
+        }
+      });
+    })();
+  </script>
 </body>
 </html>
 

@@ -56,7 +56,7 @@
     <div class="d-flex flex-column flex-md-row gap-3">
         <div class="admin-sidebar">
             <div class="text-center mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                <img style="-webkit-user-drag: none;" class="rounded-circle mb-2" width="80" src="https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png" alt="Admin Avatar">
+                <img id="adminAvatar" style="-webkit-user-drag: none;" class="rounded-circle mb-2" width="80" height="80" src="https://upload.wikimedia.org/wikipedia/commons/a/a3/Image-not-found.png" alt="Admin Avatar">
                 <p class="mb-0 mt-2" style="color: var(--text-secondary); font-size: 0.9rem;">Admin Dashboard</p>
             </div>
             <nav class="admin-nav">
@@ -411,5 +411,13 @@
 <script src="../scripts/js/adminpanel.js"></script>
 <script src="../scripts/js/theme.js"></script>
 <script src="../scripts/js/adminActions.js"></script>
+<script>
+    // Load saved avatar from localStorage
+    const adminAvatar = document.getElementById('adminAvatar');
+    const savedAvatar = localStorage.getItem('userAvatar');
+    if (savedAvatar && adminAvatar) {
+        adminAvatar.src = savedAvatar;
+    }
+</script>
 </body>
 </html>

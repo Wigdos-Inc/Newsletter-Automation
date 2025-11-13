@@ -121,6 +121,13 @@ if ($action === 'update') {
             exit;
         }
         
+        // Check if content actually changed
+        $stmt = $pdo->prepare("SELECT title, content FROM tab_newsletters WHERE newsletter_ID = ?");
+        $stmt->execute([$newsletterID]);
+        $original = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        $contentChanged = ($original['title'] !== $title || $original['content'] !== $content);
+        
         // Update newsletter
         if ($status !== null) {
             $stmt = $pdo->prepare("UPDATE tab_newsletters SET title = ?, content = ?, status = ? WHERE newsletter_ID = ?");
@@ -147,8 +154,10 @@ if ($action === 'update') {
         
         $pdo->commit();
         
-        // Send notifications to users who favorited this newsletter
-        notifyNewsletterEdited($pdo, $newsletterID, false);
+        // Send notifications to users who favorited this newsletter only if content changed
+        if ($contentChanged) {
+            notifyNewsletterEdited($pdo, $newsletterID, false);
+        }
         
         echo json_encode(['success' => true, 'message' => 'Newsletter updated successfully']);
     } catch (PDOException $e) {

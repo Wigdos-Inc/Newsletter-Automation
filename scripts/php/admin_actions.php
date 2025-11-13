@@ -98,6 +98,16 @@ if ($action === 'toggle_newsletter_visibility') {
         $stmt = $pdo->prepare("UPDATE tab_newsletters SET status = ? WHERE newsletter_ID = ?");
         $stmt->execute([$newStatus, $newsletterID]);
         
+        // Notify users who favorited this newsletter if it's being hidden
+        if ($newStatus === 'hidden') {
+            require_once '../db/notifications.php';
+            notifyNewsletterHidden($pdo, $newsletterID, 'Hidden by administrator');
+        } elseif ($newsletter['status'] === 'hidden' && $newStatus === 'draft') {
+            // Newsletter is being unhidden, notify users it's available again
+            require_once '../db/notifications.php';
+            notifyNewsletterRepublished($pdo, $newsletterID);
+        }
+        
         echo json_encode(['success' => true, 'new_status' => $newStatus]);
     } catch (PDOException $e) {
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
