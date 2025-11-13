@@ -9,7 +9,10 @@
     
     // Decode user_data from JSON
     $result = json_decode($_COOKIE['user_data'], true);
+
+    $isIframe = isset($_GET['iframe']);
 ?>
+<?php if (!$isIframe): ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,7 +24,8 @@
     <!-- <link rel="stylesheet" href="../styling/main.css"> -->
     <link rel="stylesheet" href="../styling/profile.css">
 </head>
-<body>        
+<body>
+<?php endif; ?>        
         
         <?php if(isset($_GET['err'])): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -44,11 +48,11 @@
                     <p class="mb-0 mt-2" style="color: var(--text-secondary); font-size: 0.9rem;">User Profile</p>
                 </div>
                 <nav class="admin-nav">
-                    <a id="btn_tab_about" class="admin-nav-link active">
+                    <a href="#" id="btn_tab_about" class="admin-nav-link active">
                         <i class="fas fa-user me-2"></i>
                         <span>About</span>
                     </a>
-                    <a id="btn_tab_settings" class="admin-nav-link">
+                    <a href="#" id="btn_tab_settings" class="admin-nav-link">
                         <i class="fas fa-cog me-2"></i>
                         <span>Settings</span>
                     </a>
@@ -58,7 +62,7 @@
                     </a>
                     <a class="admin-nav-link" href="../scripts/db/account/logout.php">
                         <i class="fas fa-sign-out-alt me-2"></i>
-                        <span>Sign out</span>
+                        <span>Log out</span>
                     </a>
                 </nav>
             </div>
@@ -161,5 +165,7 @@
             modal.show();
         });
     </script>
+<?php if (!$isIframe): ?>
 </body>
 </html>
+<?php endif; ?>

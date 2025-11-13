@@ -92,7 +92,7 @@ try {
 // Fetch all categories with their newsletters and contributors
 $categories = [];
 try {
-    $stmt = $pdo->query("SELECT * FROM tab_categories ORDER BY name ASC");
+    $stmt = $pdo->query("SELECT * FROM tab_categories WHERE status != 'hidden' ORDER BY name ASC");
     $baseCategories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Populate each category with newsletters and contributors

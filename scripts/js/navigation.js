@@ -1,5 +1,12 @@
 // Navigation and UI Controls for Main Application
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
 // Inbox Dropdown Toggle
 const inboxIcon = document.getElementById('inboxIcon');
 const inboxDropdown = document.getElementById('inboxDropdown');
@@ -7,6 +14,10 @@ const inboxDropdown = document.getElementById('inboxDropdown');
 if (inboxIcon && inboxDropdown) {
   inboxIcon.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (!getCookie('userID')) {
+      window.location.href = 'pages/login_view.php';
+      return;
+    }
     inboxDropdown.classList.toggle('show');
     // Close profile dropdown if open
     if (profileDropdown) profileDropdown.classList.remove('show');

@@ -386,6 +386,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const menuToggle = document.getElementById('menuToggle');
   const mobileMenu = document.getElementById('mobileMenu');
 
+  // Check for load parameter in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const loadPageParam = urlParams.get('load');
+  if (loadPageParam) {
+    loadPage(loadPageParam);
+  }
+
+  // Persist current page in URL
+  if (iframe) {
+    iframe.addEventListener('load', () => {
+      const currentSrc = iframe.src;
+      if (currentSrc && currentSrc !== 'pages/home_view.php') {
+        const url = new URL(window.location);
+        url.searchParams.set('load', currentSrc);
+        window.history.replaceState(null, null, url);
+      }
+    });
+  }
+
   function setActive(link) {
     navLinks.forEach(l => l.classList.remove('active'));
     if (link) link.classList.add('active');
@@ -396,6 +415,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Reset iframe height before loading new page
     iframe.style.height = '600px';
+    
+    // Store current page before loading login
+    if (path.includes('login_view.php')) {
+      const currentSrc = iframe.src;
+      localStorage.setItem('pageBeforeLogin', currentSrc);
+    }
     
     // Check if the path has a hash
     const [basePath, hash] = path.split('#');
@@ -443,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!iframe) return;
     try {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
-      const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight);
+      const height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, 600); // Minimum 600px
       iframe.style.height = height + 'px';
       // console.log('Iframe resized to:', height + 'px'); // Disabled logging
     } catch (err) {
