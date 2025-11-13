@@ -79,3 +79,24 @@
     color: #718096;
     font-size: 0.95rem;
 }
+
+/* ===== SCROLLBAR STYLING ===== */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary, #1a1c20);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--accent-blue, #3498db), var(--accent-green, #2ecc71));
+    border-radius: 10px;
+    border: 2px solid var(--bg-primary, #1a1c20);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2980b9, #27ae60);
+}

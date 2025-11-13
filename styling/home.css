@@ -520,9 +520,7 @@ body.light-mode .empty-state {
 
 /* Remove overflow restrictions */
 html, body {
-    overflow: visible !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
+    overflow: hidden !important;
 }
 
 .container {
