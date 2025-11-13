@@ -503,9 +503,9 @@ if ($userID) {
         window.currentFeaturedId = <?php echo $featuredNewsletter ? $featuredNewsletter['newsletter_ID'] : 'null'; ?>;
         window.currentUserID = <?php echo $userID ? $userID : 'null'; ?>;
     </script>
-    <script src="./../scripts/js/theme.js"></script>
-    <script src="./../scripts/js/homeView.js"></script>
+    <script src="../scripts/js/theme.js"></script>
+    <script src="../scripts/js/homeView.js"></script>
     <!-- Favorites System -->
-    <script src="./../scripts/js/favorites.js"></script>
+    <script src="../scripts/js/favorites.js"></script>
 </body>
 </html>

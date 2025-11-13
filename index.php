@@ -434,6 +434,10 @@ if ($userID && isset($users[$userID])) {
   <?php endif; ?>
 
   <script src="bootstrap-5.3.6-dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Set global userID for popup system
+    window.globalUserID = <?php echo (isset($userID) && $userID) ? $userID : 'null'; ?>;
+  </script>
   <?php if (isset($userID) && $userID): ?>
   <script src="scripts/js/favorites.js"></script>
   <script>
