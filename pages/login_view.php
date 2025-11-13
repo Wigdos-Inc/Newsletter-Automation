@@ -14,6 +14,9 @@
             <h3 id="error" class="text-danger">Error: <?=$_GET['err']?></h3>
         <?php }?>
         <form class="rounded p-4 bg-purple-dark w-50 d-inline-block shadow" action="../scripts/db/account/login.php" method="post">
+            <?php if(isset($_GET['redirect'])): ?>
+                <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($_GET['redirect']); ?>">
+            <?php endif; ?>
             <div class="form-floating mb-3 mt-5">
                 <input class="form-control" type="text" name="username" id="username" placeholder="Username ...">
                 <label for="username">Username ...</label>

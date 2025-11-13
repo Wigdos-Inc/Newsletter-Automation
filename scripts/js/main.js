@@ -420,6 +420,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (path.includes('login_view.php')) {
       const currentSrc = iframe.src;
       localStorage.setItem('pageBeforeLogin', currentSrc);
+      // Also set a cookie for server-side access
+      document.cookie = 'pageBeforeLogin=' + encodeURIComponent(currentSrc) + '; path=/; max-age=300'; // 5 minutes
     }
     
     // Check if the path has a hash

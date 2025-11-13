@@ -20,8 +20,13 @@ if ($action === 'fetch_single') {
     }
     
     try {
-        // Fetch newsletter
-        $stmt = $pdo->prepare("SELECT * FROM tab_newsletters WHERE newsletter_ID = ?");
+        // Fetch newsletter with creator info
+        $stmt = $pdo->prepare("
+            SELECT n.*, u.username as creator_username 
+            FROM tab_newsletters n 
+            LEFT JOIN tab_users u ON n.user_ID = u.user_ID 
+            WHERE n.newsletter_ID = ?
+        ");
         $stmt->execute([$newsletterID]);
         $newsletter = $stmt->fetch(PDO::FETCH_ASSOC);
         

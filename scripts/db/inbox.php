@@ -194,6 +194,18 @@ function archiveMessage($pdo, $messageID, $userID) {
 }
 
 /**
+ * Unarchive a message (move back to read status)
+ * 
+ * @param PDO $pdo Database connection
+ * @param int $messageID Message ID
+ * @param int $userID User ID (for security check)
+ * @return bool Success status
+ */
+function unarchiveMessage($pdo, $messageID, $userID) {
+    return updateMessageStatus($pdo, $messageID, $userID, 'read');
+}
+
+/**
  * Delete a message permanently
  * 
  * @param PDO $pdo Database connection
