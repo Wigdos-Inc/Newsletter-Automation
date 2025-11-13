@@ -196,15 +196,24 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
         window.addEventListener('hashchange', handleHashChange);
     });
 
+    // Get the currently active tab
+    function getActiveTab() {
+        return document.querySelector('#profile_tabs > div[style*="display: block"]');
+    }
+
     // Inbox functions
     function selectAllMessages() {
-        const checkboxes = document.querySelectorAll('.message-checkbox');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkboxes = activeTab.querySelectorAll('.message-checkbox');
         checkboxes.forEach(cb => cb.checked = true);
         updateBulkActions();
     }
 
     function unselectAllMessages() {
-        const checkboxes = document.querySelectorAll('.message-checkbox');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkboxes = activeTab.querySelectorAll('.message-checkbox');
         checkboxes.forEach(cb => cb.checked = false);
         updateBulkActions();
     }
@@ -229,13 +238,16 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
     }
 
     function updateBulkActions() {
-        const allCheckboxes = document.querySelectorAll('.message-checkbox');
-        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        
+        const allCheckboxes = activeTab.querySelectorAll('.message-checkbox');
+        const checkedBoxes = activeTab.querySelectorAll('.message-checkbox:checked');
         const hasSelection = checkedBoxes.length > 0;
         const allSelected = allCheckboxes.length > 0 && checkedBoxes.length === allCheckboxes.length;
         
         // Update Select All/Unselect All button
-        const selectBtn = document.getElementById('selectAllBtn');
+        const selectBtn = activeTab.querySelector('#selectAllBtn');
         if (selectBtn) {
             if (allSelected) {
                 selectBtn.innerHTML = '<i class="fas fa-times me-1"></i>Unselect All';
@@ -248,9 +260,9 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
         
         if (!hasSelection) {
             // No selection - disable action buttons
-            const readBtn = document.getElementById('bulkReadBtn');
-            const archiveBtn = document.getElementById('bulkArchiveBtn');
-            const deleteBtn = document.getElementById('bulkDeleteBtn');
+            const readBtn = activeTab.querySelector('#bulkReadBtn');
+            const archiveBtn = activeTab.querySelector('#bulkArchiveBtn');
+            const deleteBtn = activeTab.querySelector('#bulkDeleteBtn');
             if (readBtn) readBtn.disabled = true;
             if (archiveBtn) archiveBtn.disabled = true;
             if (deleteBtn) deleteBtn.disabled = true;
@@ -276,7 +288,7 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
         });
 
         // Update Read/Unread button
-        const readBtn = document.getElementById('bulkReadBtn');
+        const readBtn = activeTab.querySelector('#bulkReadBtn');
         if (readBtn) {
             if (unreadCount > readCount) {
                 // Most are unread - show "Mark as Read"
@@ -291,7 +303,7 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
         }
 
         // Update Archive/Unarchive button
-        const archiveBtn = document.getElementById('bulkArchiveBtn');
+        const archiveBtn = activeTab.querySelector('#bulkArchiveBtn');
         if (archiveBtn) {
             if (notArchivedCount > archivedCount) {
                 // Most are not archived - show "Archive"
@@ -306,43 +318,54 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
         }
 
         // Delete button always enabled when selection exists
-        const deleteBtn = document.getElementById('bulkDeleteBtn');
+        const deleteBtn = activeTab.querySelector('#bulkDeleteBtn');
         if (deleteBtn) deleteBtn.disabled = false;
     }
 
     function bulkMarkRead() {
-        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkedBoxes = activeTab.querySelectorAll('.message-checkbox:checked');
         checkedBoxes.forEach(cb => {
             markAsRead(cb.closest('.message-card').dataset.messageId);
         });
     }
 
     function bulkMarkUnread() {
-        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkedBoxes = activeTab.querySelectorAll('.message-checkbox:checked');
         checkedBoxes.forEach(cb => {
             markAsUnread(cb.closest('.message-card').dataset.messageId);
         });
     }
 
     function bulkArchive() {
-        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkedBoxes = activeTab.querySelectorAll('.message-checkbox:checked');
         checkedBoxes.forEach(cb => {
             archiveMessage(cb.closest('.message-card').dataset.messageId);
         });
     }
 
     function bulkUnarchive() {
-        const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkedBoxes = activeTab.querySelectorAll('.message-checkbox:checked');
         checkedBoxes.forEach(cb => {
             unarchiveMessage(cb.closest('.message-card').dataset.messageId);
         });
     }
 
     function bulkDelete() {
-        if (confirm('Are you sure you want to delete the selected messages?')) {
-            const checkedBoxes = document.querySelectorAll('.message-checkbox:checked');
+        const activeTab = getActiveTab();
+        if (!activeTab) return;
+        const checkedBoxes = activeTab.querySelectorAll('.message-checkbox:checked');
+        
+        if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected message(s)?`)) {
             checkedBoxes.forEach(cb => {
-                deleteMessage(cb.closest('.message-card').dataset.messageId);
+                deleteMessage(cb.closest('.message-card').dataset.messageId, true);
             });
         }
     }
@@ -403,20 +426,22 @@ $archivedCount = getInboxCount($pdo, $userID, 'archived');
         });
     }
 
-    function deleteMessage(messageId) {
-        if (confirm('Are you sure you want to delete this message?')) {
-            fetch('../scripts/php/inbox_api.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'delete', message_id: messageId })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                }
-            });
+    function deleteMessage(messageId, skipConfirm = false) {
+        if (!skipConfirm && !confirm('Are you sure you want to delete this message?')) {
+            return;
         }
+        
+        fetch('../scripts/php/inbox_api.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete', message_id: messageId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
     }
 
     // Initialize data in parent window's popup system
