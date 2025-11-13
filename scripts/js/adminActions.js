@@ -617,8 +617,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Delete Button
         else if (target.id === 'admin-delete-btn') {
             e.preventDefault();
+            
+            // If newsletter hasn't been saved yet (no ID), just clear the form and return to generator
             if (!currentNewsletterID) {
-                showError('Please save the newsletter first before deleting');
+                if (!confirm('Are you sure you want to discard this newsletter draft?')) return;
+                
+                // Reset to generate mode without server call
+                document.getElementById('generate-mode').style.display = 'block';
+                document.getElementById('admin-edit-mode').style.display = 'none';
+                document.getElementById('admin-newsletter-query').value = '';
+                document.getElementById('admin-newsletter-title').value = '';
+                document.getElementById('admin-newsletter-editor').innerHTML = '';
+                currentNewsletterID = null;
+                currentNewsletterContent = null;
+                currentNewsletterStatus = 'draft';
+                showSuccess('Newsletter draft discarded');
                 return;
             }
             

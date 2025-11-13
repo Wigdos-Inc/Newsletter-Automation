@@ -2,7 +2,7 @@
 
 // Initialize popup system with newsletter data
 if (parent.window && parent.window.popupSystem) {
-    parent.window.popupSystem.initData(window.newslettersData || {}, window.categoriesData || {}, {});
+    parent.window.popupSystem.initData(window.newslettersData || {}, window.categoriesData || {}, {}, window.currentUserID || null);
 }
 
 // Open category popup function
