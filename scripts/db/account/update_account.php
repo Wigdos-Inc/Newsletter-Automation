@@ -2,6 +2,12 @@
 session_start();
 require '../config.php';
 
+// Check database connection first
+if (!$dbStatus || !$pdo) {
+    header("location: ../../../pages/profile_view.php?err=Database connection failed. Please try again later.");
+    exit();
+}
+
 if($_SERVER['REQUEST_METHOD'] !== 'POST'){
     header("location: ../../../pages/profile_view.php?err=Accessed page without POST");
     exit();

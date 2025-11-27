@@ -89,7 +89,7 @@ function updateInboxDropdown() {
             const snippet = item.snippet ? item.snippet.substring(0, 50) + '...' : '';
             
             html += `
-              <a href="#" class="inbox-item" data-message-id="${item.message_ID}">
+              <a href="#" class="inbox-item" data-page="pages/inbox_view.php" data-message-id="${item.message_ID}">
                 <div class="inbox-item-content">
                   <strong>${item.subject || 'Notification'}</strong>
                   <p class="mb-0">${snippet}</p>
@@ -99,6 +99,18 @@ function updateInboxDropdown() {
             `;
           });
           inboxItems.innerHTML = html;
+          
+          // Attach click event listeners to the newly created inbox items
+          const newInboxItems = inboxItems.querySelectorAll('.inbox-item');
+          newInboxItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+              e.preventDefault();
+              const page = item.getAttribute('data-page');
+              if (page && window.loadPage) {
+                window.loadPage(page);
+              }
+            });
+          });
         } else {
           // Show empty state
           inboxItems.innerHTML = `

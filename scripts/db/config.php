@@ -1,12 +1,15 @@
 <?php
 
-ini_set('display_errors', 1);
+// Disable error display, enable logging
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
 error_reporting(E_ALL);
 
-$servername = "localhost";
-$username = "newsletter";
-$password = "35kwJILTx4IXYeNB2Oqs";
-$dbname = "Newsletter_Automation";
+// Database configuration - try to get from environment variables first, fallback to defaults
+$servername = getenv('DB_HOST') ?: "localhost";
+$username = getenv('DB_USER') ?: "newsletter";
+$password = getenv('DB_PASS') ?: "35kwJILTx4IXYeNB2Oqs";
+$dbname = getenv('DB_NAME') ?: "Newsletter_Automation";
 
 $dbStatus = null;
 
@@ -30,8 +33,10 @@ try {
 
     // Start Session (If necessary) & Get User ID
     if (session_status() === PHP_SESSION_NONE) session_start();
-    //echo "SQLite database is connected! ";
+    //echo "Database is connected! ";
 } catch (PDOException $e){
-    echo "Connection Failed: " . $e->getMessage();
+    // Log the error but don't display it to prevent information leakage
+    error_log("Database connection failed: " . $e->getMessage());
     $dbStatus = false;
+    $pdo = null; // Ensure $pdo is null when connection fails
 }

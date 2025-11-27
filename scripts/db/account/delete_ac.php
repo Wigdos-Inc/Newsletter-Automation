@@ -2,6 +2,12 @@
 session_start();
 require '../config.php';
 
+// Check database connection first
+if (!$dbStatus || !$pdo) {
+    header("location: ../../../pages/login_view.php?err=Database connection failed. Please try again later.");
+    exit();
+}
+
 if (!isset($_COOKIE['userID'])) {
     header("location: ../../../pages/login.php");
     exit();

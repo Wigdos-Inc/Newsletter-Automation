@@ -450,6 +450,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Expose loadPage function globally for dynamic content
+  window.loadPage = loadPage;
+
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -488,19 +491,22 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(resizeIframe, 100);
       setTimeout(resizeIframe, 500);
       
-      // Monitor for content changes inside iframe
+      // Monitor for content changes inside iframe (only if same-origin)
       try {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
-        const observer = new MutationObserver(() => {
-          resizeIframe();
-        });
-        observer.observe(doc.body, {
-          childList: true,
-          subtree: true,
-          attributes: true
-        });
+        if (doc && doc.body) {
+          const observer = new MutationObserver(() => {
+            resizeIframe();
+          });
+          observer.observe(doc.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+          });
+        }
       } catch (err) {
-        console.log('Cannot observe iframe changes:', err);
+        // Silent fail - this is expected for cross-origin iframes
+        // The iframe will still resize on load events
       }
     });
   }

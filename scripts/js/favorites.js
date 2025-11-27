@@ -404,7 +404,7 @@ class FavoritesManager {
                             const snippet = item.snippet ? item.snippet.substring(0, 50) + '...' : '';
                             
                             html += `
-                                <a href="#" class="inbox-item" data-message-id="${item.message_ID}">
+                                <a href="#" class="inbox-item" data-page="pages/inbox_view.php" data-message-id="${item.message_ID}">
                                     <div class="inbox-item-content">
                                         <strong>${item.subject || 'Notification'}</strong>
                                         <p class="mb-0">${snippet}</p>

@@ -669,6 +669,11 @@ body.light-mode .search-input {
     color: #2ecc71;
 }
 
+/* Inbox dropdown date styling */
+.inbox-date {
+    color: #ffffff !important;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .desktop-search {
