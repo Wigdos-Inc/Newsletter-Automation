@@ -36,6 +36,10 @@ body.light-mode {
 }
 
 /* ===== BODY BACKGROUND ===== */
+html, body {
+    overflow: hidden !important;
+}
+
 body {
     background-color: var(--bg-primary, #1a1c20);
     background-image: none;
@@ -280,6 +284,7 @@ body {
     margin-bottom: 0 !important;
 }
 
+/* Profile tabs content */
 /* Profile tabs content */
 #tab_about > .mb-3,
 #tab_settings > .mb-3 {

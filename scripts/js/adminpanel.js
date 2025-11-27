@@ -1,6 +1,19 @@
 const profile_tabs = document.getElementById('profile_tabs');
 
 function swapTab(tabID){
+    const hash = tabID.replace('tab_', '');
+    
+    // Update URL hash
+    window.location.hash = hash;
+    
+    // Notify parent window to update its URL
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ 
+            type: 'updateHash', 
+            hash: hash 
+        }, '*');
+    }
+    
     // Hide all tabs and show the selected one
     for(let i = 0; i < (profile_tabs.childNodes.length - 1) / 2; i++){
         let offset = i * 2;
@@ -36,7 +49,28 @@ function swapTab(tabID){
     }, 10);
 }
 
+// Handle hash changes
+function handleHashChange() {
+    const hash = window.location.hash.substring(1); // Remove #
+    if (hash === 'create') {
+        swapTab('tab_create');
+    } else if (hash === 'generator') {
+        swapTab('tab_generator');
+    } else if (hash === 'viewLetters') {
+        swapTab('tab_viewLetters');
+    } else if (hash === 'viewCategories') {
+        swapTab('tab_viewCategories');
+    } else if (hash) {
+        // Try to swap to the tab if it exists
+        const tabElement = document.getElementById('tab_' + hash);
+        if (tabElement) {
+            swapTab('tab_' + hash);
+        }
+    }
+}
+
 document.getElementById('btn_tab_create').addEventListener('click', (e) => {
+    e.preventDefault();
     swapTab('tab_create');
     // Refresh newsletter list when switching to newsletters tab
     if (typeof refreshNewsletterList === 'function') {
@@ -44,20 +78,32 @@ document.getElementById('btn_tab_create').addEventListener('click', (e) => {
     }
 });
 document.getElementById('btn_tab_generator').addEventListener('click', (e) => {
+    e.preventDefault();
     swapTab('tab_generator');
 });
 document.getElementById('btn_tab_viewLetters').addEventListener('click', (e) => {
+    e.preventDefault();
     swapTab('tab_viewLetters');
 });
 document.getElementById('btn_tab_viewCategories').addEventListener('click', (e) => {
+    e.preventDefault();
     swapTab('tab_viewCategories');
 });
 
-// Restore active tab on page load
+// Handle hash on page load and listen for hash changes
 document.addEventListener('DOMContentLoaded', () => {
-    const activeTab = sessionStorage.getItem('activeAdminTab');
-    if (activeTab) {
-        swapTab(activeTab);
-        sessionStorage.removeItem('activeAdminTab'); // Clear it after use
+    // Check for hash first
+    if (window.location.hash) {
+        handleHashChange();
+    } else {
+        // Fall back to sessionStorage if no hash
+        const activeTab = sessionStorage.getItem('activeAdminTab');
+        if (activeTab) {
+            swapTab(activeTab);
+            sessionStorage.removeItem('activeAdminTab'); // Clear it after use
+        }
     }
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
 });

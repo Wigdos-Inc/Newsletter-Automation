@@ -1,8 +1,18 @@
 const profile_tabs = document.getElementById('profile_tabs');
 
 function swapTab(tabID){
+    const hash = tabID.replace('tab_', '');
+    
     // Update URL hash
-    window.location.hash = tabID.replace('tab_', '');
+    window.location.hash = hash;
+    
+    // Notify parent window to update its URL
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ 
+            type: 'updateHash', 
+            hash: hash 
+        }, '*');
+    }
     
     // Hide all tabs and show the selected one
     const tabs = document.querySelectorAll('#profile_tabs > div');

@@ -518,6 +518,20 @@ document.addEventListener('DOMContentLoaded', () => {
       loadPage(event.data.page, targetLink);
     }
     
+    // Handle hash updates from iframe (tab changes)
+    if (event.data && event.data.type === 'updateHash') {
+      const currentSrc = iframe.src.split('#')[0];
+      const newUrl = currentSrc + '#' + event.data.hash;
+      
+      // Update iframe src with hash
+      iframe.src = newUrl;
+      
+      // Update parent URL
+      const url = new URL(window.location);
+      url.searchParams.set('load', newUrl);
+      window.history.replaceState(null, null, url);
+    }
+    
     // Handle iframe resize requests from child pages
     if (event.data && event.data.type === 'resizeIframe') {
       if (iframe) {

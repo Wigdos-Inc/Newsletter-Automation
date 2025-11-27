@@ -200,16 +200,16 @@ if ($userID && isset($users[$userID])) {
         <i class="fas fa-user"></i>
         <span>Profile</span>
       </a>
+      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#settings">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </a>
       <?php if ($isAdminOrOwner): ?>
         <a href="#" class="sidebar-link" data-page="pages/adminPanel.php">
           <i class="fas fa-user-shield"></i>
           <span>Admin Panel</span>
         </a>
       <?php endif; ?>
-      <a href="#" class="sidebar-link" data-page="pages/profile_view.php#settings">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
-      </a>
       
       <div class="sidebar-divider"></div>
       
